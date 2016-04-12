@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CLE147             Date 30Sep11               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CLE147 - Aggregate Facility (Recompile)                      *
@@ -46,108 +49,108 @@
       *  CLE042 - Extended Loan Sub Type                              *
       *                                                               *
       *****************************************************************
- 
+
      FSDTCLDPD  IP   E             DISK
- 
+
      FCLOANCL   UF   E             DISK
      FMCLONCL   UF   E             DISK    RENAME(CLOANCLF:MCLONCLF)
- 
+
      FFCLTYFM   UF   E             DISK
      FLEFCLTQD  UF   E             DISK
- 
+
      FLEAGFMPD  UF   E             DISK    RENAME(FCLTYFMF:LEAGFMF)
      FLEAGFTQD  UF   E             DISK    RENAME(LEFCLTD0:LEAGFTD0)
- 
+
      FLEFEED    UF   E             DISK
- 
+
      FLEPARTPD  UF   E             DISK
- 
+
      FLOAMSDK   UF   E             DISK
- 
+
      FLEPELND   UF   E             DISK
      FLEPEMGD   UF   E             DISK
- 
+
      FLENPVAPD  UF   E             DISK
      FLENPVLPD  UF   E             DISK
      FLEHNPAPD  UF   E             DISK    RENAME(LENPVAD0:LEHNPVAD0)
      FLEHNPLPD  UF   E             DISK    RENAME(LENPVLD0:LEHNPVLD0)
- 
+
      FHISTSHM   UF   E             DISK
      FHISTSHP   UF   E             DISK
      FMHISTHM   UF   E             DISK    RENAME(HISTSHMF:MHISTHMF)
      FMHISTHP   UF   E             DISK    RENAME(HISTSHPF:MHISTHPF)
- 
+
      FQSYSPRT   O    F  132        PRINTER USROPN
- 
- 
+
+
      ILEFEEDF
      I              FESUTP                      SUTP
      I              FECLAS                      CLAS
- 
+
      ILEFCLTD0
      I              FCXSLS                      SLST
      I              FCXSLC                      SLCL
      I              FCXRLS                      DRST
      I              FCXRLC                      DRCL
- 
+
      ILEAGFTD0
      I              FCXSLS                      SLST
      I              FCXSLC                      SLCL
      I              FCXRLS                      DRST
      I              FCXRLC                      DRCL
- 
+
      ILEPELNDF
      I              LDSUTP                      SUTP
      I              LDCLAS                      CLAS
- 
+
      ILEPEMGDF
      I              MDSUTP                      SUTP
      I              MDCLAS                      CLAS
- 
+
      ILENPVAD0
      I              LNLNST                      SUTP
      I              LNLNCL                      CLAS
      ILENPVLD0
      I              LELNST                      SUTP
      I              LELNCL                      CLAS
- 
+
      ILEHNPVAD0
      I              LNLNST                      SUTP
      I              LNLNCL                      CLAS
      ILEHNPVLD0
      I              LELNST                      SUTP
      I              LELNCL                      CLAS
- 
+
      C                   EXSR      P_CLOANCL
      C                   EXSR      P_MCLONCL
- 
+
      C                   EXSR      P_FCLTYFM
      C                   EXSR      P_LEFCLTQD
- 
+
      C                   EXSR      P_LEAGFMPD
      C                   EXSR      P_LEAGFTQD
- 
+
      C                   EXSR      P_LEFEED
- 
+
      C                   EXSR      P_LEPARTPD
- 
+
      C                   EXSR      P_LOAMSDK
- 
+
      C                   EXSR      P_LEPELND
      C                   EXSR      P_LEPEMGD
- 
+
      C                   EXSR      P_LENPVAPD
      C                   EXSR      P_LENPVLPD
      C                   EXSR      P_LEHNPAPD
      C                   EXSR      P_LEHNPLPD
- 
+
      C                   EXSR      P_HISTSHM
      C                   EXSR      P_HISTSHP
      C                   EXSR      P_MHISTHM
      C                   EXSR      P_MHISTHP
- 
+
      C                   ADD       1             Count             3 0
- 
+
      CLR                 EXSR      FINISH
       /SPACE 5
       ********************************************************************
@@ -361,39 +364,39 @@
       /SPACE 5
       ********************************************************************
      C     SET_Class     BEGSR
- 
+
      C     SUTP          IFNE      *BLANK
      C                   EVAL      CLAS = LECLAS
      C                   ENDIF
- 
+
      C     DFST          IFNE      *BLANK
      C                   EVAL      DFCL = LECLAS
      C                   ENDIF
- 
+
      C     SLST          IFNE      *BLANK
      C                   EVAL      SLCL = LECLAS
      C                   ENDIF
- 
+
      C     DRST          IFNE      *BLANK
      C                   EVAL      DRCL = LECLAS
      C                   ENDIF
- 
+
      C                   ENDSR
       ********************************************************************
       /SPACE 5
       ********************************************************************
      C     FINISH        BEGSR
      C                   OPEN      QSYSPRT
- 
+
       * Report error or completion
- 
+
      C     Count         IFNE      1
      C                   EXCEPT    ERR
      C                   SETON                                        U8
      C                   ELSE
      C                   EXCEPT    FIN
      C                   ENDIF
- 
+
      C                   CLOSE     QSYSPRT
      C                   ENDSR
       ********************************************************************

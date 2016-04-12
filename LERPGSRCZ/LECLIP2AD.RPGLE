@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD025521           Date 19Aug14               *
-      *  Prev Amend No. MD000091           Date 09May13               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *                 MD000091           Date 09May13               *
       *                 AR804863           Date 10Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -45,6 +46,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD025521 - Recompile due to changes on LECLI2PD.             *
       *  MD000091 - Event Codes Substitution                          *
       *  AR804863 - Details are not correctly reverted back when the  *
@@ -298,7 +301,7 @@
      C                   PARM      DDRTSP        ZCMPAMT1         25
      C                   PARM      @DDRTSP       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDRTSP'
@@ -359,7 +362,7 @@
      C                   PARM      DDIPRD        ZCMPAMT1         25
      C                   PARM      @DDIPRD       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C     CL_PTYP       ANDNE     80                                                        BUG3721
      C                   ADD       1             Idx
@@ -887,7 +890,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  INPUTS

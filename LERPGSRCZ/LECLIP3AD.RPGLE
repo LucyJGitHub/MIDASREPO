@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 09May13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD000091           Date 09May13               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -43,6 +44,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD000091 - Event Codes Substitution                          *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -361,7 +364,7 @@
      C                   PARM      DDBCXR        ZCMPAMT1         25
      C                   PARM      @DDBCXR       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDBCXR'
@@ -394,7 +397,7 @@
      C                   PARM      DDFCXR        ZCMPAMT1         25
      C                   PARM      @DDFCXR       ZCMPAMT2         25
      C                   PARM      'N'           ZCMPAMTDif        1
- 
+
      C     ZCMPAMTDif    IFEQ      'Y'
      C                   ADD       1             Idx
      C                   EVAL      FldNameArr(Idx) = 'DDFCXR'
@@ -560,7 +563,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  INPUTS

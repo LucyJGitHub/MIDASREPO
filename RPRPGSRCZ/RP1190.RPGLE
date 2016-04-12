@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR858264           Date 02Dec11               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  AR858264 - Compilation Issues on RP1180 and RP1190           *
@@ -68,91 +71,91 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCLOAN     UF   E           K DISK    IGNORE(CLOANHHF:CLOANZ1F)
- 
+
       /EJECT
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       ** The following /COPY contains various standard declares
      C**********/COPY RPCPYSRC,Std_Dcl                                                      AR858264
      C/COPY RPCPYSRC,STD_DCL                                                                AR858264
- 
+
       ** The following /COPY contains the layout of the Meridian header as
       ** a data structure
      C**********/COPY RPCPYSRC,Mdn_Hd_DS                                                    AR858264
      C/COPY RPCPYSRC,MDN_HD_DS                                                              AR858264
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   Key to PF/LOAMSDK.
      D@KCLOANds        DS
      D @KLNRFA                 1      6    INZ(*Blanks)
      D @KLNRF                  1      6S 0 INZ(*Zeros)
- 
+
      D @KRCDT          S                   LIKE(RCDT) INZ(*Zeros)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
       /EJECT
- 
+
       ** +--------------------------------------+
       ** ¦ Start F-specs                        ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       ** Extract the Deal Number from the data input.
- 
+
      C                   Eval      @KLNRFA = %subst(TransData:24:6)
      C                   Eval      @KRCDT  = 'A'
- 
+
       ** Access original record on PF/CLOANCL.
- 
+
      C     @KCLOAN       Chain     CLOANCLF                           80
- 
+
       ** If error then perform any special processing and exit
- 
+
      C                   If        *IN80 <> '0'
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   EVAL      TNLU = TNLU + 1
- 
+
      C                   UPDATE    CLOANCLF
- 
+
       ** Return control at the end of the processing for the message.
- 
+
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -168,25 +171,25 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         Begsr
- 
+
       ** If error in RP1110, set Return Code accordingly.
- 
+
      C                   If        ReturnCode = *blank
      C                   Eval      ReturnCode = ('ErrRP1190')
      C                   EndIf
- 
+
      C     @RUN          IfEq      *BLANK
      C                   Move      'Y'           @RUN              1
      C                   Dump
      C                   EndIf
- 
+
      C                   SetOn                                        U7U8LR
      C                   Return
- 
+
      C                   Endsr
- 
+
       ********************************************************************
       /EJECT
       *****************************************************************
@@ -194,22 +197,22 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       ** Transaction Data
      C                   PARM                    TransData
       ** Return Code
      C                   PARM                    ReturnCode
- 
+
       ** Key list for LF/CLOAN
- 
+
      C     @KCLOAN       KLIST
      C**********         KFLD                    @KLNRF                                       CLE148
      C                   KFLD                    @KLNRFA                                      CLE148
      C                   KFLD                    @KRCDT
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

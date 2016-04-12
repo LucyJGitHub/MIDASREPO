@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 01Sep14               *
-      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *                 MD025521           Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
       *  MD025521 - Recompile due to changes on LECLI2PD.             *
@@ -154,19 +157,19 @@
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       ***  File Payment instructions
      D  FLPAY                  1    559
- 
+
      D FRIRFilFmt    E DS                  EXTNAME(SDESFFPD)
       ** Midas SD File Extended Settlement Instruction - FRA/IRS
- 
+
      D PAYScnFmt     E DS                  EXTNAME(SDESSPPD)
       ** Midas SD Screen Extended Settlement Instruction - Pay
- 
+
      D RECScnFmt     E DS                  EXTNAME(SDESSRPD)
       ** Midas SD Screen Extended Settlement Instruction - Receive
- 
+
      D FRIRScnFmt    E DS                  EXTNAME(SDESSFPD)
       ** Midas SD Screen Extended Settlement Instruction - FRA/IRS
- 
+
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for Bank Details
@@ -194,7 +197,7 @@
       ** Ê ==============                       Ê
       ** +--------------------------------------+
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -304,9 +307,9 @@
       *
      C                   ELSE
       *
- 
+
      C                   CALLB     'ZASETINCVT'
- 
+
      C                   PARM                    F_PAY
      C                   PARM                    F_REC
      C                   PARM      *BLANKS       FRIRFilFmt
@@ -315,7 +318,7 @@
      C                   PARM      *BLANKS       FRIRScnFmt
      C                   PARM      DDCURR        #TRCCY                                      CSF011A
      C                   PARM      DDCURR        #TPCCY                                      CSF011A
- 
+
       *
      C                   EVAL      TRANSDTL = LoanScnFmt1+ LoanScnFmt2+
      C                                        LoanScnFmt3+ LoanScnFmt4+

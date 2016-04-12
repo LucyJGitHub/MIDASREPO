@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 15Feb17               *
-      *  Prev Amend No. CER070             Date 24Nov14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *                 CER070             Date 24Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
       *                 CLE134             Date 01Aug12               *
@@ -83,6 +84,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CDL096 - Business Day Conventions on MM Deals                *
@@ -161,25 +164,25 @@
       *  CPB002 - Meridian DBA Middleware Replication Customization.  *
       *                                                               *
       *****************************************************************
- 
+
       **  SE Security Details, sorted by SESN.
      FSECTY     IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  PM Customer Positions, sorted by CSCN/CSSC/CSBA/CSDA.
      FPMCPSNL0  IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  SE Trades, sorted by TCNR/TDRF.
      FTRADCU    IF   E           K Disk
      F                                     Rename(TRADSDF:TRADCUF)
      F                                     Infsr(*Pssr)
- 
+
       **  SE Historic Trades, sorted by TDRF.
      FHSTTTR    IF   E           K Disk
      F                                     RENAME(HSTTRDF:HSTTTRF)
      F                                     Infsr(*Pssr)
- 
+
       ****PM*Historic*Exchange*Rate,*sorted*by*Q8CCY/Q8SDAT****************     208648
      F**PMHSEXPD  IF   E           K Disk                                       208648
      F**********                           Infsr(*Pssr)                         208648
@@ -188,116 +191,116 @@
      FSDCUHSL2  IF   E           K Disk                                         208648
      F                                     Infsr(*Pssr)                         208648
                                                                                 208648
- 
+
       **  SE Security Diary Events, sorted by SDSN/SDED/SDET.
      FSEDEV     IF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  SE Security Events, sorted by SNSN/SNET/SNDT.
       **                                SDSN/SDET/SDED.
      FSECEO     IF   E           K Disk
      F                                     Rename(SEDEVDF:SEDEVD0)
      F                                     Rename(SNDEVDF:SNDEVD0)
      F                                     Infsr(*Pssr)
- 
+
       **  MM and FX Deals, sorted by CNUM/PTFR.
      FPMDEALL4  UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  FD Deal Types/Subtypes, sorted by DTPE11/DLST11.
      FFDDTSTL0  UF A E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  FX Deals, sorted by FHDN38.
      FFXDEALLL  UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  MM Deals, sorted by HKDN38.
      FMMDEALLL  UF   E           K Disk
      F                                     Ignore(MMDENSP0)
      F                                     Infsr(*Pssr)
- 
+
       **  SE Current and historic Trades, sorted by TCNR/TDSS/TDBA/TDDT/TDRF.
      FTRADC     UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  SE Depot Movements, sorted by DPBN/DPRN.
      FDEPMVC    UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  LE Customer Loans, sorted by CNUM.
      FPMCLONL6  UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  LE Matured Customer Loans, sorted by CNUM.
      FPMCLONL0  UF   E           K Disk
      F                                     Rename(CLOANCLF:PMCLONF0)
      F                                     Infsr(*Pssr)
- 
+
       **  GL Accounts Master Details, sorted by CNUM/CCY/ACOD/ACSQ/BRCA.
      FACCNT     UF   E           K Disk
      F                                     Ignore(ACCNTAAF)
      F                                     Ignore(ACCNTACF)
      F                                     Infsr(*Pssr)
- 
+
       **  SE Historic Customer Average Price, sorted by CSCN/CSBA/CSSC/CSDA/CSSE/CSRF.
      FCAPRH     UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  PM Portfolio Positions Audit.
      FPMCPOSPA  UF   E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  PM All Portfolio Positions, sorted by QACNUM/QAPTFR/QATDSS/QATVDA/QAPDAT.
      FPMAPOSLL  UF A E           K Disk
      F                                     Infsr(*Pssr)
- 
+
       **  FF Transactions, sorted by CUSC.
      FTRANSC    UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Customer Depot Positions, sorted by CDCN/CDSN/CDPA/DDTE.
      FCDEPD     UF   E           K Disk    Usropn
      F                                     Rename(CDEPPDF:CDEPDF)
      F                                     Infsr(*Pssr)
- 
+
       **  SE Allocations, sorted by VCCNUM/VCPTFR.
      FSEERALL3  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Allocations, sorted by VCCNUM/VCERRF/VCBRCD/VCDDPT.
      FSEERALL4  UF A E           K Disk    Usropn
      F                                     Rename(SEERALD0:SEERALD4)
      F                                     Infsr(*Pssr)
- 
+
       **  SE General Blocks, sorted by VDCNUM/VDPTFR/VDBEDT.
      FSEBLKPL4  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Client Depot Positions Audit.
      FCDEPPA    UF   E             Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Corporate Actions Allocations, sorted by MCCNUM.
      FSECOAL11  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Corporate Actions Affected Positions, sorted by MXCNUM.
      FSECOAPL1  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Corporate Actions Blocked Positions, sorted by MUCNUM.
      FSECOBKL3  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Corporate Actions Correspondance Details, sorted by MVCNUM.
      FSECOCOL1  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Corporate Actions Instructions, sorted by MOCNUM.
      FSECOSIL3  UF   E           K Disk    Usropn
      F                                     Infsr(*Pssr)
- 
+
       **  SE Customer Position Profit Centre, sorted by CNUM.
      FSEPPCL0   UF   E           K Disk
      F                                     Infsr(*Pssr)
@@ -309,7 +312,7 @@
       **  SD Additional Customer by Country of Tax by CNUM                                    233196
      FSDACTXL4  UF   E           K Disk                                                       233196
      F                                     Infsr(*Pssr)                                       233196
- 
+
       **  PB Default PTFR for New PB Customer Audit Report.
      FPB1030AU  O    E             Printer Infds(SpoolU)
      F                                     Infsr(*Pssr)
@@ -349,40 +352,40 @@
       *  *inzsr  - Program Initialization routine.                    *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /Eject
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       **  Array containing Copyright statement.
      D Cpy@            S             80    Dim(1) Ctdata Perrcd(1)
- 
+
       **  External Data structure for Local data area (database error details).
      D LDA           E DS           256    Extname(LDA) Dtaara(LDA)
       ** The following fields are defined in the external file:
@@ -392,32 +395,32 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       **  File Information Data Structure for printer file PB1030AU.
      D Spoolu          DS
      D  Sfileu                83     92
      D  Sfnumu               123    124B 0
      D    DBFields           134    203
- 
+
       **  External Data structure for Portfolio Management I.C.D. Details.
      D PMSTAT        E DS           256    Extname(PMSTAT) Dtaara(PMSTAT)
- 
+
       **  Table for PF/DEALSDC deal types.
      D TABDealTypes    S              2    Dim(9) Ctdata Perrcd(9)
- 
+
       **  Array containing power for currency conversion.
      D POWER8          S              8  4 Dim(8) Ctdata Perrcd(1)
- 
+
       **  Array used to store all Portfolio Definition References
       **  for Customer.
      D POR             S              4    Dim(50)
- 
+
       **  External data structure for Currency Details.
      D Sdcurr        E DS                  Extname(SDCURRPD)
- 
+
       **  External data structure for Securities Clients Details.
      D Sdsecs        E DS                  Extname(SDSECSPD)
- 
+
       **  External data structure for Customer Details.
      D Sdcust        E DS                  Extname(SDCUSTPD)
                                                                                 CPB004
@@ -425,41 +428,41 @@
      D Sdacod        E DS                  Extname(SDACODPD)                    CPB004
       ** External DS for Customer Details                                                     CAS010
      D  QQACC1       E                     EXTFLD(QQACCD)                                     CAS010
- 
+
       **  External data structure for Bank Details.
      D Sdbank        E DS                  Extname(SDBANKPD)
- 
+
       **  External data structure for Portfolio I.C.D. Details.
      D Sdport        E DS                  Extname(SDPORTPD)
- 
+
       **  External data structure for Midas Modules Details.
      D Sdmmod        E DS                  Extname(SDMMODPD)
- 
+
       **  External data structure for Securities Trading Details.
      D Sdstrd        E DS                  Extname(SDSTRDPD)
- 
+
       **  External data structure for Switchable Features Details.
      D Scsard        E DS                  Extname(SCSARDPD)
- 
+
       **  External data structure for Investment Type Details.
      D Invtpd        E DS                  Extname(INVTPD)
      D   INLCD       E                     Extfld(LCD)
      D   DEFPRG      E                     Extfld(PLDPCD)
- 
+
       **  First DS for access programs, short data structure.
      D Dsfdy         E DS                  Extname(DSFDY)
- 
+
       **  Second DS for access programs, long data structure.
      D Dssdy         E DS                  Extname(DSSDY)
- 
+
      D Dsldy         E DS                  Extname(DSLDY)
       ** DS for Access Programs, Extend Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** ------------------- Start of parameters --------------------**
       **  Return Code.
      D P_ReturnCode    S             10A
@@ -472,7 +475,7 @@
       ** Portfolio Currency Decimal Places.                                     CPB002
      D P_PortCdp       S              1  0                                      CPB002
       ** -------------------- End of parameters ---------------------**
- 
+
       ** --------- Start of fields used by access programs ----------**
       **  Return code.
      D P_RtCd          S              7A
@@ -492,7 +495,7 @@
      D*P_Acod**********S              4A                                               CPB004 CAS011
      D P_Acod          S             10A                                                      CAS011
       ** ---------- End of fields used by access programs -----------**
- 
+
       **  Define work fields used as keys.
      D K_CustNum       S                   Like(CNUM)                           Customer Number
      D K_TradeRef      S                   Like(TDRF)                           Trade Reference
@@ -506,7 +509,7 @@
      D K_PosDate       S                   Like(DDTE)                           Position Date
      D K_EventType     S                   Like(SNET)                           Event Type
      D K_EventDate     S                   Like(SNDT)                           Event Date
- 
+
       **  Define work fields used to store values.
      D W_CSBA          S                   Like(CSBA)                           Branch Code
      D W_CSDA          S                   Like(CSDA)                           Position Date
@@ -524,7 +527,7 @@
      D W_MDIN          S                   Like(G2MDIN)                         Mutl/Div Indic208648
      D W_CDP           S                   Like(A6NBDP)                         Decimal Places208648
      D W_VDNA          S                   Like(CSDA)                           Back Value Date
- 
+
       **  Define work fields used to calculate totals.
      D W_TSNT          S                   Like(CSNT)                           Total Trade Date Nom
      D W_TSNV          S                   Like(CSNV)                           Total Value Date Nom
@@ -543,7 +546,7 @@
      D W_ERNSC         S             15  8
      D W_ITRASC        S             15  0
      D W_SETAM         S             15  0
- 
+
       **  Work fields used as flags.
      D W_PMFlag        S              1A
      D W_TradeFound    S              1A
@@ -553,7 +556,7 @@
                                                                                 CPB004
       **  Work Field used to change value of field ACCNTAB/REPI.                CPB004
      D W_Repi          S              2  0                                      CPB004
- 
+
       **  True and False can be used for indicators being on or off.
      D True            C                   *On
      D False           C                   *Off
@@ -565,14 +568,14 @@
      D   SETNLU      E                     Extfld(TNLU)                                       198688
      D   SENDEC      E                     Extfld(NDEC)                                       CAS010
      D   SEZONE1     E                     Extfld(SEZONE)                                     CAS010
- 
+
       /Eject
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Rename Fields                        ¦
       ** ¦ =============                        ¦
       ** +--------------------------------------+
- 
+
      I*SECTYDFF**                                                                             198688
      I**********    RECI                        SERECI                                        198688
      I**********                                                                              198688
@@ -605,10 +608,10 @@
       /Eject
       *****************************************************************
      C
- 
+
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listing
- 
+
       *****************************************************************
       *                                                               *
       *                  M A I N  P R O C E S S I N G                 *
@@ -620,7 +623,7 @@
       **   +------------------------------------------------------+   *
       *                                                               *
       *****************************************************************
- 
+
       *================================================================         224860
       **               Account Details file processing                *         224860
       *================================================================         224860
@@ -691,156 +694,156 @@
       *================================================================
       **              Deals by Customer File processing               *
       *================================================================
- 
+
       **  Position to first deal for customer.
      C     K_CustNum     Setll     PMDEALL4
      C     K_CustNum     Reade     PMDEALL4                               73
- 
+
       **  Do while Deals to be processed.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
      C     RECI          Ifne      '*'                                          Begin RECI
      C     RECI          Andne     'R'
- 
+
       **  Initialize update indicator.
      C                   Eval      *in77 = False
- 
+
       **  If record comes from PF/DEALSDB.
      C     RCDT          Ifeq      'B'                                          Begin FX Deal
      C                   Eval      *in77 = True
- 
+
       **  If record comes from PF/DEALSDC, check deal type.
      C                   Else                                                   Else FX Deal
      C                   Z-ADD     1             X                 2 0
      C     DTYP          LOOKUP    TABDealTypes                           77
- 
+
      C                   Endif                                                  End FX DEal
- 
+
       **  For MM Deal, Determine cross rate nominal to Portfolio Currency.
      C     RCDT          Ifeq      'C'                                          Begin MM Deal
      C     *in77         Andeq     True
      C                   Eval      K_CurrCode = CCY
      C                   Eval      K_PayDate  = DDAT
- 
+
      C                   Exsr      #PMRATE
- 
+
      C**********         Eval      ZCCYF  = NMCY                                208648
      C                   Eval      ZCCYF  = CCY                                 208648
      C                   Eval      ZRATEF = W_SPOT
      C                   Eval      ZMDINF = W_MDIN
      C**********         Eval      ZCDPF  = Q8CDP                               208648
      C                   Eval      ZCDPF  = W_CDP                               208648
- 
+
       **  Perform S/R #PMRATE for Customer Base Currency.
      C                   Eval      K_CurrCode = P_PortCcy
- 
+
      C                   Exsr      #PMRATE
- 
+
      C                   Eval      ZCCYT  = P_PortCcy
      C                   Eval      ZRATET = W_SPOT
      C                   Eval      ZMDINT = W_MDIN
      C                   Eval      ZCDPT  = P_PortCdp
- 
+
       **  Get Cross FX Rate.
      C                   Exsr      #ZCCYCN
- 
+
      C                   Eval      FXRD = ZCRSRT
- 
+
      C                   Endif                                                  End MM Deal
- 
+
       **  If update required.
      C     *in77         Ifeq      True                                         Begin *in77
- 
+
       **   Define Key List used to access to FD Deal Type/Sub-type file.
      C     K_FDDtst      Klist
      C                   Kfld                    DTYP
      C                   Kfld                    DLST
- 
+
       **  Access to Deal Type/Sub-type details.
      C     K_FDDtst      Chain     FDDTSTL0                           74
- 
+
       **  If Type/Sub=type combination already exists.
      C     *in74         Ifeq      False                                        Begin *in74
- 
+
       **  If record was deleted, change record id.
      C     RCID11        Ifeq      '*'                                          Begin RCID11
      C                   Eval      RCID11 = 'D'
      C                   Update    FDDTSTPD
- 
+
      C                   Endif                                                  End RCID11
- 
+
       **  If record was not found, create a new record.
      C                   Else                                                   Else *in74
      C                   Exsr      #FDDTST
- 
+
      C                   Endif                                                  End *in74
- 
+
       **  If Portfolio Definition is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
- 
+
      C                   Endif                                                  End PTFR
- 
+
      C                   Eval      HLEX = *blank
- 
+
       **  Update appropriate record.
      C                   Select                                                 Begin Select
- 
+
      C     RCDT          Wheneq    'B'                                          FX Deal
      C                   Except    DEALSB_U
- 
+
       **  Access to FX Deal record.
      C     DLNO          Chain     FXDEALLL                           81
- 
+
       **  If record was found and Portfolio Reference was blank.
      C     *IN81         Ifeq      False                                        Begin *in81
      C     FHPTFR        Andeq     *blanks
      C                   Eval      FHPTFR = P_PortDefn
      C                   Except    FXDEAL_U
- 
+
      C                   Endif                                                  End *in81
- 
+
      C     RCDT          Wheneq    'C'                                          MM Deal
      C     *in77         Andeq     True
      C                   Except    DEALSC_U
      C     DLNO          Chain     MMDELDP0                           02
- 
+
       **  If record was found and Portfolio Definition is blank.
      C     *IN02         Ifeq      '0'
      C     HKPTFR        Andeq     *blanks
      C                   Eval      HKPTFR = P_PortDefn
- 
+
      C                   Endif                                                  End *in02
      C                   Except    MMDELD_U
- 
+
      C                   Endsl                                                  End Select
- 
+
      C                   Endif                                                  End *in77
- 
+
      C                   Endif                                                  End RECI
- 
+
       **  Read following Deal record for customer.
      C     K_CustNum     Reade     PMDEALL4                               73
- 
+
      C                   Enddo                                              End Do_W_N73
- 
+
       *================================================================
       **              Trades by Customer file processing              *
       *================================================================
- 
+
       **  Position to first SE Trade for customer.
      C     K_CustNum     Setll     TRADC
      C     K_CustNum     Reade     TRADC                                  73
- 
+
       **  Do while Trades to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If live SE Trade and Portfolio Reference is blank.
      C     RECI          Ifne      '*'                                          Begin RECI
      C     RECI          Andne     'C'
      C     PTFR          Andeq     *blanks
      C                   Eval      PTFR = P_PortDefn
- 
+
      C                   Endif                                                  End RECI
                                                                                               198387
       **  Access to Security Details.                                                         198387
@@ -855,102 +858,102 @@
      C                   Eval      W_DBAse = 15                                 * Db Error 15 198387
                                                                                 **************198387
      C                   Exsr      #INVTYP                                                    198387
- 
+
       **  Calculate Trade Portfolio Value (more specifically, the FX rate).
- 
+
      C                   Exsr      #P07
- 
+
       **  Update appropriate record.
      C                   Select                                                 Begin Select
- 
+
      C     *IN08         Wheneq    True                                         SE Trade
      C                   Except    TRADS_U
- 
+
      C     *IN09         Wheneq    True                                         SE Historic Trade
      C                   Except    HSTTR_U
- 
+
      C                   Endsl                                                  End Select
- 
+
       **  Read next SE Trade for customer.
      C     K_CustNum     Reade     TRADC                                  73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **                Depot Movements file processing               *
       *================================================================
- 
+
       **  Position to first Depot Movement for customer.
      C     K_CustNum     Setll     DEPMVC
      C     K_CustNum     Reade     DEPMVC                                 73
       *
       **  Do while Depot Movements to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If live Depot Movement.
      C     RECI          Ifne      '*'                                          Begin RECI
- 
+
       **  If Walk In or Walk Out Depot Movement.
      C     DPMV          IFEQ      'WI'                                         Begin DPMV
      C     DPMV          OREQ      'WO'
- 
+
       **  If Portfolio Reference is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
- 
+
       **  Access to Security Details.
      C                   Eval      K_Security = DPSS
                                                                                 ***************
      C                   Eval      W_DBAse = 12                                 * Db Error 12 *
                                                                                 ***************
      C                   Exsr      #SECDET
- 
+
       **  Access to Investment Type to get Processing Type.
                                                                                 ***************
      C                   Eval      W_DBAse = 12                                 * Db Error 12 *
                                                                                 ***************
      C                   Exsr      #INVTYP
- 
+
       **  Set Movement Date                                                R10049
      C     DPMD          Ifeq      0                                            Begin DPMD
      C                   Eval      K_PayDate = DPDO
- 
+
      C                   Else                                                   ELse DPMD
      C                   Eval      K_PayDate = DPMD
- 
+
      C                   Endif                                                  End DPMD
- 
+
      C                   Eval      ZAMTF = 1
- 
+
       **  Perform S/R #PMRATE for Nominal Currency.
      C                   Eval      K_CurrCode = NMCY
- 
+
      C                   Exsr      #PMRATE                                      Spot Rate
- 
+
      C                   Eval      ZCCYF  = NMCY
      C                   Eval      ZRATEF = W_SPOT
      C                   Eval      ZMDINF = W_MDIN
      C*****              Eval      ZCDPF  = Q8CDP                               208648
      C                   Eval      ZCDPF  = W_CDP                               208648
- 
+
       **  Perform S/R #PMRATE for Customer Base Currency.
      C                   Eval      K_CurrCode = P_PortCcy
- 
+
      C                   Exsr      #PMRATE
- 
+
      C                   Eval      ZCCYT  = P_PortCcy
      C                   Eval      ZRATET = W_SPOT
      C                   Eval      ZMDINT = W_MDIN
      C                   Eval      ZCDPT  = P_PortCdp
- 
+
       **  Get Cross FX Rate.
      C                   Exsr      #ZCCYCN
- 
+
      C                   Eval      SPXR = ZCRSRT
      C                   Eval      SPMD = ZCRSMD
      C                   Eval      CWDI = 'N'
      C                   Eval      CYLD = 0
- 
+
       **  Calculate yield on Depot Movement.
      C     PROT          IFEQ      '1'                                          Begin PROT
      C     PROT          OREQ      '3'
@@ -960,168 +963,168 @@
      C     PROT          OREQ      '9'
      C*
      C     MATY          Ifne      0                                            Begin MATY
- 
+
       **  If Security is Interest Bearing, use AIBD method, else Discoun.
- 
+
      C     CD01          Ifne      0                                            Begin CD01
      C                   Eval      SYBS = 'A '
- 
+
      C                   Else                                                   Else CD01
      C                   Eval      SYBS = 'DA'
- 
+
      C                   Endif                                                  End CD01
- 
+
      C     DYBS          Ifeq      '4'                                          Begin DYBS
      C                   Eval      DYBS = '3'
      C                   Eval      DVBS = '1'
- 
+
      C                   Endif                                                  End DYBS
- 
+
      C                   Eval      ZPRICE = MKTP
      C                   Eval      ZFDATE = DPVD
      C                   Eval      ECD    = ZFDATE
- 
+
      C     SERECI        Ifeq      'D'                                          Begin SERECI
      C                   Exsr      #ZYLDO
- 
+
      C                   Else                                                   Else SERECI
      C                   Eval      ZYLDOT = 0
- 
+
      C                   Endif                                                  End SERECI
      C                   Eval      CYLD = ZYLDOT
- 
+
      C                   Endif                                                  End MATY
- 
+
      C                   Endif                                                  End PROT
- 
+
       **  Update Depot Movement record.
      C                   Except    DPTMV_U
- 
+
      C                   Endif                                                  End PTFR
- 
+
      C                   Endif                                                  End DPMV
- 
+
      C                   Endif                                                  End RECI
- 
+
       **  Read next Depot Movement for customer.
      C     K_CustNum     Reade     DEPMVC                                 73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **               Financial Futures File processing              *
       *================================================================
- 
+
       **  If Futures and Option Module is installed.
      C     BGFUOP        Ifeq      'Y'                                          Begin BGFUOP
- 
+
       **  If Bank Portfolios are supported, treat as if FF off.
      C     FCPORS        ANDNE     'B'
- 
+
       **  Position to first FF Transaction for customer.
      C     K_CustNum     Setll     TRANSC
      C     K_CustNum     Reade     TRANSC                                 73
- 
+
       **  Do while FF transactions to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If live FF Transaction and Portfolio Reference is blank.
      C     RECI          Ifne      '*'                                          Begin RECI
      C     PTFR          Andeq     *blanks
      C                   Eval      PTFR = P_PortDefn
- 
+
       **  Update FF Transaction record.
      C                   Except    TRANS_U
- 
+
      C                   Endif                                                  End RECI
- 
+
       **  Read next FF Transaction for customer.
      C     K_CustNum     Reade     TRANSC                                 73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
      C                   Endif                                                  End BGFUOP
- 
+
       *================================================================
       **                Customer Loans file processing                *
       *================================================================
- 
+
       **  Position to first loan for customer
      C     K_CustNum     Setll     PMCLONL6
      C     K_CUstNum     Reade     PMCLONL6                               73
- 
+
       **  Do while Loans to be processed for customer.
      C     *IN73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If live loan.
      C     RECI          Ifeq      'D'                                          Begin RECI
- 
+
       **  If valid loan processing type.
      C     PTYP          Ifeq      61                                           Begin PTYP
      C     PTYP          Oreq      62
      C     PTYP          Oreq      63
      C     PTYP          Oreq      70
      C     PTYP          Oreq      80                                                         CLE028
- 
+
       **  If Portfolio Reference is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
      C                   Eval      HLEX = *blanks
- 
+
       **  Update Loan record.
      C                   Except    CLOAN_U
- 
+
      C                   Endif                                                  End PTYP
- 
+
      C                   Endif                                                  End RECI
- 
+
      C                   Endif                                                  End PTFR
- 
+
       **  Read next loan for customer.
      C     K_CustNum     Reade     PMCLONL6                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       **  Position to first matured loan for customer.
      C     K_CustNum     Setll     PMCLONL0
      C     K_CustNum     Reade     PMCLONL0                               73
- 
+
       **  Do while matured loans to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If valid loan processing type.
      C     PTYP          Ifeq      61                                           Begin PTYP
      C     PTYP          Oreq      62
      C     PTYP          Oreq      63
      C     PTYP          Oreq      70
      C     PTYP          Oreq      80                                                         CLE028
- 
+
       **  If Portfolio Reference is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
- 
+
      C                   Eval      PTFR = P_PortDefn
      C                   Eval      HLEX = *blanks
- 
+
       **  Update appropriate record.
      C                   Select                                                 Begin Select
- 
+
      C     *in06         Wheneq    True                                         Loans
      C                   Except    CLOANP_U
- 
+
      C     *in07         Wheneq    True                                         Matured loans
      C                   Except    CLOANZ_U
- 
+
      C                   Endsl                                                  End Select
- 
+
      C                   Endif                                                  End PTFR
- 
+
      C                   Endif                                                  End PTYP
- 
+
       **  Read next loan for customer.
      C     K_CustNum     Reade     PMCLONL0                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **               Account Details file processing                *
       *================================================================
@@ -1189,112 +1192,112 @@
      C***  K_CustNum     Reade     ACCNT                                  73                  224860
       ***                                                                                     224860
      C***                Enddo                                                                224860
- 
+
       *================================================================
       **            Customer Average Prices file processing           *
       *================================================================
- 
+
       **  Position to first Historic Customer Average Price for customer.
      C     K_CustNum     Setll     CAPRH
      C     K_CustNum     Reade     CAPRH                                  73
- 
+
       **  Do while average prices to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
      C     RECI          Ifne      '*'                                          Begin RECI
      C     RECI          Andne     'C'
      C                   Exsr      #P04
- 
+
      C                   Endif                                                  End RECI
- 
+
       **  Read next average price for customer.
      C     K_CustNum     Reade     CAPRH                                  73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *---------------------------------------------------------------*
       **  Perform following only if Jyske Enhancements feature        *
       **  is installed.                                               *
       *                                                               *
      C     S01496        Ifeq      'Y'                                          Begin S01496
- 
+
       *================================================================
       **         Customer Depot Positions by Date processing          *
       *================================================================
- 
+
       **  Position to first Depot Position for customer.
      C     K_CustNum     Setll     CDEPD
      C     K_CustNum     Reade     CDEPD                                  73
- 
+
       **  Do while Depot Positions to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
      C                   Except    CDEP_U
- 
+
      C                   Endif                                                  End PTFR
- 
+
       **  Read next Depot Position for customer.
      C     K_CustNum     Reade     CDEPD                                  73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **  Allocations by customer and portfolio reference processing  *
       *================================================================
- 
+
       **  Position to first Allocation for customer.
      C     K_CustNum     Setll     SEERALL3
      C     K_CustNum     Reade     SEERALL3                               73
- 
+
       **  Do while Allocations to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     VCPTFR        Ifeq      *blanks                                      Begin VCPTFR
      C                   Eval      VCPTFR = P_PortDefn
- 
+
       **  Update Allocation record.
      C                   Except    SEERAL_U
- 
+
      C                   Endif                                                  End VCPTFR
- 
+
       **  Read next Depot Position for customer.
      C     K_CustNum     Reade     SEERALL3                               73
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **   General Blocks by Customer processing
       *================================================================
- 
+
       **  Position to first General Block for customer.
      C     K_CustNum     Setll     SEBLKPL4
      C     K_CustNum     Reade     SEBLKPL4                               73
- 
+
       **  Do while General Blocks to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     VDPTFR        Ifeq      *blanks                                      Begin VDPTFR
      C                   Eval      VDPTFR = P_PortDefn
- 
+
       **  Update General Block record.
      C                   Except    SEBLKP_U
- 
+
      C                   Endif                                                  End VDPTFR
- 
+
       **  Read next General Block for customer.
      C     K_CustNum     Reade     SEBLKPL4                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
      C                   Endif                                                  End S01496
       *                                                               *
       **  End of S01496 = 'Y'                                         *
       *---------------------------------------------------------------*
- 
+
                                                                                 199015
       *---------------------------------------------------------------*         199015
       **  Perform following only if Corporate Actions feature         *         199015
@@ -1304,168 +1307,168 @@
       *================================================================
       **  Corporate Actions Allocations processing                    *
       *================================================================
- 
+
       **  Position to first Corporate Actions Allocation for customer.
      C     K_CustNum     Setll     SECOAL11
      C     K_CustNum     Reade     SECOAL11                               73
- 
+
       **  Do while Allocations to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     MCPTFR        Ifeq      *blanks                                      Begin MCPTFR
      C                   Eval      MCPTFR = P_PortDefn
- 
+
       **  Update Allocation record.
      C                   Except    SECOAL_U
- 
+
      C                   Endif                                                  End MCPTFR
- 
+
       **  Read next Corporate Actions Allocation for customer
      C     K_CustNum     Reade     SECOAL11                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **  Corporate Actions Affected Positions processing             *
       *================================================================
- 
+
       **  Position to first Corporate Actions Affected Position for customer.
      C     K_CustNum     Setll     SECOAPL1
      C     K_CustNum     Reade     SECOAPL1                               73
- 
+
       **  Do while Affected Positions to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     MXPTFR        Ifeq      *blanks                                      Begin MXPTFR
      C                   Eval      MXPTFR = P_PortDefn
- 
+
       **  Update Corporate Actions Affected Positions record.
      C                   Except    SECOAP_U
- 
+
      C                   Endif                                                  End MXPTFR
- 
+
       **  Read next Corporate Actions Affected Position for customer.
      C     K_CustNum     Reade     SECOAPL1                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **  Corporate Actions Blocked Positions processing              *
       *================================================================
- 
+
       **  Position to first Corporate Actions Blocked Position for customer.
      C     K_CustNum     Setll     SECOBKL3
      C     K_CustNum     Reade     SECOBKL3                               73
- 
+
       **  Do while Blocked Positions to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     MUPTFR        Ifeq      *blanks                                      Begin MCPTFR
      C                   Eval      MUPTFR = P_PortDefn
- 
+
       **  Update Corporate Actions Blocked Position record.
      C                   Except    SECOBK_U
- 
+
      C                   Endif                                                  End MCPTFR
- 
+
       **  Read next Corporate Actions Blocked Position for customer
      C     K_CustNum     Reade     SECOBKL3                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **  Corporate Actions Correspondance Details processing         *
       *================================================================
- 
+
       **  Position to first Corporate Actions Correspondance Detail for customer.
      C     K_CustNum     Setll     SECOCOL1
      C     K_CustNum     Reade     SECOCOL1                               73
- 
+
       **  Do while Correspondance Details to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     MVPTFR        Ifeq      *blanks                                      Begin MVPTFR
      C                   Eval      MVPTFR = P_PortDefn
- 
+
       **  Update Corporate Actions Correspondance Details record.
      C                   Except    SECOCO_U
- 
+
      C                   Endif                                                  End MVPTFR
- 
+
       **  Read next Corporate Actions Correspondance Details for customer
      C     K_CustNum     Reade     SECOCOL1                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **  Corporate Actions Instructions processing                   *
       *================================================================
- 
+
       **  Position to first Corporate Actions Instruction for customer.
      C     K_CustNum     Setll     SECOSIL3
      C     K_CustNum     Reade     SECOSIL3                               73
- 
+
       **  Do while Instructions to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     MOPTFR        Ifeq      *blanks                                      Begin MOPTFR
      C                   Eval      MOPTFR = P_PortDefn
- 
+
       **  Update Corporate Actions Instructions record.
      C                   Except    SECOSI_U
- 
+
      C                   Endif                                                  End MOPTFR
- 
+
       **  Read next Corporate Actions Instruction for customer
      C     K_CustNum     Reade     SECOSIL3                               73
- 
+
      C                   Enddo                                                  End Do_W_N73
                                                                                 199015
      C                   Endif                                                  199015
       *                                                               *         199015
       **  End of CSE007 = 'Y'                                         *         199015
       *---------------------------------------------------------------*         199015
- 
+
       *================================================================
       **  Customer Position Profit Centre processing                  *
       *================================================================
- 
+
       **  Position to first Customer Position Profit Centre.
      C     K_CustNum     Setll     SEPPCL0
      C     K_CustNum     Reade     SEPPCL0                                73
- 
+
       **  Do while Position Profit Centre to be processed for customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73
- 
+
       **  If Portfolio Reference is blank.
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
- 
+
       **  Update Customer Position Profit Centre record.
      C                   Except    SEPCC_U
- 
+
      C                   Endif                                                  End PTFR
- 
+
       **  Read next Position Profit Centre for customer.
      C     K_CustNum     Reade     SEPPCL0                                73
- 
+
      C                   Enddo                                                  End Do_W_N73
- 
+
       *================================================================
       **              Customer Positions file processing              *
       *================================================================
- 
+
       **  Calculate starting position.
      C                   Exsr      #STRPOS
- 
+
       **   Access portfolio positions trailer
      C                   Read      PMCPOSPA                               72
- 
+
      C     *in72         Ifeq      True                                         Begin *in72
      C     *lock         In        Lda
      C                   Eval      Dbfile = 'PMPOSPA'                           ***************
@@ -1473,13 +1476,13 @@
      C                   Eval      DBKey = '*FIRST'                             ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  *in72
- 
+
       **  Calculate number of positions.
      C                   Add       W_WRIT        QANORE
      C                   Sub       W_DELT        QANORE
- 
+
      C                   Update    PMCPOSZ0
                                                                                               233196
       ** Taxation of Savings Income Processing                                                233196
@@ -1542,14 +1545,14 @@
      C     K_CustNum     Reade     ACCNT                                  73    224860
                                                                                 224860
      C                   Enddo                                                  224860
- 
+
       **  Output Audit Report.
      C                   Exsr      #Audit
- 
+
       **  Exit from program.
      C                   Eval      *inlr = True
      C                   Return
- 
+
       /Eject
       *****************************************************************
       /Title SR/#STRPOS
@@ -1562,54 +1565,54 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     #STRPOS       Begsr                                                  ** #STRPOS SR **
- 
+
      C                   Eval      W_TSNT = 0
      C                   Eval      W_TSNV = 0
      C                   Eval      W_TSEX = 0
      C                   Eval      W_TSPT = 0
      C                   Eval      W_TSPV = 0
- 
+
      C                   Eval      W_CSBA = *blanks
      C                   Eval      W_CSDA = 0
      C                   Eval      W_PMFlag = 'N'
- 
+
       **  Position to first Position for customer.
      C     K_CustNum     Setll     PMCPSNL0
      C     K_CustNum     Reade     PMCPSNL0                               73
- 
+
       **  Do while Positions to be processed for Customer.
      C     *in73         Doweq     False                                        Begin Do_W_N73_1
                                                                                 ***************
       **  Access to Security Details.
- 
+
      C                   Eval      K_Security = CSSC
                                                                                 ***************
      C                   Eval      W_DBAse = 13                                 * Db Error 13 *
                                                                                 ***************
      C                   Exsr      #SECDET
- 
+
       **  Access to Investment Type Details.
                                                                                 ***************
      C                   Eval      W_DBAse = 13                                 * Db Error 13 *
                                                                                 ***************
      C                   Exsr      #INVTYP
- 
+
       **  Do while Positions to be processed for Customer and Security.
      C     *in73         Doweq     False                                        Begin Do_W_N73_2
- 
+
       **  If branch has changed or Position Date is greater than
       **  Backvalue Date.
      C     CSBA          Ifne      W_CSBA                                       Begin CSBA
      C     CSDA          Orgt      W_VDNA
- 
+
       **  If processing flag is on.
      C     W_PMFlag      Ifeq      'Y'                                          Begin W_PMFlag
- 
+
       **  Calculate totals and reset flag and fields.
      C                   Exsr      #TOTPOS
- 
+
      C                   Eval      W_PMFlag = 'N'
      C                   Eval      W_CSBA = *blanks
      C                   Eval      W_CSDA = 0
@@ -1619,11 +1622,11 @@
      C                   Eval      W_CSEX = 0
      C                   Eval      W_CSPT = 0
      C                   Eval      W_CSPV = 0
- 
+
      C                   End                                                    End W_PMFlag
- 
+
      C                   End                                                    End CSBA
- 
+
       **  If Position Date is less than Back value Date, seton flag and
       **  save detail fields.
      C     CSDA          Ifle      W_VDNA                                       Begin CSDA
@@ -1636,20 +1639,20 @@
      C                   Eval      W_CSEX = CSEX
      C                   Eval      W_CSPT = CSPT
      C                   Eval      W_CSPV = CSPV
- 
+
      C                   Endif                                                  End CSDA
- 
+
       **  Read next Position details for Customer and Security.
      C     K_CustNum     Reade     PMCPSNL0                               73
- 
+
      C                   End                                                    End Do_W_N73_2
- 
+
       **  If processing flag is on.
      C     W_PMFlag      Ifeq      'Y'                                          Begin W_PMFlag
- 
+
       **  Calculate totals and reset flag and fields.
      C                   Exsr      #TOTPOS
- 
+
      C                   Eval      W_PMFlag = 'N'
      C                   Eval      W_CSBA = *blanks
      C                   Eval      W_CSDA = 0
@@ -1659,15 +1662,15 @@
      C                   Eval      W_CSEX = 0
      C                   Eval      W_CSPT = 0
      C                   Eval      W_CSPV = 0
- 
+
      C                   End                                                    End W_PMFlag
- 
+
       **  Calculate details for output to PF/PMCPOSPD.
      C                   Exsr      #P06
- 
+
       **  Read next Position details for Customer.
      C     K_CustNum     Reade     PMCPSNL0                               73
- 
+
      C                   Enddo                                                  End Do_W_N73_1
      C*
      C                   Endsr                                                  ** #STRPOS SR **
@@ -1684,11 +1687,11 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     #SECDET       Begsr                                                  ** #SECDET SR **
- 
+
      C     K_Security    Chain     SECTY                              74
- 
+
       **  If Security Details were not found, handel database error.
      C     *in74         Ifeq      True                                         Begin *in74
      C     *lock         In        Lda
@@ -1697,9 +1700,9 @@
      C                   Eval      DBAse  = W_DBase
      C                   Out       Lda
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End *in74
- 
+
      C                   Endsr                                                  ** #SECDET SR **
       /Eject
       *****************************************************************
@@ -1713,9 +1716,9 @@
       *  Calls: #P07 - to calculate Trade Portfolio Value         *   *
       *         #P08 - to calculate Depot Movement Portfolio Value*   *
       *****************************************************************
- 
+
      C     #P04          Begsr                                                  ** #P04 SR **
- 
+
       **  For settlement action or price change, set up new PM fields
       **  to blank or zero and update file.
      C     CSSE          Ifeq      '0'                                          Begin CSSE
@@ -1730,28 +1733,28 @@
      C                   Eval      CFXR = 0
      C                   Eval      CYLD = 0
      C                   Eval      OTHD = 0
- 
+
      C                   Except    CAPRH_U
- 
+
      C                   Endif                                                  End CSSE
- 
+
       **  Process trade action or depot movement.
      C     CSSE          Ifeq      '1'                                          Begin CSSE
      C     CSSE          Oreq      '3'
- 
+
       **  Access to Security Details to get Nominal Currency.
      C                   Eval      K_Security = CSSC
                                                                                 ***************
      C                   Eval      W_DBAse = 13                                 * Db Error 13 *
                                                                                 ***************
      C                   Exsr      #SECDET
- 
+
       **  Access to Investment Type Details to get Processing Type.
                                                                                 ***************
      C                   Eval      W_DBAse = 13                                 * Db Error 13 *
                                                                                 ***************
      C                   Exsr      #INVTYP
- 
+
       **  Access to Currency Details to get number of decimal places.
                                                                                 ***************
      C                   Eval      W_DBAse = 12                                 * Db Error 12 *
@@ -1759,80 +1762,80 @@
      C                   Eval      P_Curr = NMCY                                208648
       *                                                                         208648
      C                   Exsr      #CCYDET
- 
+
       **---------*
       **  Trade  *
       **---------*
- 
+
      C     CSSE          Ifeq      '1'                                          Begin Trade
      C                   Eval      W_TradeFound = 'Y'
      C                   Eval      K_TradeRef = CSRF
- 
+
       **  Define Key List to access to SE Trade Details.
      C     K_TradCust    Klist
      C                   Kfld                    K_CustNum
      C                   Kfld                    K_TradeRef
- 
+
       **  Access to SE Trade Details for Customer.
      C     K_TradCust    Chain     TRADCU                             74
- 
+
       **  If SE Trade was not found.
      C     *in74         Ifeq      True                                         Begin *in74
- 
+
       **  Access to SE Historic Trade Details.
      C     CSRF          Chain     HSTTTR                             74
- 
+
       **  If SE Trade was not found, set up flag.
      C     *IN74         Ifeq      True                                         Begin *in74_2
      C                   Eval      W_TradeFound = 'N'
- 
+
      C                   Endif                                                  End *in74_2
- 
+
      C                   Endif                                                  End *in74
- 
+
       **  Calculate Trade Portfolio value.
      C     W_TradeFound  Ifeq      'Y'                                          Begin W_TradeFound
      C                   Eval      ITRA = W_ITRA
      C                   Exsr      #P07
- 
+
      C                   Endif                                                  End W_TradeFound
- 
+
      C                   Endif                                                  End Trade
- 
+
       **------------------*
       **  Depot Movement  *
       **------------------*
- 
+
      C     CSSE          Ifeq      '3'                                          Begin Depot Movement
- 
+
       **  Calculate Depot Movement Portfolio value.
      C                   Exsr      #P08
- 
+
      C                   Endif                                                  End Depot Movement
- 
+
       **  If closed or deleted SE Trade, bypass processing.
      C     CSSE          Ifeq      '1'                                          Begin Bypass
      C     W_RECI        Andeq     'C'
      C     CSSE          Oreq      '1'
      C     W_RECI        Andeq     '*'
      C                   Goto      @EndP04
- 
+
      C                   Endif                                                  End Bypass
- 
+
       **  If Trade was found.
      C     W_TradeFound  Ifeq      'Y'                                          Begin W_TradeFound
- 
+
       **  Update PF/CAPRHD.
      C                   Exsr      #CAPRHD
- 
+
      C                   Endif                                                  End W_TradeFound
- 
+
      C                   Endif                                                  End CSSE
- 
+
      C     @EndP04       Tag
- 
+
      C                   Endsr                                                  ** #P04 SR **
- 
+
       /Eject
       *****************************************************************
       /Title SR/#INVTYP
@@ -1845,16 +1848,16 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     #INVTYP       Begsr                                                  **#INVTYP SR **
- 
+
      C                   Call      'AOINVTR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*KEY  '      P_Optn
      C                   Parm      SITP          P_Invt
      C                   Parm      NMCY          P_Curr
      C     Invtpd        Parm      Invtpd        Dsfdy
- 
+
       **  If Investment Type Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -1863,9 +1866,9 @@
      C     P_Curr        Cat       P_Invt:1      DBKey                          ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   Endsr                                                  ** #INVTYP SR **
       /Eject
       *****************************************************************
@@ -1880,29 +1883,29 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     #TOTPOS       Begsr                                                  ** #TOTPOS SR **
- 
+
       **  Total Trade Date Nominal.
      C                   Eval      W_TSNT = W_TSNT + W_CSNT
- 
+
       **  Total Value Date Nominal.
      C                   Eval      W_TSNV = W_TSNV + W_CSNV
- 
+
       **  Total Ex-coupon Nominal.
      C                   Eval      W_TSEX = W_TSEX + W_CSEX
- 
+
       **  Total Trade Date AP Numerator.
      C                   Eval      W_TSPT = W_TSPT + W_CSPT
- 
+
       **  Total Value Date AP Numerator.
      C                   Eval      W_TSPV = W_TSPV + W_CSPV
- 
+
      C     W_CSDA        Ifgt      W_DATG                                       Begin W_CSDA
      C                   Eval      W_DATG = W_CSDA
- 
+
      C                   Endif                                                  End W_CSDA
- 
+
      C                   Endsr                                                  ** #TOTPOS SR **
 1734
       /Eject
@@ -1917,23 +1920,23 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     #P06          Begsr                                                  ** #P06 SR **
- 
+
       **  If Trade Date Nominal is different from 0, write Trade Date Position.
      C     W_TSNT        Ifne      0                                            Begin W_TSNT
      C                   Eval      W_WRIT = W_WRIT + 1
      C                   Exsr      #TRDTPO
- 
+
      C                   Endif                                                  End W_TSNT
- 
+
       **  If Value Date Nominal is different from 0, write Value Date Position.
      C     W_TSNV        Ifne      0                                            Begin W_TSNV
      C                   Eval      W_WRIT = W_WRIT + 1
      C                   Exsr      #VLDTPO
- 
+
      C                   Endif                                                  End W_TSNV
- 
+
       **  Reset work fields to 0.
      C                   Eval      W_TSNT = 0
      C                   Eval      W_TSNV = 0
@@ -1955,21 +1958,21 @@
       *  Calls:     None                                              *
       *                                                               *
       *****************************************************************
- 
+
      C     #P07          Begsr                                                  ** #P07 SR **
- 
+
       **  Calculate the trade value in settlement currency.
      C                   Eval      W_CTVLSC = TVSN + TVSP + TOSV
- 
+
       **  Calculate the exchange rate from nominal to settlement currency.
      C     TCTR          Ifne      0                                            Begin TCTR
      C                   Eval(H)   W_ERNSC = W_CTVLSC / TCTR
- 
+
      C                   Else                                                   Else TCTR
      C                   Eval      W_ERNSC = 0
- 
+
      C                   Endif                                                  End TCTR
- 
+
       **  Convert Purchased Interests, Charges & Commissions
       **  to Settlement Currency.
      C                   Eval      W_CCTL = TBCA + TCCA
@@ -1978,60 +1981,60 @@
      C                   Eval(H)   W_ITRASC = ITRA * W_ERNSC
      C                   Eval(H)   W_CCTLSC = W_CCTL * W_ERNSC
      C                   Eval(H)   W_CCCTSC = W_CCCT * W_ERNSC
- 
+
       **  Subtract Purchased Interests, Charges and Commissions (if required)
       **  from total value to get Customer Trade Value in Settlement Currency.
      C                   Eval      W_SETAM = W_CTVLSC - W_ITRASC                Interests
- 
+
      C     BVCMCP        Ifeq      'N'                                          Begin BVCMCP
      C                   Eval      W_SETAM = W_SETAM - W_CCTLSC                 Charges
- 
+
      C                   Endif                                                  End BVCMCP
- 
+
      C     BVCCAP        Ifeq      'N'                                          Begin BVCCAP
      C                   Eval      W_SETAM = W_SETAM - W_CCCTSC                 Commissions
- 
+
      C                   Endif                                                  End BVCCAP
- 
+
       **  If Settlement Currency is equal to Customer Base Currency.
      C     SETC          Ifeq      P_PortCcy                                    Begin SETC
      C                   Eval      CFAP = W_SETAM
      C                   Eval      SPXR = 1
      C                   Eval      SPMD = 'M'
- 
+
      C                   Else                                                   Else SETC
- 
+
       **  Set ZAMTF equal to Trade Value in Settlement Currency.
      C                   Eval      ZAMTF = W_SETAM
- 
+
       **  Set ZCCYF equal to Settlement Currency from LF/TRADS.
      C                   Eval      ZCCYF = SETC
- 
+
       **  Set ZCCYT equal to Customer Base Currency.
      C                   Eval       ZCCYT = P_PortCcy
- 
+
       **  Determine Exchange Rate for Settlement Currency.
      C                   Eval      K_CurrCode = SETC
      C                   Eval      K_PayDate  = TDDT
- 
+
      C                   Exsr      #PMRATE
- 
+
       **  Set ZRATEF and ZMDINF equal to the Spot Rate and Multiply/Divide
       **  Indicator determined by #PMRATE subroutine.
      C                   Eval      ZRATEF = W_SPOT
      C                   Eval      ZMDINF = W_MDIN
- 
+
       **  Determine Exchange Rate for Customer Base Currency.
      C                   Eval      K_CurrCode = P_PortCcy
      C                   Eval      K_PayDate  = TDDT
- 
+
      C                   Exsr      #PMRATE
- 
+
       **  Set ZRATET and ZMDINT equel to the Spot Rate and Multiply/Divide
       **  Indicator determined by #PMRATE subroutine.
      C                   Eval      ZRATET = W_SPOT
      C                   Eval      ZMDINT = W_MDIN
- 
+
       **  Access to Currency Details, by using Access Object,
       **  to get Settlement Currency Number of Decimal Places.
                                                                                 ***************
@@ -2040,25 +2043,25 @@
      C                   Eval      P_Curr = NMCY                                208648
       *                                                                         208648
      C                   Exsr      #CCYDET
- 
+
      C                   Eval      ZCDPF = A6NBDP
- 
+
       **  Set ZCDPT equal to the Customer Base Currency Number of
       **  Decimal Places.
      C                   Eval      ZCDPT = P_PortCdp
- 
+
       **  Convert Countervalue from Settlement Currency to
       **  Customer Base Currency.
      C                   Exsr      #ZCCYCN
- 
+
      C                   Eval      CFAP = ZAMTT
      C                   Eval      SPXR = ZCRSRT
      C                   Eval      SPMD = ZCRSMD
- 
+
      C                   Endif                                                  End SETC
- 
+
      C                   Endsr                                                  ** #P07 SR **
- 
+
       /Eject
       *****************************************************************
       /Title SR/#P08
@@ -2071,60 +2074,60 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #P08          Begsr                                                  ** #P08 SR **
- 
+
       **  Set ZAMTF equal to the Depot Movement Value in Nominal Currency.
      C     CSTB          Ifne      0                                            Begin CSTB
      C                   Eval      ZAMTF = CSTB
- 
+
      C                   Else                                                   Else CSTB
      C                   Eval      ZAMTF = CSVB
- 
+
      C                   End                                                    End CSTB
- 
+
       **  Set ZCCYF equal to the Nominal Currency from PF/SECTYD.
      C                   Eval      ZCCYF = NMCY
- 
+
       **  Set ZCCYT equal to the Customer Base Currency.
      C                   Eval      ZCCYT = P_PortCcy
- 
+
       **  Determine Exchange rate for the Nominal Currency.
      C                   Eval      K_CurrCode = NMCY
- 
+
       **  Movement Date In or Out, depending on which is different from 0.
      C                   Eval      K_PayDate = CSDA
- 
+
      C                   Exsr      #PMRATE
- 
+
       **  Set ZRATEF and ZMDINF equal to the Spot Rate and Multiply/Divide
       **  Indicator determined by #PMRATE subroutine.
      C                   Eval      ZRATEF = W_SPOT
      C                   Eval      ZMDINF = W_MDIN
- 
+
       **  Determine Exchange Rate for the Customer Base Currency
       **  The Date is as above.
      C                   Eval      K_CurrCode = P_PortCcy
- 
+
      C                   Exsr      #PMRATE
- 
+
       **  Set ZRATET and ZMDINT equal to the Spot Rate and Multiply/Divide
       **  Indictaor determined by #PMRATE subroutine.
      C                   Eval      ZRATET = W_SPOT
      C                   Eval      ZMDINT = W_MDIN
- 
+
       **  Set ZCDPF equal to the Nominal Currency Number
       **  of Decimal Places.
      C                   Eval      ZCDPF = A6NBDP
- 
+
       **  Set ZCDPT equal to the Customer Base Currency Number
       **  of Decimal Places.
      C                   Eval      ZCDPT = P_PortCdp
- 
+
      C                   Exsr      #ZCCYCN
- 
+
      C                   Eval      CFAP = ZAMTT
- 
+
      C                   Endsr                                                  ** #P08 SR **
       /Eject
       *****************************************************************
@@ -2139,25 +2142,25 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #PMRATE       Begsr                                                  ** #PMRATE SR **
- 
+
       ****Define*Key*List*to*access*to*Portfolio*Historic*Exchange*Rates.**     208648
       **  Define Key List to access to SD Historic Exchange Rates.              208648
      C*****K_PMHsex      Klist                                                  208648
      C     K_SDHsex      Klist                                                  208648
      C                   Kfld                    K_CurrCode
      C                   Kfld                    K_PayDate
- 
+
       **  Position to most recent Historic Exchange Rate.
      C*****K_PMHsex      Setgt     PMHSEXPD                                     208648
      C*****K_CurrCode    Readpe    PMHSEXPD                               75    208648
      C     K_SDHsex      Setgt     SDCUHSL2                                     208648
      C     K_CurrCode    Readpe    SDCUHSL2                               75    208648
- 
+
       **  If an Exchange Rate was found for the currency.
      C     *in75         Ifeq      False                                        Begin greater date
- 
+
       **  Set Spot Rate and Multiply/Divide Indicator equal to
       ****Spot*Rate*and*Multiply/Divide Indicator from PF/PMHSEXPD.             208648
      C*****              Eval      W_SPOT = Q8SPOT                              208648
@@ -2177,18 +2180,18 @@
                                                                                 208648
       **  Set the Number of decimal places from PF/SDCURRPD                     208648
      C                   Eval      W_CDP  = A6NBDP                              208648
- 
+
       **  Otherwise, if record was not found, get next available Rate.
      C                   Else                                                   Else greater date
- 
+
      C*****K_PMHsex      Setll     PMHSEXPD                                     208648
      C*****K_CurrCode    Reade     PMHSEXPD                               75    208648
      C     K_SDHsex      Setll     SDCUHSL2                                     208648
      C     K_CurrCode    Reade     SDCUHSL2                               75    208648
- 
+
       **  If an Exchange Rate was found for the currency.
      C     *IN75         Ifeq      '0'                                          Begin lower date
- 
+
       **  Set Spot Rate and Multiply/Divide Indicator equal to
       ****Spot*Rate*and*Multiply/Divide Indicator from PF/PMHSEXPD.             208648
       **  Spot Rate and Multiply/Divide Indicator from LF/SDCUHSL2.             208648
@@ -2207,29 +2210,29 @@
                                                                                 208648
       **  Set the Number of decimal places from PF/SDCURRPD                     208648
      C                   Eval      W_CDP  = A6NBDP                              208648
- 
+
       **  Otherwise, if record was not found, access to Currency Details.
      C                   Else                                                   Else lower date
- 
+
       **  Set up key to access to Currency Details.
      C                   Eval      P_Curr = K_CurrCode
- 
+
       **  Set up database error.                                                ***************
      C                   Eval      W_DBAse = 13                                 * Db Error 13 *
                                                                                 ***************
      C                   Exsr      #CCYDET
- 
+
       **  Set Spot Rate and Multiply/Divide Indicator equal to
       **  Spot Rate and Multiply/Divide Indicator from PF/SDCURRPD.
      C                   Eval      W_SPOT = A6SPRT
       **  Set the Number of decimal places from PF/SDCURRPD                     208648
      C                   Eval      W_CDP  = A6NBDP                              208648
      C                   Eval      W_MDIN = A6MDIN
- 
+
      C                   Endif                                                  End lower date
- 
+
      C                   Endif                                                  End greater date
- 
+
      C                   Endsr                                                  ** #PMRATE SR **
       /Eject
       *****************************************************************
@@ -2243,21 +2246,21 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     #TRDTPO       Begsr                                                  ** #TRDTPO SR **
- 
+
      C                   MOVE      'T'           QATVDA
      C                   Z-ADD     W_TSNT        QANOML
      C                   Z-ADD     W_TSPT        QAAPNM
      C                   Z-ADD     W_TSNV        QAOTNM
      C                   MOVE      'N'           QAPFMR
- 
+
       **  Set up common Customer Position fields.
      C                   Exsr      #SETCPO
- 
+
       **  Write new Portfolio Position.
      C                   Write     PMCPOSP0
- 
+
      C                   Endsr                                                  ** #TRDTPO SR **
       /Eject
       *****************************************************************
@@ -2271,7 +2274,7 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     #VLDTPO       Begsr                                                  ** #VLDTPO SR **
      C*
      C                   MOVE      'V'           QATVDA
@@ -2279,10 +2282,10 @@
      C                   Z-ADD     W_TSPV        QAAPNM
      C                   Z-ADD     W_TSNT        QAOTNM
      C                   MOVE      'Y'           QAPFMR
- 
+
       **  Set up common Customer Position fields.
      C                   Exsr      #SETCPO
- 
+
       **  Write new Portfolio Position.
      C                   Write     PMCPOSP0
      C*
@@ -2299,9 +2302,9 @@
       *  Calls:                                                       *
       *                                                               *
       *****************************************************************
- 
+
      C     #SETCPO       Begsr                                                  ** #SETCPO SR **
- 
+
      C                   MOVE      'D'           QARECI
      C**********         Z-ADD     K_CustNum     QACNUM                                       CSD027
      C                   EVAL      QACNUM = K_CustNum                                         CSD027
@@ -2309,7 +2312,7 @@
      C                   MOVE      CSSC          QATDSS
      C                   Z-ADD     W_DATG        QAPDAT
      C                   Z-ADD     W_TSEX        QACSEX
- 
+
       **  Calculate FX AP Numerator. To do this:
       **  1 - Determine Cross Rate Nominal To Portfolio Currency on
       **      Position Date.
@@ -2317,9 +2320,9 @@
      C                   Z-ADD     *ZEROS        QAFXAP
      C                   MOVE      NMCY          K_CurrCode
      C                   Z-ADD     QAPDAT        K_PayDate
- 
+
      C                   Exsr      #PMRATE
- 
+
      C                   MOVE      NMCY          ZCCYF
      C                   Z-ADD     W_SPOT        ZRATEF
      C                   MOVEL     W_MDIN        ZMDINF
@@ -2327,24 +2330,24 @@
      C*****              Z-ADD     Q8CDP         WS8CDP            1 0          208648
      C                   Z-ADD     W_CDP         ZCDPF                          208648
      C                   Z-ADD     W_CDP         WS8CDP            1 0          208648
- 
+
       **  Perform #PMRATE subroutine for Customer Base Currency.
      C                   MOVEL     P_PortCcy     K_CurrCode
- 
+
      C                   Exsr      #PMRATE
- 
+
      C                   MOVE      P_PortCcy     ZCCYT
      C                   Z-ADD     W_SPOT        ZRATET
      C                   MOVEL     W_MDIN        ZMDINT
      C                   Z-ADD     P_PortCdp     ZCDPT
- 
+
       **  Convert AP Numerator into FX AP Numerator.
      C                   Z-ADD     QAAPNM        ZAMTF
- 
+
      C                   Exsr      #ZCCYCN
- 
+
      C                   Z-ADD     ZAMTT         QAFXAP
- 
+
      C                   Z-ADD     *ZEROS        QAPILP
      C                   Z-ADD     *ZEROS        QAACDI
      C                   Z-ADD     *ZEROS        QABVLD
@@ -2352,7 +2355,7 @@
      C                   Z-ADD     NMDP          QATNMD
      C                   MOVE      P_PortCcy     QAPTCY
      C                   Z-ADD     P_PortCdp     QAPCDP
- 
+
       **  Calculate yield on Position if required.
      C                   Z-ADD     *ZEROS        QAAYNM
      C     PROT          Ifeq      '1'                                          Begin PROT
@@ -2361,72 +2364,72 @@
      C     PROT          Oreq      '6'
      C     PROT          Oreq      '8'
      C     PROT          Oreq      '9'
- 
+
      C     MATY          Ifne      0                                            Begin MATY
- 
+
       **  If the Security is Interest Bearing, use AIBD method, else DISCOUNT.
      C     CD01          Ifne      0                                            Begin CD01
      C                   Eval      SYBS = 'A '
- 
+
      C                   Else                                                   Else CD01
      C                   Eval      SYBS = 'DA'
- 
+
      C                   Endif                                                  End CD01
- 
+
      C     DYBS          Ifeq      '4'                                          Begin DYBS
      C                   Eval      DYBS = '3'
      C                   Eval      DVBS = '1'
- 
+
      C                   Endif                                                  End DYBS
- 
+
       **  Price used in calculations should be average price.
      C                   Z-ADD     QANOML        ZNOML
      C                   Z-ADD     QAAPNM        ZVALU
      C                   Z-ADD     NMDP          ZNMDP
      C                   Z-ADD     WS8CDP        ZNMCD
      C                   MOVE      SPBS          ZPRCB
- 
+
      C                   Exsr      #ZAVPRC
- 
+
      C                   Z-ADD     ZAVPR         ZPRICE
      C                   Z-ADD     QAPDAT        ZFDATE
      C                   Z-ADD     ZFDATE        ECD
- 
+
       **  If live Security.
      C     SERECI        Ifeq      'D'                                          Begin SERECI
- 
+
      C                   Exsr      #ZYLDO
- 
+
       **  Convert yield returned from SR/#ZYLDO to the average yield
       **  Numerator to be output on PMCPOSPD.
      C                   Z-ADD     QANOML        ZNOML
      C                   Z-ADD     ZYLDOT        ZAVYD
      C                   Z-ADD     NMDP          ZNMDP
      C                   Z-ADD     WS8CDP        ZNMCD
- 
+
       **  Calculate AY Numerator.
      C                   Exsr      ZAYNUM
- 
+
      C                   Else                                                   Else SERECI
      C                   Z-ADD     0             ZVALU
- 
+
      C                   Endif                                                  End SERECI
      C                   Z-ADD     ZVALU         QAAYNM
- 
+
      C                   END                                                    End MATY
- 
+
      C                   END                                                    End PROT
- 
+
      C                   MOVE      P_PortCcy     QACSBY
      C                   Z-ADD     P_PortCdp     QABYDP
- 
+
       **  Get Customer Classification from SDSECSPD.
      C                   Call      'AOSECSR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*KEY  '      P_Optn
      C                   Parm      P_CustNum     P_Cust
      C     Sdsecs        Parm      Sdsecs        Dssdy
- 
+
       **  If Security Client Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -2436,11 +2439,11 @@
      C                   Eval      Dbkey  = P_CustNum                           ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   MOVE      BFCLAS        QACLAS
- 
+
       **  Get Account Officer Code from Customer Details file.
      C                   Eval      P_Cust = P_CustNum
      C                   MOVEL     P_CustNum     P_Cust
@@ -2450,7 +2453,7 @@
      C                   Parm      P_CustNum     P_Cust
      C                   Parm      *blanks       P_Kyst
      C     Sdcust        Parm      Sdcust        Dsldy
- 
+
       **  If Customer Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -2460,18 +2463,18 @@
      C                   Eval      Dbkey  = P_Cust                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   MOVE      BBACOC        QAACOC
- 
+
      C                   Z-ADD     W_TSEX        QAOTEX
      C                   MOVE      'Y'           QAAPBC
      C                   MOVE      *BLANKS       QAFLEX
      C                   MOVE      SCOR          QACOLC
      C                   MOVE      BBBRCD        QABRCD
      C                   Z-ADD     0             QANPDT
- 
+
      C                   Endsr                                                  ** #TRDTPO SR **
       /Eject
       *****************************************************************
@@ -2485,91 +2488,91 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #CAPRHD       Begsr                                                  ** #CAPRHD SR **
- 
+
      C     CSTB          Ifne      0                                            Begin CSTB
- 
+
      C     CSDA          Ifgt      W_VDNA                                       Begin CSDA
      C                   Eval      PMTI = 'D'
- 
+
      C                   Else                                                   Else CSDA
      C                   Eval      PMTI = 'H'
- 
+
      C                   Endif                                                  End
- 
+
      C                   Else                                                   Else CSTB
      C                   Eval      PMTI = '*'
- 
+
      C                   Endif                                                  End CSTB
- 
+
      C     CSVB          Ifne      0                                            Begin CSVB
- 
+
      C     CSDA          Ifgt      W_VDNA                                       Begin CSDA
      C                   Eval      PMVI = 'D'
- 
+
      C                   Else                                                   Else CSDA
      C                   Eval      PMVI = 'H'
- 
+
      C                   Endif                                                  End CSDA
- 
+
      C                   Else                                                   Else CSVB
      C                   Eval      PMVI = '*'
- 
+
      C                   Endif                                                  End CSVB
- 
+
      C     PTFR          Ifeq      *blanks                                      Begin PTFR
      C                   Eval      PTFR = P_PortDefn
- 
+
      C                   Endif                                                  End PTFR
- 
+
      C     CSSE          Ifeq      '3'                                          Begin CSSE
      C                   Eval      ACIN = *blank
      C                   Eval      ITRA = 0
- 
+
      C     CSDA          Ifgt      W_VDNA                                       Begin CSDA
      C                   Eval      PMVI = 'D'
      C                   Eval      PMTI = 'D'
- 
+
      C                   Else                                                   Else CSDA
      C                   Eval      PMVI = 'H'
      C                   Eval      PMTI = 'H'
- 
+
      C                   Endif                                                  End CSDA
- 
+
      C                   Endif                                                  End CSSE
- 
+
      C     CSSE          Ifeq      '1'                                          Begin CSSE
      C                   Eval      ACIN = W_ACIN
      C                   Eval      ITRA = W_ITRA
- 
+
      C                   Endif                                                  End CSSE
- 
+
       **  CFAP HAS BEEN DETERMINED WITHIN P07 OR P08
- 
+
       **  Determine the Customer FX Rate, using standard
       **  subroutine #ZFXAVP.
      C     CSTB          Ifne      0                                            Begin CSTB
      C                   Z-add     CSTB          ZAPNM
      C                   Z-add     TDVD          OTHD
- 
+
      C                   Else                                                   Else CSTB
      C                   Z-add     CSVB          ZAPNM
      C                   Z-add     TDDT          OTHD
- 
+
      C                   Endif                                                  End CSTB
      C                   Z-add     CFAP          ZFXAP
      C                   Z-add     A6NBDP        ZNMCD
      C                   Z-add     P_PortCdp     ZPTCD
- 
+
      C                   Exsr      #ZFXAVP
- 
+
       **  Set Customer FX Rate on PF/CAPRHD equal to the average
       **  Exchange Rate ZAVFX from SR #ZFXAVP.
      C                   Z-add     ZAVFX         CFXR
- 
+
      C                   Z-add     0             CAVR
- 
+
       **  Calculate yield from the Trade/Depot Movement Price.
      C                   Z-add     *ZERO         CYLD
      C     PROT          Ifeq      '1'                                          Begin PROT
@@ -2578,54 +2581,54 @@
      C     PROT          Oreq      '6'
      C     PROT          Oreq      '8'
      C     PROT          Oreq      '9'
- 
+
      C     MATY          Ifne      0                                            Begin MATY
- 
+
       **  If the Security is Interest Bearing, use AIBD method,
       **  else DISCOUNT.
      C     CD01          Ifne      0                                            Begin CD01
      C                   Eval      SYBS = 'A '
- 
+
      C                   Else                                                   Else CD01
      C                   Eval      SYBS = 'DA'
- 
+
      C                   Endif                                                  End CD01
- 
+
      C     DYBS          Ifeq      '4'                                          Begin DYBS
      C                   Eval      DYBS = '3'
      C                   Eval      DVBS = '1'
- 
+
      C                   Endif                                                  End DYBS
- 
+
       **  If a Trade, calculate using price from Trade and
       **  Value Date from CAPRHD.
      C     CSSE          Ifeq      '1'                                          Begin CSSE
      C                   Z-ADD     PRIC          ZPRICE           15 8
      C                   Z-ADD     TDVD          ZFDATE            5 0
- 
+
       **  Otherwise, take Coupon Rate from Security Date from CAPRHD.
      C                   Else                                                   Else CSSE
      C                   Z-ADD     MKTP          ZPRICE
      C                   Z-ADD     CSDA          ZFDATE
- 
+
      C                   Endif                                                  End CSSE
      C                   Z-ADD     ZFDATE        ECD
      C     SERECI        Ifeq      'D'                                          Begin SERECI
      C                   Exsr      #ZYLDO
- 
+
      C                   Else                                                   Else SERECI
      C                   Eval      ZYLDOT = 0
- 
+
      C                   Endif                                                  End SERECI
      C                   Z-ADD     ZYLDOT        CYLD
- 
+
      C                   Endif                                                  End MATY
- 
+
      C                   Endif                                                  End PROT
- 
+
       **  Update Historic Customer Average Price.
      C                   Except    CAPRH_U
- 
+
      C                   Endsr                                                  ** #CAPRHD SR *
       /Eject
       *****************************************************************
@@ -2639,9 +2642,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #FDDTST       Begsr                                                  ** #FDDTST SR **
- 
+
      C                   Eval      RCID11 = 'D'
      C                   Eval      TYLC11 = 'I'
      C                   Eval      LCD11  = BJRDNB
@@ -2649,10 +2652,10 @@
      C                   Eval      DLST11 = DLST
      C                   Eval      NARR11 = 'DEALING'
      C                   Eval      INNR = FCDINR
- 
+
       **  Write Deal Type/Sub-type record.
      C                   Write     FDDTSTPD
- 
+
      C                   Endsr                                                  * #FDDTST ENDSR *
       /Eject
       *****************************************************************
@@ -2690,47 +2693,47 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     ZAYNUM        Begsr                                                  ** ZAYNUM SR **
- 
+
       **  Define all fields.
      C                   Z-ADD     ZNOML         ZNOML            15 0
      C                   Z-ADD     ZAVYD         ZAVYD            11 7
      C                   Z-ADD     ZNMDP         ZNMDP             1 0
      C                   Z-ADD     ZNMCD         ZNMCD             1 0
      C                   Z-ADD     ZVALU         ZVALU            15 0
- 
+
      C                   Select                                                 Begin Select
- 
+
       **  If number of currency decimal places I = 0.
      C     ZNMCD         Wheneq    0
      C     ZNOML         Mult(H)   ZAVYD         ZVAL0            15 0
      C                   Move      ZVAL0         ZVALU
- 
+
       **  If number of currency decimal places I = 1.
      C     ZNMCD         Wheneq    1
      C     ZNOML         Mult(H)   ZAVYD         ZVAL1            15 1
      C                   Move      ZVAL1         ZVALU
- 
+
       **  If number of currency decimal places I = 2.
      C     ZNMCD         Wheneq    2
      C     ZNOML         Mult(H)   ZAVYD         ZVAL2            15 2
      C                   Move      ZVAL2         ZVALU
- 
+
       **  If number of currency decimal places I = 3.
      C     ZNMCD         Wheneq    3
      C     ZNOML         Mult(H)   ZAVYD         ZVAL3            15 3
      C                   Move      ZVAL3         ZVALU
- 
+
      C                   Endsl                                                  End Select
- 
+
       **  Set index ZI equal to 5 - (nominal decimal places).
      C     5             Sub       ZNMDP         ZI                1 0
- 
+
       **  Multiply ZVALU by POWER8(ZI) to get amount with correct number
       **  of Decimal places.
      C                   Eval      ZVALU = ZVALU * POWER8(ZI)
- 
+
      C                   Endsr                                                  ** ZAYNUM SR **
       /Eject
       *****************************************************************
@@ -2746,7 +2749,7 @@
       *                                                               *
       *****************************************************************
      C     #ZCCYCN       Begsr                                                  ** #ZCCYCN SR **
- 
+
      C                   Callb     'ZCCYCN'
      C                   Parm                    ZAMTF            15 0          Amount in From Curr
      C                   Parm                    ZCCYF             3            From Currency
@@ -2760,7 +2763,7 @@
      C                   Parm                    ZAMTT            15 0          Amount in To Curr.
      C                   Parm                    ZCRSRT           13 8          Cross Exchange Rate
      C                   Parm                    ZCRSMD            1            Cross Rate M/D Ind.
- 
+
      C                   Endsr                                                  ** #ZCCYCN SR **
       /Eject
       *****************************************************************
@@ -2775,9 +2778,9 @@
       *                                                               *
       *****************************************************************
      C     #ZYLDO        Begsr                                                  ** #ZYLDO SR **
- 
+
      C                   Callb     'ZYLDI'
- 
+
      C                   Parm                    ECD               5 0          Event Control Date
      C**********         Parm                    MATY              5 0          Maturity Date 198688
      C**********         Parm                    SESN             10            Security Short198688
@@ -2813,11 +2816,11 @@
      C**********         Parm                    SFPP             15 0          Fully paid pr 198688
      C                   Parm                    WRKPI            15 9          Purchased interest w
      C                   Parm                    BJDFIN                                       198688
- 
+
       **  Output parameters.
      C                   Parm                    ZYLDOk            1
      C                   Parm                    ZYLDOT           15 8
- 
+
      C                   Endsr                                                  ** #ZYLDO SR **
       /Eject
       *****************************************************************
@@ -2832,14 +2835,14 @@
       *                                                               *
       *****************************************************************
      C     #CCYDET       Begsr                                                  ** #CCYDET SR **
- 
+
      C                   Call      'AOCURRR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*KEY  '      P_Optn
      C*****              Parm      NMCY          P_Curr                         208648
      C                   Parm                    P_Curr                         208648
      C     Sdcurr        Parm      Sdcurr        Dssdy
- 
+
       **  If Currency Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -2849,9 +2852,9 @@
      C                   Eval      Dbkey  = P_Curr                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   Endsr                                                  ** #CCYDET SR **
       /Eject
       *****************************************************************
@@ -2883,7 +2886,7 @@
       *                                                               *
       *****************************************************************
      C     #ZAVPRC       Begsr                                                  ** #ZAVPRC SR **
- 
+
       **  Define all fields.
      C                   Z-add     ZNOML         ZNOML            15 0
      C                   Z-add     ZVALU         ZVALU            15 0
@@ -2891,39 +2894,39 @@
      C                   Z-add     ZNMCD         ZNMCD             1 0
      C                   Move      ZPRCB         ZPRCB             1
      C                   Z-add     ZAVPR         ZAVPR            15 8
- 
+
       **  If Nominal = 0, end process.
      C     ZNOML         Ifeq      0                                            Begin ZNOML
      C                   Eval      ZAVPR = 0
- 
+
       **  If Nominal different from 0.
      C                   Else                                                   Else ZNOML
- 
+
       **  Divide value by nominal.
      C     ZVALU         Div       ZNOML         WXAVPR           20 8
- 
+
       **  If Price Basis is percentage.
      C     ZPRCB         Ifeq      'P'                                          Begin ZPRCB
      C                   Eval      WXAVPR = WXAVPR * 100
- 
+
      C                   Endif                                                  End ZPRCB
- 
+
       **  Set Power8 index to 5 = Nominal Number of Decimal Places +
       **  Currency Number of Decimal Places.
      C     5             Sub       ZNMDP         ZI                1 0
      C                   Eval      ZI = ZI + ZNMCD
- 
+
       **  Divide average price by power.
      C     WXAVPR        Div(H)    POWER8(ZI)    ZAVPR
- 
+
       **  Set average price positive.
      C     ZAVPR         Ifle      0                                            Begin ZAVPR
      C                   Z-sub     ZAVPR         ZAVPR
- 
+
      C                   Endif                                                  End ZAVPR
- 
+
      C                   Endif                                                  End ZNOML
- 
+
      C                   Endsr                                                  ** #ZAVPRC SR **
       /Eject
       *****************************************************************
@@ -2955,40 +2958,40 @@
       *                                                               *
       *****************************************************************
      C     #ZFXAVP       Begsr                                                  ** #ZFXAVP SR **
- 
+
       **  Define all fields.
      C                   Z-add     ZAPNM         ZAPNM            15 0
      C                   Z-add     ZFXAP         ZFXAP            15 0
      C                   Z-add     ZNMCD         ZNMCD             1 0
      C                   Z-add     ZPTCD         ZPTCD             1 0
      C                   Z-add     ZAVFX         ZAVFX            13 8
- 
+
       **  If AP Numerator = 0, end process.
      C     ZAPNM         Ifeq      0                                            Begin ZAPNM
      C                   Eval      ZAVFX = 0
- 
+
       **  If AP Numerator is different from 0.
      C                   Else
- 
+
       **  Divide FX AP Numerator by AP Numerator.
      C     ZFXAP         Div(H)    ZAPNM         WWAVFX           21 8
- 
+
       **  Set Power8 index to 5 = Nominal Number of Decimal Places +
       **  Portfolio Currency Number of Decimal Places.
      C     5             Sub       ZNMCD         ZI                1 0
      C                   add       ZPTCD         ZI
- 
+
       **  Divide Average Price by POWER.
      C     WWAVFX        DIV(H)    POWER8(ZI)    ZAVFX                                         49213
- 
+
       **  Set Average Price positive.
      C     ZAVFX         Ifle      0                                            Begin ZAVFX
      C                   Z-SUB     ZAVFX         ZAVFX
- 
+
      C                   Endif                                                  End ZAVFX
- 
+
      C                   Endif                                                  End ZAPNM
- 
+
      C                   Endsr                                                  ** #ZFXAVP SR **
       /Eject
       *****************************************************************
@@ -3002,34 +3005,34 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     #Audit        Begsr                                                  ** #Audit SR **
- 
+
       **  Ensure Audit Report Spool File Recorded by RCF.
      C                   Exsr      #Rcfau
- 
+
      C                   Eval      AURCIN = W_RCIN
      C                   Eval      AURCDL = W_RCDL
- 
+
       **  Output Report Header and File Controls.
      C                   Write     HEADAU
      C                   Write     CONTROL
- 
+
       **  If there is a DB Error, output the DB Error Information.
      C     *inu7         Ifeq      *on                                          Begin *inu7
      C                   Write     DBERROR
- 
+
      C                   Else                                                   Else *inu7
- 
+
       **  Or, if no records read, output "No Details" message.
      C     AURCIN        Ifeq      0                                            Begin AURCIN
      C     AURCDL        Andeq     0
      C                   Write     NODTLS
- 
+
      C                   Endif                                                  End AURCIN
- 
+
      C                   Endif                                                  End *inu7
- 
+
       **  If S01496 is installed, close appropriate files.
      C     S01496        Ifeq      'Y'                                          Begin S01496
      C                   Close     CDEPD
@@ -3037,9 +3040,9 @@
      C                   Close     SEERALL3
      C                   Close     SEERALL4
      C                   Close     SEBLKPL4
- 
+
      C                   Endif                                                  End S01496
- 
+
      C                   Endsr                                                  ** #Audit SR **
       /Eject
       *****************************************************************
@@ -3055,17 +3058,17 @@
       *****************************************************************
       *
      C     #Rcfau        Begsr                                                  ** #Rcfau SR **
- 
+
       **  Ensure Audit Spool File recorded by RCF.
      C                   Move      Sfnumu        Zsnumu
- 
+
      C                   Call      'ZSFILE'
      C                   Parm      *Blanks       Seq               5
      C                   Parm      *Blanks       Senty             3
      C                   Parm                    Sfileu
      C                   Parm                    Zsnumu            6 0
      C                   Parm      *Blank        Zserr             1
- 
+
       **  If Error occurs during ZSFILE processing, then return to the
       **  Calling Program.
      C     Zserr         Ifeq      'Y'                                          Begin Zserr
@@ -3094,24 +3097,24 @@
       *****************************************************************
       *
      C     *Pssr         Begsr                                                  ** *Pssr SR **
- 
+
      C     W_RunBefore   Ifne      'Y'                                          Begin W_RunBefore
      C                   Eval      W_RunBefore = 'Y'
- 
+
      C                   Eval      *inu7 = True
      C                   Eval      *inu8 = True
- 
+
      C                   Dump
      C                   Callb     'DBERRCTL'
- 
+
       **  Ouput Audit Report.
      C                   Exsr      #Audit
- 
+
      C                   Endif                                                  End W_RunBefore
- 
+
      C                   Eval      *inlr = True
      C                   Return
- 
+
      C                   Endsr
       /Eject
       *****************************************************************
@@ -3127,7 +3130,7 @@
       *****************************************************************
       *
      C     *Inzsr        Begsr                                                  ** *Inzsr SR **
- 
+
      C     *Entry        Plist
       **  Return Code.
      C                   Parm                    P_ReturnCode
@@ -3139,19 +3142,19 @@
      C                   Parm                    P_PortCcy                      CPB002
       ** Portfolio Currency Decimal Places.                                     CPB002
      C                   Parm                    P_PortCdp                      CPB002
- 
+
       **  Initialize database error fields.
      C     *lock         In        Lda
      C                   Eval      DBFields = *blanks
      C                   Eval      DBPgm    = PSProcName
      C                   Out       Lda
- 
+
       **  Access to Bank Details to get Midas Run date.
      C                   Call      'AOBANKR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*FIRST '     P_Optn
      C     Sdbank        Parm      Sdbank        Dsfdy
- 
+
       **  If Bank Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -3160,21 +3163,21 @@
      C                   Eval      Dbkey  = P_Optn                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
       **  Check system date format, DDMMYY or MMDDYY.
      C     BJDFIN        Ifeq      'M'                                          Begin BJDFIN
      C                   Eval      *in98 = True                                 ** MMDDYY **
- 
+
      C                   Endif                                                  End BJDFIN
- 
+
       **  Access Portfolio Installation Control Data record.
      C                   Call      'AOPORTR0'
      C                   Parm      *blanks       P_Rtcd
      C                   Parm      '*FIRST '     P_Optn
      C     Sdport        Parm      Sdport        Dsfdy
- 
+
       **  If Portfolio ICD Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -3183,15 +3186,15 @@
      C                   Eval      Dbkey  = P_Optn                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
       **  Access to Midas Modules.
      C                   Call      'AOMMODR0'
      C                   Parm      '*MSG   '     P_Rtcd
      C                   Parm      '*FIRST '     P_Optn
      C     Sdmmod        Parm      Sdmmod        Dsfdy
- 
+
       **  If Midas Modules Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -3200,9 +3203,9 @@
      C                   Eval      Dbkey  = P_Optn                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
       **  If Securities Trading Module has been insatlled, access
       **  to Securities Trading Installation Control Data record.
      C     BGSECS        Ifeq      'Y'                                          Begin BGSECS
@@ -3210,7 +3213,7 @@
      C                   Parm      '*MSG   '     P_Rtcd
      C                   Parm      '*FIRST '     P_Optn
      C     Sdstrd        Parm      Sdstrd        Dssdy
- 
+
       **  If Securities Trading ICD Details were not found, handle database error.
      C     P_Rtcd        Ifne      *blanks                                      Begin P_Rtcd
      C     *lock         In        Lda
@@ -3219,25 +3222,25 @@
      C                   Eval      Dbkey  = P_Optn                              ***************
      C                   Out       LDA
      C                   Exsr      *Pssr
- 
+
      C                   Endif                                                  End  P_Rtcd
- 
+
      C                   Endif                                                  End  BGSECS
- 
+
       **  If Bank Portfolios are supported, treat as if FF module was off.
      C     BGFUOP        Ifeq      'Y'                                          Begin BGFUOP
      C     FCPORS        Andne     'B'
      C                   Open      TRANSC
- 
+
      C                   Endif                                                  End BGFUOP
- 
+
       **  Get Event Control Date from Portfolio Management Data Area.
      C                   In        PMStat
- 
+
       **  Calculate Back Value Date.
      C                   Move      DAECD         W_VDNA
      C                   Eval      W_VDNA =  W_VDNA - BVBVP
- 
+
       **  Check if feature "Jyske Enhancements" is on.
      C                   Move      'N'           S01496            1
      C                   Call      'AOSARDR0'
@@ -3245,7 +3248,7 @@
      C                   Parm      '*VERIFY'     P_Optn
      C                   Parm      'S01496'      P_Sard
      C     Scsard        Parm      Scsard        Dssdy
- 
+
       **  If feature S01496 is installed, open appropriate files.
      C     P_Rtcd        Ifeq      *blanks                                      Begin P_Rtcd
      C                   Eval      S01496 = 'Y'
@@ -3254,9 +3257,9 @@
      C                   Open      SEERALL3
      C                   Open      SEERALL4
      C                   Open      SEBLKPL4
- 
+
      C                   Else                                                   Else P_Rtcd
- 
+
       **  Return code other than *NRF.
      C     P_Rtcd        Ifne      '*NRF'                                       Begin P_Rtcd <> *NRF
      C     *Lock         In        Lda
@@ -3265,11 +3268,11 @@
      C                   Eval      DBAse  = 1                                   ***************
      C                   OUT       LDA
      C                   Exsr      *PSSR
- 
+
      C                   Endif                                                  End P_Rtcd <> *NR
- 
+
      C                   Endif                                                  End P_Rtcd
- 
+
       **  Check if feature "Corporate Actions" is on.
      C                   Move      'N'           CSE007            1
      C                   Call      'AOSARDR0'
@@ -3277,7 +3280,7 @@
      C                   Parm      '*VERIFY'     P_Optn
      C                   Parm      'CSE007'      P_Sard
      C     Scsard        Parm      Scsard        Dssdy
- 
+
       **  If feature CSE007 is installed, open appropriate files.
      C     P_Rtcd        Ifeq      *blanks                                      Begin P_Rtcd
      C                   Eval      CSE007 = 'Y'
@@ -3286,9 +3289,9 @@
      C                   Open      SECOSIL3
      C                   Open      SECOCOL1
      C                   Open      SECOAPL1
- 
+
      C                   Else                                                   Else P_Rtcd
- 
+
       **  Return code other than *NRF.
      C     P_Rtcd        Ifne      '*NRF'                                       Begin P_Rtcd <> *NRF
      C     *Lock         In        Lda
@@ -3297,9 +3300,9 @@
      C                   Eval      DBAse  = 1                                   ***************
      C                   OUT       LDA
      C                   Exsr      *PSSR
- 
+
      C                   Endif                                                  End P_Rtcd <> *NR
- 
+
      C                   Endif                                                  End P_Rtcd
                                                                                 CPB004
       **  Check if feature "Account Closing" is on.                             CPB004
@@ -3326,10 +3329,10 @@
      C                   IF        P_Rtcd = *Blanks                                           233196
      C                   EVAL      CGL031 = 'Y'                                               233196
      C                   ENDIF                                                                233196
- 
+
       **  Set up Customer Number key field used to access to files.
      C                   Move      P_CustNum     K_CustNum
- 
+
      C                   Endsr                                                  ** *Inzsr SR **
       /Eject
       *****************************************************************

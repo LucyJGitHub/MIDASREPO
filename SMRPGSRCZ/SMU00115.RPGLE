@@ -11,32 +11,35 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. AR1075447D*CREATE  Date 28Mar13               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR1075447D*CREATE  Date 28Mar13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  AR1085447D - Migration utility for CLOANCL, MCLONCL          *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas LE Past Due & Original Loan Link
      FLEPDUELA  IF   E           K DISK
- 
+
       ** Midas LE Past Due & Original Fees Link
      FLEPDUFL1  IF   E           K DISK
- 
+
       ** Midas GZ Customer loans A record
      FCLOAN     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       ** Midas LE New matured loans file
      FMLOAN     UF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:HISTLF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
@@ -60,7 +63,7 @@
      C                   EXSR      SrUpdateFL2
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -154,7 +157,7 @@
      C                   ENDSR
       *
       *****************************************************************
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

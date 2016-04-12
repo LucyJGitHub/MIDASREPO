@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -91,26 +94,26 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FCLOAN     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -125,28 +128,28 @@
       **                                    194 203 DBPROC
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Loan master file DS of the current loan
      D WLoanCLDS     E DS                  EXTNAME(CLOANCL)
- 
+
       ** Loan master file DS parameter of LE2165
      D PLoanCLDS     E DS                  EXTNAME(CLOANCL)
      D                                     PREFIX(PL)
- 
+
       ** Incoming Message parameter of LE2165
      D PIncomingDS     DS            99
      D  PIMsgTyp               1      4
@@ -163,7 +166,7 @@
      D  PILoanRef             81     86A                                                      CLE148
      D  PIFixIntRate          87     98
      D  PIFixRateInd          99     99
- 
+
       ** Outgoing Message parameter of LE2165
      D POutgoingDS     DS           172
      D  POMsgTyp               1      4
@@ -181,22 +184,22 @@
      D  POMsgTxt              89    166
      D**POLoanRef            167    172S 0                                                    CLE148
      D  POLoanRef            167    172A                                                      CLE148
- 
+
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Externally described DS for Switchable features
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D                                     PREFIX(SR)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CLE011          S              1
      D WRUN            S              1
      D PMode           S              1
@@ -208,7 +211,7 @@
      D PZMsgF          S             10
      D PZMsgDta        S            132
      D PZMsgTxt        S            132
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -219,11 +222,11 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       *
       ** Set up Outgoing fields from the Incoming fields
       *
@@ -335,7 +338,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

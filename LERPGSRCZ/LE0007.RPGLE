@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -102,10 +105,10 @@
       **                                    181 1830DBase
       **                                    184 193 DBMod
       **                                    194 203 DBProc
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
       *
@@ -173,12 +176,12 @@
      C                             CHIN = 'R' OR
      C                             BRTT <> 0 AND
      C                             CHIN = 'R'
- 
+
      C                   IF        RFDY = *Blanks
      C                   EVAL      RFDY = '02'
      C                   UPDATE    CLOANCLF
      C                   ENDIF
- 
+
      C                   ENDIF
       *
       ** Read next record.
@@ -195,9 +198,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   MOVE      *ON           *INLR
      C                   RETURN
       *
@@ -216,9 +219,9 @@
       *****************************************************************
       *
      C     *INZSR        BEGSR
- 
+
      C                   MOVEA     CPY@          CPY2@            80
- 
+
      C     *DTAARA       DEFINE                  LDA
       *
      C     *LOCK         IN        LDA
@@ -227,7 +230,7 @@
      C                   EVAL      DBKey = *Blank
      C                   EVAL      DBase = 0
      C                   OUT       LDA
- 
+
      C                   ENDSR
       *
       *****************************************************************
@@ -244,9 +247,9 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
      C                   EVAL      *INU7 = *On
      C                   EVAL      *INU8 = *On
@@ -259,6 +262,6 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2001

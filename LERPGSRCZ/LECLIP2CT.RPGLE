@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD025521           Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR846083           Date 14Oct11               *
       *                 CRE073             Date 06Dec10               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD025521 - Added Interest Rate field.                        *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *

@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR316373           Date 03Jun15               *
-      *  Prev Amend No. LLN022             Date 03Jun15               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR316373           Date 03Jun15               *
+      *                 LLN022             Date 03Jun15               *
       *                 AR702532           Date 13Jan15               *
       *                 CAP212             Date 15Sep14               *
       *                 CGL158             Date 16Sep14               *
@@ -196,6 +197,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions                                *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *
       *             java wrapped function. Retrieve customer details  *
       *             from screen passed by java.                       *
@@ -212,7 +215,7 @@
       *  CRE101 - Interim Interest Statement on a Frequency           *
       *           Added hooks: CRE101_001, CRE101_002, CRE101_003,    *
       *                        CRE101_004, CRE101_005, CRE101_063,    *
-      *                        CRE101_064, CRE101_065, CRE101_066     *      
+      *                        CRE101_064, CRE101_065, CRE101_066     *
       *  CGL165 - Dual Withholding Tax                                *
       *  MD030621 - Add @DEPI (Decrease Principal indicator) for PDCL *
       *             generated during IC.                              *
@@ -498,26 +501,26 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the definitions of the
       ** error arrays, including the named constant giving the size of
       ** the arrays.
      D/COPY ZACPYSRC,FVAL_ARRAY
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
      D WDSPgmMod       DS                                                                     CRE020
      D  WrkPgm                 1     10                                                       CRE020
      D  WrkMod                11     12                                                       CRE020
@@ -658,32 +661,32 @@
      D POthNarr2       S            500A                                                    BUG23742
       *                                                                                     BUG23742
       ** External DS on BITP Additional Info 2                                              BUG23742
- 
+
       ** The maximum size of the error arrays
      D ArrayMax        C                   CONST(75)
- 
+
       ** Array of Fields in error.
      D FldNameArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDArr        S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of error message data.
      D MsgDtaArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNamArr      S             10A   DIM(ArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDArr       S                   DIM(ArrayMax)
      D                                     LIKE(#MsgID)
- 
+
       ** Array of warning message data.
      D WMsgDtaArr      S                   DIM(ArrayMax)
      D                                     LIKE(#MsgData)
- 
+
       ** Entry parameters
      D TransType       S              4
      D Parm            S           1000
@@ -719,7 +722,7 @@
      D APINam          S             20                                                       CBF011
      D @ACTRV          S              1                                                     AR910559
      D @DEPI           S              1                                                     MD030621
- 
+
       ** DS/variables to split up incoming parameter
      D APParm          DS          1000
      D  UPDATEYN               1      1
@@ -766,7 +769,7 @@
      D  DDACTN                 1      1                                                     MD021813
      D  DDCUST                 2      7                                                     MD021813
      D  DDNTCP                 8      8                                                     MD021813
- 
+
       ** Extra fields for CSW213                                                              CSW213
      D InSwift2013     DS                                                                     CSW213
      D  DLRPIFS1In                         LIKE(DLRPIFScn1Fmt)                                CSW213
@@ -776,7 +779,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
                                                                                               CSW213
       * Incoming Header
      D HeadIn        E DS                  EXTNAME(APHEADPD)
- 
+
       * Standard parameters for called programs
      D TRANS1A         S           1000                                                       CDL028
      D TRANS1          S            500
@@ -854,7 +857,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D TempData#9      S             50A                                                    MD029663
      D GLFullAcct      S             24A                                                    MD026979
      D TempData7       S              1A                                                      CLE164
- 
+
      D*WCFSC1OLn       S              4P 0                                                   BUG4646
      D*WCFSC2OLn       S              4P 0                                                   BUG4646
      D*WCFSC3OLn       S              4P 0                                                   BUG4646
@@ -890,7 +893,7 @@ RGC  D  DLRPIFS4In                         LIKE(DLRPIFScn4Fmt)                  
      D RatDateDS       S           4800A                                                    BUG10563
      D PayDateDS       S           4800A                                                    BUG10563
      D WDUMMY          S             90A                                                    BUG10563
- 
+
       *                                                                                       CER001
       ** Length for regional fields                                                           CER001
       *                                                                                       CER001
@@ -1017,7 +1020,7 @@ RGC  D RPIF4LN         S              4  0                                      
      D FTCRLn          S              4  0                                                    CGL132
      D/COPY OFCPYSRCZ,CRE101_001                                                              CRE101
       ** +--- Start of main processing -----------------------------------+
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    TransType
      C                   PARM                    Parm
@@ -1040,7 +1043,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * Block question marks in input buffer                                                  BG0505
                                                                                               BG0505
      C                   EXSR      BLOCK_QM                                                   BG0505
- 
+
       * Clear down buffers
      C                   Eval      Buffer = *BLANKS
      C                   Eval      Buffer2 = *BLANKS
@@ -1049,11 +1052,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Eval      Buffer = BufferTotal
      C                   MOVE      BufferTotal   Buffer2                                     BUG4646
      C                   EVAL      HeadIn = ApHead                                          AR971184
- 
+
       * Call the required API
- 
+
      C                   EXSR      CALLAPI
- 
+
       * Move the buffers into the full buffer
      C                   EVAL      BufferTotal = Buffer + Buffer2
                                                                                               BG0505
@@ -1062,13 +1065,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C     QM_Blocked    IFEQ      'Y'                                                        BG0505
      C                   EXSR      ADD_QM_ERROR                                               BG0505
      C                   ENDIF                                                                BG0505
- 
+
       * Edit the Messages for output
- 
+
      C                   If        TransTYPE <> 'COLD'                                       BUG5728
      C                   EXSR      EDTMSGS
      C                   EndIf                                                               BUG5728
- 
+
      C                   SETON                                        LR
      C                   RETURN
       **********************************************************************
@@ -1077,7 +1080,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * Call the required API
       ****************************************************************
      C     CALLAPI       BEGSR
- 
+
      C                   CLEAR                   TRANS1
      C                   CLEAR                   TRANS2
      C                   CLEAR                   TRANS2B                                    BUG11194
@@ -1134,22 +1137,22 @@ RGC  D RPIF4LN         S              4  0                                      
      C/COPY OFCPYSRCZ,CGL135_042                                                             CGL135A
      C/COPY OFCPYSRCZ,CRE101_002                                                              CRE101
      C/COPY OFCPYSRCZ,CGL158_002                                                              CGL158
- 
+
       ** Position Buffer pointer to 1st byte
- 
+
      C                   Z-ADD     1             Bfp               4 0
      C                   Z-ADD     1             Bfp2              4 0                      BUG10296
- 
+
      C                   SELECT
- 
+
       * FX deals
- 
+
      C     TransTYPE     WHENEQ    'FXDL'
- 
+
      C                   EXSR      FXDLFmts
      C                   EXSR      SettleFmts
      C                   EXSR      RPIFFmts                                                   CSW213
- 
+
      C     FXDLLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       FXDLLn        Bfp
      C     26            SUBST     BUFFER:Bfp    @TimeStamp                                  BUG4087
@@ -1171,7 +1174,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     FXFXLn        SUBST     BUFFER:Bfp    ExtData
      C                   ADD       FXFXLn        Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
- 
+
      C                   CALL      'FXFXDLVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1202,15 +1205,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * MM Loan/deposit deals
- 
+
      C     TransTYPE     WHENEQ    'LDNI'
- 
+
      C                   EXSR      LDNIFmts
      C                   EXSR      SettleFmts
      C                   EXSR      FSettleFmts                                                CDL018
- 
+
      C*****LDNILn        SUBST     BUFFER:Bfp    TRANS1                                      CSF011A
      C     LDNILn        SUBST     BUFFER:Bfp    TRANS1A                                     CSF011A
      C                   ADD       LDNILn        Bfp
@@ -1300,7 +1303,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****LDEXLn        SUBST     BufferEx2:Bfp2ExtData                               248299 CSF011
      C     LDEXLn        SUBST     BufferEx3:Bfp2ExtData                                      CSF011
      C                   ADD       LDEXLn        Bfp2                                         248299
- 
+
      C                   CALL      'MMLDNIVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1341,13 +1344,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Incoming Payments
- 
+
      C     TransTYPE     WHENEQ    'IPAY'
- 
+
      C                   EXSR      IPAYFmts
- 
+
      C*****IPY1Ln        SUBST     BUFFER:Bfp    TRANS1                                      CSF011A
      C     IPY1Ln        SUBST     BUFFER:Bfp    TRANS1A                                     CSF011A
      C                   ADD       IPY1Ln        Bfp
@@ -1399,7 +1402,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER:Bfp    AAuth                            BUG22140 AR1002463
      C**********         ADD       1             Bfp                              BUG22140 AR1002463
      C/COPY WNCPYSRC,APH00060
- 
+
      C                   CALL      'FTIPAYVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1442,13 +1445,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Outgoing payments
- 
+
      C     TransTYPE     WHENEQ    'OPAY'
- 
+
      C                   EXSR      OPAYFmts
- 
+
      C*****OPY1Ln        SUBST     BUFFER:Bfp    TRANS1                                      CSF011A
      C     OPY1Ln        SUBST     BUFFER:Bfp    TRANS1A                                     CSF011A
      C                   ADD       OPY1Ln        Bfp
@@ -1538,7 +1541,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****1****         SUBST     BUFFER2:Bfp2  AAuth                              CSF011 AR1002463
      C**********         ADD       1             Bfp2                               CSF011 AR1002463
      C/COPY WNCPYSRC,APH00063
- 
+
      C                   CALL      'FTOPAYVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1564,10 +1567,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Trans11A                                     CER030
      C                   PARM                    Trans11B                                     CFT039
      C                   PARM                    Trans12                                      CER049
- 
+
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -1587,16 +1590,16 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * GL Accounts Maintenance
- 
+
      C     TransTYPE     WHENEQ    'AMAD'
      C     TransTYPE     OREQ      'ACMC'                                                     CRE026
      C     TransTYPE     OREQ      'ACMI'                                                     CRE026
      C     TransTYPE     OREQ      'ACMN'                                                     CRE026
- 
+
      C                   EXSR      AMADFmts
- 
+
      C     AMMDLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       AMMDLn        Bfp
      C     AMDILn        SUBST     BUFFER:Bfp    TRANS2
@@ -1657,7 +1660,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       AMRXLn        Bfp2                                        CSF011A
      C     AMEXLn        SUBST     BUFFER2:Bfp2  Extdata                                      CRE073
      C                   ADD       AMEXLn        Bfp2                                         CRE073
- 
+
      C                   CALL      'GLAMADVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1687,15 +1690,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    GLFullAcct                                 MD026979
- 
+
       * GL Journal Entry Header Maintenance
       * GL Journal Entry Header Maintenance - Non-retail                                     BUG9009
- 
+
      C     TransTYPE     WHENEQ    'BITH'
      C     TransTYPE     OrEq      'BINH'                                                    BUG9009
- 
+
      C                   EXSR      BITHFmts
- 
+
      C     BITHLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       BITHLn        Bfp
      C     8             SUBST     BUFFER:Bfp    PEAHeader         8                          CSC054
@@ -1703,7 +1706,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     GLIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       GLIFLn        Bfp                                          CAP086
      C     BHEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'GLBITHVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1722,15 +1725,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * GL Journal Entry Item Maintenance
       * GL Journal Entry Item Maintenance - Non-retail                                       BUG9009
- 
+
      C     TransTYPE     WHENEQ    'BITP'
      C     TransTYPE     OrEq      'BINP'                                                    BUG9009
- 
+
      C                   EXSR      BITPFmts
- 
+
      C     BITPLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       BITPLn        Bfp
      C     BIPXLn        SUBST     BUFFER:Bfp    OthData                                      246418
@@ -1751,7 +1754,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     BPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       BPRXLn        Bfp                                          CER001
      C     BPEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'GLBITPVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1774,15 +1777,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * SD Customers
- 
+
      C     TransTYPE     WHENEQ    'CUSD'
      C     TransTYPE     OREQ      'CSDU'                                                     CSD079
      C     TransTYPE     OREQ      'CSDV'                                                     CSD079
- 
+
      C                   EXSR      CUSDFmts
- 
+
      C     SDPRLn        SUBST     BUFFER:Bfp    TRANS1
      C                   EVAL      TransCUPR = TRANS1                                       MD022093
      C                   ADD       SDPRLn        Bfp
@@ -1910,7 +1913,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       SDEXLn        Bfp                                 BUG22140 CER059
      C*****1****         SUBST     BUFFER:Bfp    AAuth                               BUG22140 CER059
      C**********         ADD       1             Bfp                                 BUG22140 CER059
- 
+
      C                   CALL      'SDCUSDVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -1973,16 +1976,16 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4196
      C                   PARM                    AAuth                                      BUG22140
- 
+
      C                   MOVEL     Buffer9999    Buffer                                       CER059
      C                   MOVE      Buffer9999    Buffer2                                      CER059
                                                                                               CER059
       * SD Securities Customers
- 
+
      C     TransTYPE     WHENEQ    'SECD'
- 
+
      C                   EXSR      SECDFmts
- 
+
      C     SDSCLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       SDSCLn        Bfp
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22155
@@ -1993,7 +1996,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       SDSXLn        Bfp                                        BUG22140
      C*****1****         SUBST     BUFFER:Bfp    AAuth                             BUG22140 BUG22155
      C**********         ADD       1             Bfp                               BUG22140 BUG22155
- 
+
      C                   CALL      'SDSECDVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -2012,17 +2015,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    AAuth                                      BUG22140
- 
+
       * PM Portfolio Definition
- 
+
      C     TransTYPE     WHENEQ    'PFDM'
- 
+
      C                   EXSR      PFDMFmts
- 
+
      C     PMPMLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       PMPMLn        Bfp
      C     PMEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'PMPFDMVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -2039,14 +2042,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * MM Deal Amendments
- 
+
      C     TransTYPE     WHENEQ    'DEAM'
- 
+
      C                   EXSR      DEAMFmts
      C                   EXSR      SettleFmts
- 
+
      C     DEAMLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       DEAMLn        Bfp
       **  Restore Timestamp field from the record                                            BUG4146
@@ -2068,7 +2071,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     DAIFLn        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       DAIFLn        Bfp
      C     DAEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'MMDEAMVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -2100,11 +2103,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Facilities amendments
- 
+
      C     TransTYPE     WHENEQ    'FAMD'
- 
+
      C                   EXSR      FAMDFmts
      C     FAMDLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       FAMDLn        Bfp                                          CAP086
@@ -2113,7 +2116,7 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C                   CALL      'LEFAMDVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -2130,11 +2133,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * Collateral details
- 
+
      C     TransTYPE     WHENEQ    'COLL'
- 
+
      C                   EXSR      COLLFmts
      C     COL1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       COL1Ln        Bfp
@@ -2143,7 +2146,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     COL3Ln        SUBST     BUFFER:Bfp    TRANS3
      C                   ADD       COL3Ln        Bfp
      C     COL4Ln        SUBST     BUFFER:Bfp    TRANS4
- 
+
      C                   CALL      'GLCOLLVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -2161,10 +2164,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * Collateral Allocations
      C     TransTYPE     WHENEQ    'COLA'
- 
+
      C                   EXSR      COLAFmts
      C                   EXSR      SettleFmts
      C     COLALn        SUBST     BUFFER:Bfp    TRANS1
@@ -2173,12 +2176,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
- 
+
      C                   CALL      'GLCOLAVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    PaySttmt
@@ -2195,17 +2198,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * Facilities details
- 
+
      C     TransTYPE     WHENEQ    'FCIP'
- 
+
      C                   EXSR      FCIPFmts
      C                   EXSR      SettleFmts                                                 CLE106
- 
+
      C     FCI1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       FCI1Ln        Bfp
- 
+
      C     FCI2Ln        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       FCI2Ln        Bfp
                                                                                               CLE106
@@ -2235,7 +2238,7 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C*****FCRXLn        SUBST     BUFFER:Bfp    RegData                             CER001 BUG10093
      C**********         ADD       FCRXLn        Bfp                                 CER001 BUG10093
       **********                                                                     CER001 BUG10093
@@ -2252,7 +2255,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       FCRXLn        Bfp                                        BUG10093
                                                                                             BUG10093
      C     FCEXLn        SUBST     BUFFER:Bfp    ExtData                                    BUG10093
- 
+
      C                   CALL      'LEFCIPVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -2279,26 +2282,26 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    DDPATH                                     BUG13174
      C                   PARM                    CADetails                                    CLE147
- 
+
       * Loan Input
- 
+
      C     TransTYPE     WHENEQ    'CLIP'
- 
+
      C                   EXSR      CLIPFmts
      C                   EXSR      SettleFmts
- 
+
      C     CLI1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       CLI1Ln        Bfp
- 
+
      C     CLI2Ln        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       CLI2Ln        Bfp
- 
+
      C     CLI3Ln        SUBST     BUFFER:Bfp    TRANS3
      C                   ADD       CLI3Ln        Bfp
- 
+
      C     CLI4Ln        SUBST     BUFFER:Bfp    TRANS4
      C                   ADD       CLI4Ln        Bfp
- 
+
      C     CLI5Ln        SUBST     BUFFER:Bfp    TRANS5                                       CLE106
      C                   ADD       CLI5Ln        Bfp                                          CLE106
                                                                                               CLE106
@@ -2313,6 +2316,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C     CLI6Ln        SUBST     BUFFER:Bfp    TRANS6                                    AR1021983
      C                   ADD       CLI6Ln        Bfp                                       AR1021983
                                                                                            AR1021983
+     C     CLI7Ln        SUBST     BUFFER:Bfp    TRANS7                                       CLE141
+     C                   ADD       CLI7Ln        Bfp                                          CLE141
+                                                                                              CLE141
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
@@ -2323,16 +2329,16 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                     MD030621
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C*****10************SUBST     BUFFER:Bfp    ReservID                       BUG2480
      C*******************ADD       10            Bfp                            BUG2480
- 
+
      C     CLRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       CLRXLn        Bfp                                          CER001
                                                                                               CER001
      C     CLEXLn        SUBST     BUFFER:Bfp    ExtData
      C                   ADD       CLEXLn        Bfp
- 
+
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
      C                   CALL      'LECLIPVU'
@@ -2345,6 +2351,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Trans5                                       CLE106
      C                   PARM                    TransQ                                       CER049
      C                   PARM                    Trans6                                    AR1021983
+     C                   PARM                    Trans7                                       CLE141
      C                   PARM                    PaySttmt
      C                   PARM                    RecSttmt
      C                   PARM                    ReservID         10
@@ -2372,20 +2379,20 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'LE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Rollover instructions
- 
+
      C     TransTYPE     WHENEQ    'LERI'
- 
+
      C                   EXSR      LERIFmts
      C                   EXSR      SettleFmts
- 
+
      C     LERILn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       LERILn        Bfp
- 
+
      C     LER2Ln        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       LER2Ln        Bfp
- 
+
      C     LER3Ln        SUBST     BUFFER:Bfp    TRANS3                                        BUG19
      C                   ADD       LER3Ln        Bfp                                           BUG19
                                                                                                BUG19
@@ -2396,14 +2403,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       1             Bfp                                        AR702532
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
- 
+
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C     LEEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'LELERIVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -2426,31 +2433,31 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @ACTRV                                     AR702532
- 
+
       * Repayment schedule
- 
+
      C     TransTYPE     WHENEQ    'RPSC'
- 
+
      C                   EXSR      RPSCFmts
      C                   EXSR      SettleFmts
- 
+
      C     RPSCLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       RPSCLn        Bfp
- 
+
      C     RPS2Ln        SUBST     BUFFER:Bfp    TRANS2                                       CLE106
      C                   ADD       RPS2Ln        Bfp                                          CLE106
                                                                                               CLE106
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
- 
+
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C     RPEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'LERPSCVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -2477,17 +2484,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'LE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Loan Amendment
- 
+
      C     TransTYPE     WHENEQ    'LOAM'
- 
+
      C                   EXSR      LOAMFmts
      C                   EXSR      SettleFmts
- 
+
      C     LOAMLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       LOAMLn        Bfp
- 
+
      C     LOA2Ln        SUBST     BUFFER:Bfp    TRANS2                                       CLE106
      C                   ADD       LOA2Ln        Bfp                                          CLE106
                                                                                               CLE106
@@ -2495,24 +2502,24 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       LOEXLn        Bfp                                  BUG9493 247172
      C*****10************SUBST     BUFFER:Bfp    ReservID                       BUG2480
      C*******************ADD       10            Bfp                            BUG2480
- 
+
      C*****16***         SUBST     BUFFER:Bfp    DDSTAT                                       CLE106
      C**********         ADD       16            Bfp                                          CLE106
- 
+
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
- 
+
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C     LOEXLn        SUBST     BUFFER:Bfp    ExtData                                      247172
      C                   ADD       LOEXLn        Bfp                                          247172
      C*****LOEXLn        SUBST     BUFFER:Bfp    ExtData                                     BUG9493
      C**********         ADD       LOEXLn        Bfp                                         BUG9493
- 
+
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
      C                   CALL      'LELOAMVU'
@@ -2542,17 +2549,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'LE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Manual repayment
- 
+
      C     TransTYPE     WHENEQ    'MAPY'
- 
+
      C                   EXSR      MAPYFmts
      C                   EXSR      SettleFmts
- 
+
      C     MAPYLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       MAPYLn        Bfp
- 
+
      C     MAP2Ln        SUBST     BUFFER:Bfp    TRANS2                                       CLE106
      C                   ADD       MAP2Ln        Bfp                                          CLE106
                                                                                               CLE106
@@ -2567,18 +2574,18 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CLE164
      C*****10************SUBST     BUFFER:Bfp    ReservID                       BUG2480
      C*******************ADD       10            Bfp                            BUG2480
- 
+
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
- 
+
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C     MAEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   MOVE      ReservID15    ReservID                       BUG2480
                                                                                 BUG2480
      C                   CALL      'LEMAPYVU'
@@ -2610,10 +2617,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'LE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Base rates
      C     TransTYPE     WHENEQ    'BSRT'
- 
+
      C                   EXSR      BSRTFmts
      C     BSRTLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       BSRTLn        Bfp
@@ -2623,12 +2630,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       BSEXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
- 
+
      C                   CALL      'SDBSRTVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
@@ -2644,7 +2651,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
- 
+
       ** Fees                                                                                BUG1100
      C     TransTYPE     WHENEQ    'FEEM'                                                    BUG1100
                                                                                              BUG1100
@@ -2698,7 +2705,7 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                                      BUG3071
       * Fee Adjustment
      C     TransTYPE     WHENEQ    'FEAD'
- 
+
      C                   EXSR      FEADFmts
       ***Need*to*add*10*chars*for*the*status*field*not*included*on*format             BUG1218 CLE106
       ***file*LEFEADPD*but*in*API*XML*file*FEAD.XML********************               BUG1218 CLE106
@@ -2715,12 +2722,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       FEA2Ln        Bfp                                          CLE106
                                                                                               CLE106
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
- 
+
      C                   CALL      'LEFEADVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2                                       CLE106
@@ -2735,10 +2742,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * Fee settlement
      C     TransTYPE     WHENEQ    'FEST'
- 
+
      C                   EXSR      FESTFmts
      C                   EXSR      SettleFmts
       ***Need*to*add*60*chars*for*fields*not*included*on*format**************                 CLE106
@@ -2758,12 +2765,12 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CAP086
      C     LEIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       LEIFLn        Bfp                                          CAP086
- 
+
      C                   CALL      'LEFESTVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2                                       CLE106
@@ -2786,10 +2793,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'LE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Funding Participant
      C     TransTYPE     WHENEQ    'FPRT'
- 
+
      C                   EXSR      FPRTFmts
      C                   EXSR      SettleFmts
      C     FPRTLn        SUBST     BUFFER:Bfp    TRANS1
@@ -2798,17 +2805,17 @@ RGC  D RPIF4LN         S              4  0                                      
       * Primary Facility screen details
      C     76            SUBST     BUFFER:Bfp    PFData           76
      C                   ADD       76            Bfp
- 
+
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
- 
+
      C                   CALL      'LEFPRTVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    PaySttmt
@@ -2823,10 +2830,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * Assignments
      C     TransTYPE     WHENEQ    'ASGN'
- 
+
      C                   EXSR      ASGNFmts
      C                   EXSR      SettleFmts
      C     ASGNLn        SUBST     BUFFER:Bfp    TRANS1
@@ -2834,17 +2841,17 @@ RGC  D RPIF4LN         S              4  0                                      
       * Assignments screen details
      C     17            SUBST     BUFFER:Bfp    PFData17         17
      C                   ADD       17            Bfp
- 
+
      C     ESSRLn        SUBST     BUFFER:Bfp    RecSttmt
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
- 
+
      C                   CALL      'LEASGNVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    PaySttmt
@@ -2861,10 +2868,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * FRA - Forward Rate Agreement deals
      C     TransTYPE     WHENEQ    'FRA '
- 
+
      C                   EXSR      FRAFmts
      C                   EXSR      SettleFmts
      C                   EXSR      RPIFFmts                                                   CSW213
@@ -2889,12 +2896,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     IRFRLn        SUBST     BUFFER:Bfp    InfData                                    BUG18701
      C                   ADD       IRFRLn        Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
- 
+
      C                   CALL      'IRFRAVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    PaySttmt
@@ -2922,20 +2929,20 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       ** Single Currency IRS (SIRS)
- 
+
      C     TransTYPE     WHENEQ    'SIRS'
- 
+
      C                   EXSR      SrSIRS
- 
+
       ** Cross Currency IRS (CIRS)
      C     TransTYPE     WHENEQ    'CIRS'
- 
+
      C                   EXSR      CIRSFmts
      C                   EXSR      SettleFmts
      C                   EXSR      RPIFFmts                                                   CSW213
- 
+
      C*****CIRSLn******* SUBST     BUFFER:Bfp    TRANS1                                       CDL028
      C     CIRSLn        SUBST     BUFFER:Bfp    TRANS1A                                      CDL028
      C                   ADD       CIRSLn        Bfp
@@ -2954,12 +2961,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       ESSRLn        Bfp
      C     ESSPLn        SUBST     BUFFER:Bfp    PayStmtM
      C                   ADD       ESSPLn        Bfp
- 
+
       **  Non-Screen Interface Data for Class 1 enhancements
- 
+
      C     IRRXLn        SUBST     BUFFER:Bfp    InfData
      C                   ADD       IRRXLn        Bfp
- 
+
      C                   EVAL      IRCS2Ln = 6000 - Bfp                                     MD029663
      C*****IRCSLn        SUBST     BUFFER:Bfp    ExtData                                    MD029663
      C**********         ADD       IRCSLn        Bfp                                 CSW213 MD029663
@@ -2967,7 +2974,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       IRCS2Ln       Bfp                               MD029663 MD030454
      C**********         ADD       168           Bfp                                 CSW213 MD030454
      C**********         EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)      CSW213 MD030454
- 
+
      C                   EVAL      IRCS3Ln = IRCSLn - IRCS2Ln                               MD029663
      C     IRCS3Ln       SUBST     BUFFER2:Bfp2  TempData#8                                 MD029663
      C                   ADD       IRCS3Ln       Bfp2                                       MD029663
@@ -2978,10 +2985,10 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      InSwift2013 = %SUBST(BufferTotal:Bfp:RPIFLn)             MD030454
                                                                                             MD029663
      C                   CALL      'IRCIRSVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C**********         PARM                    TRANS1                                       CDL028
      C                   PARM                    TRANS1A                                      CDL028
@@ -3020,12 +3027,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * SE Securities Details
      C     TransTYPE     WHENEQ    'SECS'
- 
+
      C                   EXSR      SECSFmts
- 
+
      C     SEC1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       SEC1Ln        Bfp
      C     SEC2Ln        SUBST     BUFFER:Bfp    TRANS2
@@ -3046,12 +3053,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     SERXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       SERXLn        Bfp                                          CER001
      C     SEEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'SESECSVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
@@ -3061,7 +3068,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    TRANS6                                       CSE071
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -3073,13 +3080,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG1569
- 
+
       * SE Trade
- 
+
      C     TransTYPE     WHENEQ    'TRAD'
- 
+
      C                   EXSR      TRADFmts
- 
+
      C     TRPRLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       TRPRLn        Bfp
      C     TRSELn        SUBST     BUFFER:Bfp    TRANS2
@@ -3144,12 +3151,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       SETRLn        Bfp                              BUG22155 AR698195B
      C*****1****         SUBST     BUFFER:Bfp    AAuth                            BUG22155 AR698195B
      C**********         ADD       1             Bfp                              BUG22155 AR698195B
- 
+
      C                   CALL      'SETRADVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
@@ -3167,7 +3174,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         PARM                    InfData                                    BUG10202
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -3189,14 +3196,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'SE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Request for transfer
- 
+
      C     TransTYPE     WHENEQ    'RFTD'
- 
+
      C                   EVAL      Trans1 = Buffer
      C                   EVAL      Trans2 = %SUBST(Buffer:501:500)
- 
+
      C                   CALL      'FTM1011VU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3218,15 +3225,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Request for transfer details
- 
+
      C     TransTYPE     WHENEQ    'RFT2'
- 
+
      C                   EVAL      Trans1 = Buffer
      C                   EVAL      Trans2 = %SUBST(Buffer:501:500)
      C                   EVAL      Trans3 = %SUBST(Buffer:1001:500)
- 
+
      C                   CALL      'FTM1012VU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3249,14 +3256,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Credit customer transfer
- 
+
      C     TransTYPE     WHENEQ    'CCTD'
- 
+
      C                   EVAL      Trans1 = Buffer
      C                   EVAL      Trans2 = %SUBST(Buffer:501:500)
- 
+
      C                   CALL      'FTM1021VU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3278,15 +3285,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * Customer credit transfer details
- 
+
      C     TransTYPE     WHENEQ    'CCT2'
- 
+
      C                   EVAL      Trans1 = Buffer
      C                   EVAL      Trans2 = %SUBST(Buffer:501:500)
      C                   EVAL      Trans3 = %SUBST(Buffer:1001:500)
- 
+
      C                   CALL      'FTM1022VU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3309,13 +3316,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FT'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * FF OTCC
- 
+
      C     TransTYPE     WHENEQ    'OTCC'
- 
+
      C                   EXSR      OTCCFmts
- 
+
      C     OTCCLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       OTCCLn        Bfp
      C     OTCCLnS       SUBST     BUFFER:Bfp    TRANS2
@@ -3333,7 +3340,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       OTRXLn        Bfp                                          CER001
      C     OTCCLnX       SUBST     BUFFER:Bfp    ExtData                                      CER001
      C                   ADD       OTCCLnX       Bfp                                          CER001
- 
+
      C                   CALL      'FFOTCCVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3359,13 +3366,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FF'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * FF OTCO
- 
+
      C     TransTYPE     WHENEQ    'OTCO'
- 
+
      C                   EXSR      OTCOFmts
- 
+
      C     OTCOLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       OTCOLn        Bfp
      C     OTCOLnS       SUBST     BUFFER:Bfp    TRANS2
@@ -3377,7 +3384,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       26            Bfp                                         BUG4258
      C     15            SUBST     BUFFER:Bfp    SPREM            15                         BUG6274
      C                   ADD       15            Bfp                                         BUG6274
- 
+
      C                   CALL      'FFOTCOVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3402,13 +3409,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FF'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * FF Exchange-Traded Transactions
- 
+
      C     TransTYPE     WHENEQ    'EXTR'
- 
+
      C                   EXSR      EXTRFmts
- 
+
      C     EXTRLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       EXTRLn        Bfp
      C     EXTRLnCS      SUBST     BUFFER:Bfp    TRANS2
@@ -3428,7 +3435,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       20            Bfp                                          CAP191
      C     20            SUBST     BUFFER:Bfp    AFRT                                         CAP191
      C                   ADD       20            Bfp                                          CAP191
- 
+
      C                   CALL      'FFEXTRVU'
      C                   PARM                    HeadIn
       * Transaction information
@@ -3457,17 +3464,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'FF'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * SE Depot Movements
- 
+
      C     TransTYPE     WHENEQ    'DPWI'
      C     TransTYPE     OREQ      'DPWO'
      C     TransTYPE     OREQ      'DPMV'                                                     CAP087
- 
+
      C                   EXSR      DPMVFmts
      C     DMWILn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       DMWILn        Bfp
- 
+
      C     DMesLn        SUBST     BUFFER:Bfp    OthrData
      C                   ADD       DMesLn        Bfp
       *   Depot Movement Type for Walk-In (WI)/ Walk-Out (WO)
@@ -3485,12 +3492,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       DMEXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
- 
+
      C                   CALL      'SEDPMVVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    OthrData
@@ -3498,7 +3505,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    OthData                                     BUG9089
      C                   PARM                    RegData                                      CER001
      C                   PARM                    ExtData
- 
+
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIDArr
      C                   PARM                    MsgDtaArr
@@ -3517,14 +3524,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'SE'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * MM Negotiable Assets Purchased
- 
+
      C     TransTYPE     WHENEQ    'NASP'
- 
+
      C                   EXSR      NASPFmts
      C                   EXSR      SettleFmts
- 
+
      C     NASPLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       NASPLn        Bfp
       **  Restore Timestamp field from the record                                            BUG4146
@@ -3541,7 +3548,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     NPRXLn        SUBST     BUFFER:Bfp    RegData                                      CER001
      C                   ADD       NPRXLn        Bfp                                          CER001
      C     NPEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'MMNASPVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3572,14 +3579,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * MM Negotiable Assets Sold
- 
+
      C     TransTYPE     WHENEQ    'NASS'
- 
+
      C                   EXSR      NASSFmts
      C                   EXSR      SettleFmts
- 
+
      C     NASSLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       NASSLn        Bfp
       **  Restore Timestamp field from the record                                            BUG4146
@@ -3594,7 +3601,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     NAIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       NAIFLn        Bfp                                          CAP086
      C     NSEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'MMNASSVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3624,14 +3631,14 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       * MM Rollover Deals Maintenance
- 
+
      C     TransTYPE     WHENEQ    'RODL'
- 
+
      C                   EXSR      RODLFmts
      C                   EXSR      SettleFmts
- 
+
      C*****RODLLn        SUBST     BUFFER:Bfp    TRANS1                                      CSF011A
      C     RODLLn        SUBST     BUFFER:Bfp    TRANS1A                                     CSF011A
      C                   ADD       RODLLn        Bfp
@@ -3642,7 +3649,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     ESSPLn        SUBST     BUFFER:Bfp    PaySttmt
      C                   ADD       ESSPLn        Bfp
      C     ROEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'MMRODLVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3665,15 +3672,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       * IR Caps/Collars/Floors
- 
+
      C     TransTYPE     WHENEQ    'CACF'
- 
+
      C                   EXSR      CACFFmts
      C                   EXSR      SettleFmts
      C                   EXSR      RPIFFmts                                                   CSW213
- 
+
      C     CACFLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       CACFLn        Bfp
      C     CAC2Ln        SUBST     BUFFER:Bfp    TRANS2
@@ -3688,7 +3695,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       CFEXLn        Bfp                                          CSW213
      C                   ADD       61            Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
- 
+
      C                   CALL      'IRCACFVU'
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
@@ -3720,17 +3727,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
       ** FX CLS Pay-in Schedule Header
- 
+
      C     TransTYPE     WHENEQ    'CLSP'
- 
+
      C                   EXSR      CLSPFmts
      C     CLSPLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       CLSPLn        Bfp
      C     CLIFLn        SUBST     BUFFER:Bfp    InfData                                      CAP086
      C                   ADD       CLIFLn        Bfp                                          CAP086
- 
+
      C                   CALL      'FXCLSPVU'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -3745,15 +3752,15 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       ** FX CLS Pay-in Schedule Detail
- 
+
      C     TransTYPE     WHENEQ    'CLS2'
- 
+
      C                   EXSR      CLS2Fmts
      C     CLS2Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       CLS2Ln        Bfp
- 
+
      C                   CALL      'FXCLSPVU2'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -3767,13 +3774,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
- 
+
       ** Internal Contracts
- 
+
      C     TransTYPE     WHENEQ    'INTC'
- 
+
      C                   EXSR      INTCFmts
- 
+
       ** Need to add 109 chars for the following fields not included on
       ** Format file ABINTCPD.
       ** DDLL2RT/DDL2CB/DDL2BA/DDL2CS/DDL2SA/DDLOIA/DDDPIA/DDSTS
@@ -3787,7 +3794,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C     1             SUBST     BUFFER:Bfp    AAuth             1                        BUG22140
      C                   ADD       1             Bfp                                        BUG22140
      C/COPY WNCPYSRC,APH00032
- 
+
      C                   CALL      'ABINTCVU'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -3805,11 +3812,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    AAuth                                      BUG22140
      C                   PARM                    FRNT                                         261962
      C                   PARM                    AFRT                                         261962
- 
+
       ** Internal Funding Deals
- 
+
      C     TransTYPE     WHENEQ    'FUND'
- 
+
      C                   EXSR      FUNDFmts
      C     FUNDLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       FUNDLn        Bfp
@@ -3824,7 +3831,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       20            Bfp                                          261140
      C     20            SUBST     BUFFER:Bfp    AFRT                                         261140
      C                   ADD       20            Bfp                                          261140
- 
+
      C                   CALL      'ABFUNDVU'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -3843,11 +3850,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    AAUTH                                        CAP191
      C                   PARM                    FRNT                                         261140
      C                   PARM                    AFRT                                         261140
- 
+
       ** Spot Rates
- 
+
      C     TransTYPE     WHENEQ    'SPTR'
- 
+
      C                   EXSR      SPTRFmts
      C     SPTRLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       SPTRLn        Bfp
@@ -3855,7 +3862,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       26            Bfp                                         BUG4469
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
- 
+
      C                   CALL      'SDSPTRVU'
      C                   PARM                    HeadIn
      C                   PARM                    Trans1
@@ -3871,12 +3878,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
      C                   PARM                    AAuth                                      BUG22140
- 
+
       * MM Interest Rates
      C     TransTYPE     WHENEQ    'INTR'
- 
+
      C                   EXSR      INTRFmts
- 
+
      C     INT1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       INT1Ln        Bfp
      C     INT2Ln        SUBST     BUFFER:Bfp    TRANS2
@@ -3884,12 +3891,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C     26            SUBST     BUFFER:Bfp    @TimeStamp                                  BUG4469
      C                   ADD       26            Bfp                                         BUG4469
      C     INEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'FDINTRVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    TRANS2
@@ -3905,25 +3912,25 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4469
- 
- 
+
+
       * SE Security Diary Events
      C     TransTYPE     WHENEQ    'SEDE'
- 
+
      C                   EXSR      SEDEFmts
- 
+
      C     SEDELn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       SEDELn        Bfp
       **  Restore Timestamp field from the record                                            BUG4258
      C     26            SUBST     BUFFER:Bfp    @TimeStamp                                  BUG4258
      C                   ADD       26            Bfp                                         BUG4258
      C     SDEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'SESEDEVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    ExtData
@@ -3938,13 +3945,13 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    Buffer
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4258
- 
- 
+
+
       * SE Prices Input
      C     TransTYPE     WHENEQ    'PRCS'
- 
+
      C                   EXSR      PRCSFmts
- 
+
      C     PRCSLn        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       PRCSLn        Bfp
       **  Restore Timestamp field from the record                                            BUG4258
@@ -3954,12 +3961,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       PRCXLn        Bfp                                        BUG22140
      C     1             SUBST     BUFFER:Bfp    AAuth                                      BUG22140
      C                   ADD       1             Bfp                                        BUG22140
- 
+
      C                   CALL      'SEPRCSVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
- 
+
       * Transaction information
      C                   PARM                    TRANS1
      C                   PARM                    ExtData
@@ -3975,21 +3982,21 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    APIRetc
      C                   PARM                    @TimeStamp                                  BUG4258
      C                   PARM                    AAuth                                      BUG22140
- 
+
       * FD Forward rates
- 
+
      C     TransTYPE     WHENEQ    'FWRT'
- 
+
      C                   EXSR      FWRTFmts
- 
+
      C     FWR1Ln        SUBST     BUFFER:Bfp    TRANS1
      C                   ADD       FWR1Ln        Bfp
      C     FWR2Ln        SUBST     BUFFER:Bfp    TRANS2
      C                   ADD       FWR2Ln        Bfp
      C     FWEXLn        SUBST     BUFFER:Bfp    ExtData
- 
+
      C                   CALL      'FDFWRTVU'
- 
+
       * Common header information (DS) from source system
      C                   PARM                    HeadIn
       * Transaction information
@@ -4033,7 +4040,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   PARM                    UpdateYN                                    CGP010
      C                   PARM                    Buffer                                      CGP010
      C                   PARM                    APIRetc                                     CGP010
- 
+
       * Settlement Module                                                                     CLE106
                                                                                               CLE106
      C     TransTYPE     WHENEQ    'SETL'                                                     CLE106
@@ -4796,9 +4803,9 @@ RGC  D RPIF4LN         S              4  0                                      
       * If unknown API requested, make sure this is reported back
      C                   OTHER
      C                   EXSR      *PSSR
- 
+
      C                   ENDSL
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -4806,7 +4813,7 @@ RGC  D RPIF4LN         S              4  0                                      
       *  SrSIRS - Call the validate/update program for SIRS
       ****************************************************************
      C     SrSIRS        BEGSR
- 
+
      C                   EXSR      SIRSFmts
      C**********         EXSR      SCHEDFmts                                                 BUG4646
      C                   EXSR      SettleFmts
@@ -4815,7 +4822,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         ADD       6             Bfp                                         BUG4646
       **********                                                                             BUG4646
      C**********         SELECT                                                              BUG4646
- 
+
       ** Single Currency IRS - Main details
       **********                                                                             BUG4646
      C**********         WHEN      %SUBST(BUFFER:1:6) = 'IRSIRS'                             BUG4646
@@ -4829,7 +4836,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C*****DTTRLn        SUBST     BUFFER:Bfp    Trans4                                      BUG4646
      C**********         ADD       DTTRLn        Bfp                                         BUG4646
      C*****DTTPLn        SUBST     BUFFER:Bfp    Trans5                                      BUG4646
- 
+
       ***Rate*Change*&*Interest*Payment*Dates*-*Single*Currency*IRS****                      BUG4646
       *****************************************************************                      BUG4646
      C**********         WHEN      %SUBST(BUFFER:1:6) = 'IRSIRI'                             BUG4646
@@ -4893,9 +4900,9 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       168           Bfp                                          CSW213
      C     RPIFLn        SUBST     BUFFER:Bfp    InSwift2013                                  CSW213
                                                                                              BUG6671
- 
+
      C**********         ENDSL                                                               BUG4646
- 
+
      C                   CALL      'IRSIRSVU'
      C                   PARM                    HeadIn
      C**********         PARM                    Trans1                                       CIR017
@@ -4938,7 +4945,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      WrkMod = 'DL'                                              CRE020
      C                   EXSR      SRSndDtaQ                                                  CRE020
      C                   ENDIF                                                                CRE020
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -4966,12 +4973,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * FX Deal
       *****************************************************************
      C     FXDLFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FXFXDLPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FXDLLn            4 0
- 
+
       **Add*DDNBRF*(19)*DDNSRF*(19)*DDSTS*(24)*BNNMAM*(1)**************                       CTI004
       **and*BJLCCY*(3)*to*end*of*details.******************************                       CTI004
      C**********         ADD       66            FXDLLn                                       CTI004
@@ -4984,7 +4991,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       21            FXDLLn                                       CFX114
       * Add TRAM fields, Counterpary and Broker Stati and visibility flags                   BUG4562
      C                   ADD       6             FXDLLn                                      BUG4562
- 
+
      C                   MOVEL     'FXFXIFPD'    FileName                                    BUG4815
      C                   EXSR      GETRCDLN                                                  BUG4815
      C                   Z-ADD     RecordLen     FXIFLn            4 0                       BUG4815
@@ -4992,7 +4999,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FXFXEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FXFXLn            4 0
- 
+
      C**********         MOVEL     'SDCUCUPD'    FileName                              CER043 CSF011
      C**********         EXSR      GETRCDLN                                            CER043 CSF011
      C**********         Z-ADD     RecordLen     SDCULn                                CER043 CSF011
@@ -5031,14 +5038,14 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Loan/Deposit
       *****************************************************************
      C     LDNIFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'MMLDNIPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LDNILn            4 0
       **Add*TRAM*fields,*Counterpary and Broker Stati and visibility flags           BUG6512 BUG7664
      C*******************ADD       6             LDNILn                              BUG6512 BUG7664
- 
+
      C                   MOVEL     'MMLDIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LDIFLn            4 0
@@ -5050,7 +5057,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   ADD       34            LDIFLn                                      BUG3986
       * Add TRAM fields, Counterpary and Broker Stati and visibility flags                   BUG7664
      C                   ADD       6             LDIFLn                                      BUG7664
- 
+
      C                   MOVEL     'MMLDRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     LDRXLn                                       CER001
@@ -5058,7 +5065,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMLDEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LDEXLn            4 0
- 
+
      C                   MOVEL     'SDCUCUPD'    FileName                                     CER043
      C                   EXSR      GETRCDLN                                                   CER043
      C                   Z-ADD     RecordLen     SDCULn                                       CER043
@@ -5075,24 +5082,24 @@ RGC  D RPIF4LN         S              4  0                                      
       **               Commissions & Overdraft charges and Other details
       *****************************************************************
      C     AMADFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLAMADPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     AMMDLn            4 0
- 
+
      C                   MOVEL     'GLAMDIPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     AMDILn            4 0
- 
+
      C                   MOVEL     'GLAMCIPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     AMCILn            4 0
- 
+
      C                   MOVEL     'GLAMCOPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     AMCOLn            4 0
- 
+
      C                   MOVEL     'GLAMODPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     AMODLn            4 0
@@ -5119,7 +5126,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   CRE015
      C                   EVAL      AMPPLn2 = RecordLen                                        CRE015
      C/COPY OFCPYSRCZ,CRE101_005                                                              CRE101
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5127,20 +5134,20 @@ RGC  D RPIF4LN         S              4  0                                      
       * (Dealing) Extended Payment Instructions
       *****************************************************************
      C     SettleFmts    BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SDESSPPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ESSPLn            4 0
- 
+
      C                   MOVEL     'SDESSRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ESSRLn            4 0
- 
+
      C                   MOVEL     'SDESSFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ESSFLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5165,37 +5172,37 @@ RGC  D RPIF4LN         S              4  0                                      
       **                     : Fifth, Sixth, Seventh and Eighth
       *****************************************************************
      C     OPAYFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FTOPY1PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY1Ln            4 0
- 
+
      C                   MOVEL     'FTOPY1APD'   FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FTOPY2PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY3Ln            4 0
- 
+
      C                   MOVEL     'FTOPY3PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY4Ln            4 0
- 
+
      C                   MOVEL     'FTOPY4PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY5Ln            4 0
- 
+
      C                   MOVEL     'FTOPY5PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY6Ln            4 0
- 
+
      C                   MOVEL     'FTOPY6PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY7Ln            4 0
- 
+
      C                   MOVEL     'FTOPY7PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OPY9Ln            4 0
@@ -5233,7 +5240,7 @@ RGC  D RPIF4LN         S              4  0                                      
       ** Blanking out the name for the next name to be moved correctly                        CER030
       *                                                                                       CER030
      C                   MOVE      *BLANKS       Filename                                     CER030
- 
+
      C                   MOVEL     'FTOPRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     OPRXLn                                       CER001
@@ -5248,7 +5255,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FTOPY9PD'    FileName                                     CER049
      C                   EXSR      GETRCDLN                                                   CER049
      C                   Z-ADD     RecordLen     OPY12Ln           4 0                        CER049
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5258,35 +5265,35 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                               *
       *****************************************************************
      C     IPAYFmts      BEGSR
- 
+
      C                   MOVEL     'FTIPY1PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY1Ln            4 0
- 
+
      C                   MOVEL     'FTIPY1APD '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY2Ln            4 0
- 
+
      C                   MOVEL     'FTIPY2PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY3Ln            4 0
- 
+
      C                   MOVEL     'FTIPY3PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY4Ln            4 0
- 
+
      C                   MOVEL     'FTIPY4PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY5Ln            4 0
- 
+
      C                   MOVEL     'FTIPY4APD '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY6Ln            4 0
- 
+
      C                   MOVEL     'FTIPY5PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY7Ln            4 0
- 
+
      C                   MOVEL     'FTIPY6PD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPY8Ln            4 0
@@ -5311,7 +5318,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FTIPY9PD  '  FileName                                     CER049
      C                   EXSR      GETRCDLN                                                   CER049
      C                   Z-ADD     RecordLen     IPY10Ln           4 0                        CER049
- 
+
      C                   MOVEL     'FTIPRXPD  '  FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     IPRXLn                                       CER001
@@ -5319,7 +5326,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FTIPEXPD  '  FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IPEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5327,29 +5334,29 @@ RGC  D RPIF4LN         S              4  0                                      
       * SD Customers
       *****************************************************************
      C     CUSDFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SDCUPRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDPRLn            4 0
- 
+
      C                   MOVEL     'SDCUSEPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDSELn            4 0
- 
+
      C                   MOVEL     'SDCUMRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDMRLn            4 0
- 
+
      C                   MOVEL     'SDCUPBPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDPBLn            4 0
- 
+
      C                   MOVEL     'SDCUBRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     500           SDB1Ln            4 0
      C     RecordLen     SUB       500           SDB2Ln            4 0
- 
+
      C                   MOVEL     'SDCUMTPD'    FileName                                   BUG14485
      C                   EXSR      GETRCDLN                                                 BUG14485
      C                   Z-ADD     RecordLen     SDMTLn            4 0                      BUG14485
@@ -5413,7 +5420,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'SDCUEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDEXLn            4 0
- 
+
      C                   MOVEL     'SDCURXPD'    FileName                                     CSD079
      C                   EXSR      GETRCDLN                                                   CSD079
      C                   Z-ADD     RecordLen     SDCULn            4 0                        CSD079
@@ -5463,7 +5470,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * GL Journal Entry Header Maintenance
       *****************************************************************
      C     BITHFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLBITHPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5473,11 +5480,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'GLJEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     GLIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     'GLBHEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     BHEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5485,7 +5492,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * GL Journal Entry Item Maintenance
       *****************************************************************
      C     BITPFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLBITPPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5501,7 +5508,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN                                                   246418
      C                   Z-ADD     RecordLen     BIPXLn            4 0                        246418
                                                                                               246418
- 
+
      C                   MOVEL     *BLANKS       FileName                                     246418
      C                   MOVEL     'GLBPRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
@@ -5512,7 +5519,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     BPEXLn            4 0
      C/COPY OFCPYSRCZ,CGL135_045                                                             CGL135A
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5520,16 +5527,16 @@ RGC  D RPIF4LN         S              4  0                                      
       * SD Securities Customers
       *****************************************************************
      C     SECDFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SDSECDPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDSCLn            4 0
- 
+
      C                   MOVEL     'SDSEEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDSXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5537,16 +5544,16 @@ RGC  D RPIF4LN         S              4  0                                      
       * PM Portfolio Definition
       *****************************************************************
      C     PFDMFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'PMPFDMPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     PMPMLn            4 0
- 
+
      C                   MOVEL     'PMPFEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     PMEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5554,12 +5561,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE loans
       *****************************************************************
      C     LOANFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEN1MFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOANLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5567,20 +5574,20 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Deal Amendments
       *****************************************************************
      C     DEAMFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'MMDEAMPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DEAMLn            4 0
- 
+
      C                   MOVEL     'MMDAIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DAIFLn            4 0
- 
+
      C                   MOVEL     'MMDAEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DAEXLn            4 0
- 
+
      C                   MOVEL     'SDCUCUPD'    FileName                                     CER043
      C                   EXSR      GETRCDLN                                                   CER043
      C                   Z-ADD     RecordLen     SDCULn                                       CER043
@@ -5592,7 +5599,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Facilities Amendements
       *****************************************************************
      C     FAMDFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFAMDPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5606,7 +5613,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LEFAM2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
      C                   Z-ADD     RecordLen     FAM2Ln            4 0                        CLE106
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5614,27 +5621,27 @@ RGC  D RPIF4LN         S              4  0                                      
       * GL Collateral Details
       *****************************************************************
      C     COLLFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLCOL1PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     COL1Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLCOL2PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     COL2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLCOL3PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     COL3Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLCOL4PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     COL4Ln            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5642,12 +5649,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * GL Collateral Allocations
       ****************************************************************
      C     COLAFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'GLSCLAPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     COLALn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -5655,12 +5662,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Facilities Details
       *****************************************************************
      C     FCIPFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFCPPPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FCI1Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFCSPPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5684,7 +5691,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LEFCNTPD'    FileName                                   BUG10093
      C                   EXSR      GETRCDLN                                                 BUG10093
      C                   Z-ADD     RecordLen     FCRNLn                                     BUG10093
- 
+
      C                   MOVEL     'LEFCRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     FCRXLn                                       CER001
@@ -5692,7 +5699,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LEFCEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FCEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5700,22 +5707,22 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Loan Details
       *****************************************************************
      C     CLIPFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LECLI1PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLI1Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LECLI2PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLI2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LECLI3PD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLI3Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LECLI4PD'    FileName
      C                   EXSR      GETRCDLN
@@ -5734,7 +5741,7 @@ RGC  D RPIF4LN         S              4  0                                      
       *                                                                         CLE120
      C**********         ADD       8             CLI4Ln                                CLE120 CLE106
      C                   ADD       8             CLI5Ln                                       CLE106
- 
+
      C                   MOVEL     'LECLRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     CLRXLn                                       CER001
@@ -5752,7 +5759,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LECLI6PD'    FileName                                  AR1021983
      C                   EXSR      GETRCDLN                                                AR1021983
      C                   Z-ADD     RecordLen     CLI6Ln            4 0                     AR1021983
- 
+
+     C                   MOVEL     *BLANKS       FileName                                     CLE141
+     C                   MOVEL     'LECLI7PD'    FileName                                     CLE141
+     C                   EXSR      GETRCDLN                                                   CLE141
+     C                   Z-ADD     RecordLen     CLI7Ln            4 0                        CLE141
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5760,17 +5772,17 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Rollover Instructions
       *****************************************************************
      C     LERIFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LELERIPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LERILn            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LELERI2PD'   FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LER2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName                                      BUG19
      C                   MOVEL     'LELERI3PD'   FileName                                      BUG19
      C                   EXSR      GETRCDLN                                                    BUG19
@@ -5785,7 +5797,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LEEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5793,7 +5805,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Repayment schedule
       *****************************************************************
      C     RPSCFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LERPSCPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5803,7 +5815,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     LEIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     *BLANKS       FileName                                     CLE106
      C                   MOVEL     'LERPS2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
@@ -5812,8 +5824,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LERPEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     RPEXLn            4 0
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5821,7 +5833,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Loam Amendments
       *****************************************************************
      C     LOAMFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LELOAMPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5831,7 +5843,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     LEIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     *BLANKS       FileName                                     CLE106
      C                   MOVEL     'LELOA2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
@@ -5840,8 +5852,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELOEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     LOEXLn            4 0
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5849,7 +5861,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Manual Repayment
       *****************************************************************
      C     MAPYFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEMAPYPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5859,7 +5871,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     LEIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     *BLANKS       FileName                                     CLE106
      C                   MOVEL     'LEMAP2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
@@ -5872,8 +5884,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LEMAEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     MAEXLn            4 0
- 
- 
+
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -5881,17 +5893,17 @@ RGC  D RPIF4LN         S              4  0                                      
       * SD Base rates
       *****************************************************************
      C     BSRTFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SDBSRSPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     BSRTLn            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SDBSEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     BSEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************                       CSD093
       /SPACE 5                                                                                CSD093
@@ -5967,7 +5979,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Fee Adjustments
       ****************************************************************
      C     FEADFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFEADPD'    FileName
      C                   EXSR      GETRCDLN
@@ -5977,7 +5989,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     LEIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     *BLANKS       FileName                                     CLE106
      C                   MOVEL     'LEFEA2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
@@ -5990,7 +6002,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Fee settlement
       ****************************************************************
      C     FESTFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFESTPD'    FileName
      C                   EXSR      GETRCDLN
@@ -6000,7 +6012,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'LELEIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     LEIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     *Blanks       FileName                                     CLE106
      C                   MOVEL     'LEFES2PD'    FileName                                     CLE106
      C                   EXSR      GETRCDLN                                                   CLE106
@@ -6012,12 +6024,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Funding Partcipant
       ****************************************************************
      C     FPRTFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEFPRTPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FPRTLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6025,12 +6037,12 @@ RGC  D RPIF4LN         S              4  0                                      
       * LE Assignments
       ****************************************************************
      C     ASGNFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'LEASGNPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ASGNLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6038,14 +6050,14 @@ RGC  D RPIF4LN         S              4  0                                      
       * IR Forward Rate Agreements
       ****************************************************************
      C     FRAFmts       BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'IRFRAPD'     FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FRALn             4 0
       * Add TRAM fields, Counterpary and Broker Stati and visibility flags                   BUG6512
      C                   ADD       6             FRALn                                       BUG6512
- 
+
       ** Fwd Rate Agreement Interface Data Format Definition Layout                         BUG18701
      C                   MOVEL     'IRFRIFPD'    FileName                                   BUG18701
      C                   EXSR      GETRCDLN                                                 BUG18701
@@ -6058,7 +6070,7 @@ RGC  D RPIF4LN         S              4  0                                      
       *  IR Single Currency IRS                                       *
       *****************************************************************
      C     SIRSFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'IRSIRSPD'    FileName
      C                   EXSR      GETRCDLN
@@ -6085,7 +6097,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'IRSSEXPD'    FileName                                    BUG6671
      C                   EXSR      GETRCDLN                                                  BUG6671
      C                   Z-ADD     RecordLen     IRSSLn            4 0                       BUG6671
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6093,27 +6105,27 @@ RGC  D RPIF4LN         S              4  0                                      
       *  IR Cross Currency IRS
       ****************************************************************
      C     CIRSFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'IRCIRSPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CIRSLn            4 0
- 
+
       ** IR Cross Currency Interface Data Format Definition Layout
- 
+
      C                   MOVEL     'IRRXIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IRRXLn            4 0
- 
+
       ** IR IRS Cross Ccy Extra Data file (50 byte narrative text plus any
       ** custom info)
- 
+
      C                   MOVEL     'IRCSEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     IRCSLn            4 0
      C                   Z-ADD     0             IRCS2Ln           4 0                      MD029663
      C                   Z-ADD     0             IRCS3Ln           4 0                      MD029663
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6121,7 +6133,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * SE Securities Detail
       ****************************************************************
      C     SECSFmts      BEGSR
- 
+
      C                   MOVEL     'SESEC1PD  '  Filename
      C                   EXSR      GETRCDLN
      C                   Z-ADD     Recordlen     SEC1Ln            4 0
@@ -6157,8 +6169,8 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   Z-ADD     Recordlen     SEEXLn            4 0
                                                                                              BUG5988
      C                   EVAL      SECSFLn = %LEN(SECSFldDS1)                                BUG5988
- 
- 
+
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6166,10 +6178,10 @@ RGC  D RPIF4LN         S              4  0                                      
       * SE Securities Trade
       ****************************************************************
      C     TRADFmts      BEGSR
- 
+
       ** SE Trade: Primary, Secondary, Exchange Rates, Settlement Details,
       **           Charges & Commissions, SWIFT Details
- 
+
      C                   MOVEL     'SETRPRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     TRPRLn            4 0
@@ -6195,20 +6207,20 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     TRX2Ln            4 0
      C                   EVAL      TRX2Ln = TRX2Ln * 2
- 
+
       *  Hedge Accounting file
- 
+
      C                   MOVEL     'SETRTHPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     TRHALn            4 0
- 
+
       ** SE Trades Interface Data  Format Definition Layout
       ** (50 byte narrative text plus any custom info)
- 
+
      C                   MOVEL     'SETRIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SETILn            4 0
- 
+
      C                   MOVEL     'SETDRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     TDRXLn                                       CER001
@@ -6219,11 +6231,11 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                              BUG9584
       ** SE Trades Extra Data file (50 byte narrative text plus any
       ** custom info)
- 
+
      C                   MOVEL     'SETDEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SETRLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6231,8 +6243,8 @@ RGC  D RPIF4LN         S              4  0                                      
       * SE Depot Movements
       ****************************************************************
      C     DPMVFmts      BEGSR
- 
- 
+
+
      C                   MOVEL     'SEDMIDPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DMWILn            4 0
@@ -6240,7 +6252,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'SEDMESPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DMesLn            4 0
- 
+
      C                   MOVEL     'SEDMAXPD'    FileName                                    BUG9089
      C                   EXSR      GETRCDLN                                                  BUG9089
      C                   Z-ADD     RecordLen     DMAXLn            4 0                       BUG9089
@@ -6250,11 +6262,11 @@ RGC  D RPIF4LN         S              4  0                                      
                                                                                               CER001
       ** SE Depot Movements file (50 byte narrative text plus any
       ** custom info)
- 
+
      C                   MOVEL     'SEDMEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     DMEXLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6262,7 +6274,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Negotiable Assets Purchased
       *****************************************************************
      C     NASPFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'MMNASPPD'    FileName
      C                   EXSR      GETRCDLN
@@ -6278,7 +6290,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMNAIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     NAIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     'MMNPEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     NPEXLn            4 0
@@ -6286,7 +6298,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMNPRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     NPRXLn                                       CER001
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6294,7 +6306,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Negotiable Assets Sold
       *****************************************************************
      C     NASSFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'MMNASSPD'    FileName
      C                   EXSR      GETRCDLN
@@ -6306,11 +6318,11 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'MMNAIFPD'    FileName                                     CAP086
      C                   EXSR      GETRCDLN                                                   CAP086
      C                   Z-ADD     RecordLen     NAIFLn            4 0                        CAP086
- 
+
      C                   MOVEL     'MMNSEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     NSEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6318,23 +6330,23 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Rollover Details Maintenance
       *****************************************************************
      C     RODLFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'MMLDNIPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     RODLLn            4 0
- 
+
       * Add DDRAMN (14A) and DDRACT (1A) at the end of deal details.
      C                   ADD       15            RODLLn
- 
+
      C                   MOVEL     'MMLDIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ROIFLn            4 0
- 
+
      C                   MOVEL     'MMLDEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     ROEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6342,25 +6354,25 @@ RGC  D RPIF4LN         S              4  0                                      
       * IR Caps/Collars/Floors Maintenance
       *****************************************************************
      C     CACFFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'IRCACFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CACFLn            4 0
- 
+
      C                   MOVEL     'IRCACF2PD'   FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CAC2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'IRRPIFPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CFIFLn            4 0
- 
+
      C                   MOVEL     'IRCPEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CFEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6368,7 +6380,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * FX CLS Pay-in Schedule (Header)                               *
       *****************************************************************
      C     CLSPFmts      BEGSR
- 
+
      C                   EVAL      FileName = 'FXCLSPHPD'
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLSPLn            4 0
@@ -6379,7 +6391,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FXCLIFPD'    FileName                                    BUG9829
      C                   EXSR      GETRCDLN                                                  BUG9829
      C                   Z-ADD     RecordLen     CLIFLn            4 0                       BUG9829
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6387,7 +6399,7 @@ RGC  D RPIF4LN         S              4  0                                      
       * FX CLS Pay-in Schedule (Detail)                               *
       *****************************************************************
      C     CLS2Fmts      BEGSR
- 
+
      C                   EVAL      FileName = 'FXCLSPDPD'
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     CLS2Ln            4 0
@@ -6398,17 +6410,17 @@ RGC  D RPIF4LN         S              4  0                                      
      C**********         MOVEL     'FXCLIFPD'    FileName                             CAP086 BUG9829
      C**********         EXSR      GETRCDLN                                           CAP086 BUG9829
      C**********         Z-ADD     RecordLen     CLIFLn            4 0                CAP086 BUG9829
- 
+
      C                   ENDSR
       *****************************************************************
       * Internal Contracts                                            *
       *****************************************************************
      C     INTCFmts      BEGSR
- 
+
      C                   EVAL      FileName = 'ABINTCPD'
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     INTCLn            4 0
- 
+
      C/COPY WNCPYSRC,APH00034
      C                   ENDSR
       *****************************************************************
@@ -6417,11 +6429,11 @@ RGC  D RPIF4LN         S              4  0                                      
       * Internal Funding Deals                                        *
       *****************************************************************
      C     FUNDFmts      BEGSR
- 
+
      C                   EVAL      FileName = 'ABFUNDPD'
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FUNDLn            4 0
- 
+
      C                   EVAL      FileName = 'ABFUEXPD'                                      CAP191
      C                   EXSR      GETRCDLN                                                   CAP191
      C                   Z-ADD     RecordLen     FUEXLn            4 0                        CAP191
@@ -6433,16 +6445,16 @@ RGC  D RPIF4LN         S              4  0                                      
       * FF Over The Counter OTCC
       *****************************************************************
      C     OTCCFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FFOTCCPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCCLn            4 0
- 
+
      C                   MOVEL     'FFCSETPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCCLnS           4 0
- 
+
      C                   MOVEL     'FFOTRXPD'    FileName                                     CER001
      C                   EXSR      GETRCDLN                                                   CER001
      C                   Z-ADD     RecordLen     OTRXLn                                       CER001
@@ -6450,26 +6462,26 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FFOTEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCCLnX           4 0
- 
+
      C                   ENDSR
       *****************************************************************
       * FF Non Currency Over The Counter OTCO
       *****************************************************************
      C     OTCOFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FFOTCOPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCOLn            4 0
- 
+
      C                   MOVEL     'FFCSETPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCOLnS           4 0
- 
+
      C                   MOVEL     'FFOTEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     OTCOLnX           4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6477,18 +6489,18 @@ RGC  D RPIF4LN         S              4  0                                      
       * FF Exchange Traded Transaction EXTR
       *****************************************************************
      C     EXTRFmts      BEGSR
- 
+
       * The main file...
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FFEXTRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     EXTRLn            4 0
- 
+
       * ... Customer Settlement details...
      C                   MOVEL     'FFCSETPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     EXTRLnCS          4 0
- 
+
       * ... Broker Settlement details...
      C                   MOVEL     'FFBSETPD'    FileName
      C                   EXSR      GETRCDLN
@@ -6498,12 +6510,12 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   MOVEL     'FFETRXPD'    FileName                                     CAP191
      C                   EXSR      GETRCDLN                                                   CAP191
      C                   Z-ADD     RecordLen     EXTRLnR           4 0                        CAP191
- 
+
       * ... and Extra details.
      C                   MOVEL     'FFETEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     EXTRLnX           4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6511,11 +6523,11 @@ RGC  D RPIF4LN         S              4  0                                      
       * SD Spot Rates                                                 *
       *****************************************************************
      C     SPTRFmts      BEGSR
- 
+
      C                   EVAL      FileName = 'SDSPTRPD'
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SPTRLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -6577,17 +6589,17 @@ RGC  D RPIF4LN         S              4  0                                      
       * MM Interest Rates                                             *
       *****************************************************************
      C     INTRFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FDINTRPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     500           INT1Ln            4 0
      C     RecordLen     SUB       500           INT2Ln            4 0
- 
+
      C                   MOVEL     'FDIREXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     INEXLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6595,16 +6607,16 @@ RGC  D RPIF4LN         S              4  0                                      
       * SE Security Diary Events                                      *
       *****************************************************************
      C     SEDEFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SESEDEPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SEDELn            4 0
- 
+
      C                   MOVEL     'SESDEXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     SDEXLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6612,16 +6624,16 @@ RGC  D RPIF4LN         S              4  0                                      
       * SE Prices Input                                               *
       *****************************************************************
      C     PRCSFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'SEPRCSPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     PRCSLn            4 0
- 
+
      C                   MOVEL     'SEPREXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     PRCXLn            4 0
- 
+
      C                   ENDSR
       ****************************************************************
       /SPACE 5
@@ -6629,18 +6641,18 @@ RGC  D RPIF4LN         S              4  0                                      
       * FD Forward Rates                                              *
       *****************************************************************
      C     FWRTFmts      BEGSR
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FDFWRTPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     500           FWR1Ln            4 0
      C     RecordLen     SUB       500           FWR2Ln            4 0
- 
+
      C                   MOVEL     *BLANKS       FileName
      C                   MOVEL     'FDFREXPD'    FileName
      C                   EXSR      GETRCDLN
      C                   Z-ADD     RecordLen     FWEXLn            4 0
- 
+
      C                   ENDSR
       *****************************************************************                       CLE106
       * Settlement Details                                                                    CLE106
@@ -7117,7 +7129,7 @@ RGC  D RPIF4LN         S              4  0                                      
      C                   EVAL      CRE020 = 'Y'                                               CRE020
      C                   ENDIF                                                                CRE020
      C/COPY WNCPYSRC,APH00035
- 
+
       ** Check if SWIFT2009 is installed                                                      CSW209
                                                                                               CSW209
      C                   Eval      CSW209 = 'N'                                               CSW209
@@ -7136,7 +7148,7 @@ RGC  D RPIF4LN         S              4  0                                      
       ** procedure names for database error processing.
      C/COPY ZACPYSRC,DBFIELDS
       **--------------------------------------------------------------
- 
+
      C                   ENDSR
       *****************************************************************
       /SPACE 5
@@ -7144,24 +7156,24 @@ RGC  D RPIF4LN         S              4  0                                      
       *  Get Record Lengths of Transaction Data Blocks               *
       ****************************************************************
      C     GETRCDLN      BEGSR
- 
+
      C                   CALLB     'UTGETRCDLN'
- 
+
       ** Return code
      C                   PARM                    ReturnCode       10
       ** Record length
      C                   PARM      *ZERO         RecordLen         5 0
- 
+
       ** File name
      C                   PARM                    FileName         10
       ** File library
      C                   PARM      '*LIBL     '  FileLib          10
- 
+
       ** If file not found (or any other error) shut down the program
      C     ReturnCode    Ifne      *Blanks
      C                   EXSR      *pssr
      C                   EndIf
- 
+
      C                   ENDSR
       *****************************************************************                       CRE020
       /SPACE 5                                                                                CRE020

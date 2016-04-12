@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031736           Date 02Mar15               *
-      *  Prev Amend No. MD021302           Date 29Jan15               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *                 MD021302           Date 29Jan15               *
       *                 MD020134A          Date 29Jan15               *
       *                 CGL165             Date 17Mar15               *
       *                 AR897086           Date 10Mar15               *
@@ -362,6 +363,7 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
       *  MD031736 - Update DLRC with latest value date recorded on    *
       *             rates file.                                       *
       *  MD021302 - Further change on MD020134A. Added checking if    *
@@ -1104,7 +1106,8 @@
      F***LOUPDL1 IP AF    1773 10AI     2 DISK                                         CLE042 CER020
      F***LOUPDL1 IP AF    1782 10AI     2 DISK                                         CER020 CRE073
      F***LOUPDL1   IP  AF 1829    10AIDISK    KEYLOC(2)                                CRE073 CLE134
-     FLOUPDL1   IP  AF 1905    10AIDISK    KEYLOC(2)                                          CLE134
+     F***LOUPDL1   IP  AF 1905    10AIDISK    KEYLOC(2)                                CLE134 CLE141
+     FLOUPDL1   IP  AF 2025    10AIDISK    KEYLOC(2)                                          CLE141
      FLELOMKL1  IF   E           K DISK                                                       CLE134
      F                                     IGNORE(LOAMSDHF)                                   CLE134
      F                                     RENAME(LOAMSDKF:LOMNEWF)                           CLE134
@@ -1209,7 +1212,8 @@
      F***NCLONCL O   F    1773            DISK                                       CLE042 BUG22966
      F***NCLONCL O   F    1782            DISK                                       BUG22966 CRE073
      F***NCLONCL   O    F 1829        DISK                                             CRE073 CLE134
-     FNCLONCL   O    F 1905        DISK                                                       CLE134
+     F***NCLONCL   O    F 1905        DISK                                             CLE134 CLE141
+     FNCLONCL   O    F 2025        DISK                                                       CLE141
      F***NCLONCK O   F     469            DISK                     S01518 CLE004
      F***NCLONCK*O   F    1103            DISK                     CLE004 123335
      F***NCLONCK*O   F    1111            DISK                     123335 CEU004
@@ -1249,7 +1253,8 @@
      F***MCLONCL O   F    1773            DISK                                         CLE042 CER020
      F***MCLONCL O   F    1776            DISK                                         CER020 CRE073
      F***MCLONCL   O    F 1805        DISK                                             CRE073 CLE134
-     FMCLONCL   O    F 1881        DISK                                                       CLE134
+     F***MCLONCL   O    F 1881        DISK                                             CLE134 CLE141
+     FMCLONCL   O    F 2001        DISK                                                       CLE141
 0019 F***MCLONCK*O***F     400            DISK                      S10227S01518
 0019 F***MCLONCK O   F     469            DISK                     S01518 CLE004
      F***MCLONCK*O   F    1103            DISK                     CLE004 123335

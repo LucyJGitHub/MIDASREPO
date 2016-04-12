@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. AR547813           Date 13Nov15               *
-      *  Prev Amend No. MD026167           Date 13May14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR547813           Date 13Nov15               *
+      *                 MD026167           Date 13May14               *
       *                 MD025467           Date 08May14               *
       *                 MD024342B          Date 08May14               *
       *                 MD024342           Date 08May14               *
@@ -94,6 +95,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  AR547813 - Base rate change not captured by loans thus affec-*
       *             ting interest calculation. BR events were not pro-*
       *             cessed during COB if CHIN = blank. Default CHIN to*
@@ -216,33 +219,33 @@
       **   F-specs                               
       **   =======                               
       ** +--------------------------------------+
- 
+
       ** Midas LE Loan Amendment Details
      FLOAMD     UF A E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(LOAMSDHF)
- 
+
       ** Midas LE Loan Transaction Index Detail
      F***LTRIX**** UF   F   43        DISK    INFSR(*PSSR) COMMIT                           AR322732
      FLTRIX     O  A F   45        DISK    INFSR(*PSSR) COMMIT                              AR322732
      F                                     INFDS(FLDTX)
- 
+
       ** Midas LE Customer loans
      FCLOAN     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     INCLUDE(CLOANCLF)
      F                                     PREFIX(LO_)
- 
+
       ** Midas LE Customer Lending Facility File
      FFCLTY     UF   E           K DISK    INFSR(*PSSR) COMMIT
      F                                     IGNORE(FCLTYHHF)
      F                                     IGNORE(FCLTYZZF)
      F                                     PREFIX(FA_)
- 
+
       ** Midas LE Loan amendment fee index file
      FLEFELAL0  UF A E           K DISK    INFSR(*PSSR) COMMIT
- 
+
       ** Midas LE Lending fees master detail inputs
      FLEFEEDL1  UF   E           K DISK    INFSR(*PSSR) COMMIT
- 
+
       *                                                                                     MD023203
      FLEFEEDL0  UF   E           K DISK    INFSR(*PSSR)                                     MD023203
      F                                     COMMIT                                           MD023203
@@ -295,7 +298,7 @@
       **   Automatically included D-specs        
       **   ==============================        
       ** +--------------------------------------+
- 
+
       **----------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
@@ -319,7 +322,7 @@
       **----------------------------------------------------------------
       *
       **----------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
@@ -331,12 +334,12 @@
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
       ** +--------------------------------------+
- 
+
      D*PSysValOME      C                   CONST('OMEIndicator')                      BUG8241 CSC054
      D PSysValPEA      C                   CONST('PEAIndicator')                              CSC054
       ** +--------------------------------------+
@@ -346,30 +349,30 @@
                                                                                             AR656363
      D WUpdExpo        S              1A                                                    AR656363
      D CobMode         S              1A                                                   MD021423E
- 
+
       ** File information data structure for LTRIX
      D FLDTX           DS
      D   TXSTS           *STATUS
- 
+
       ** Switchable feature details                                                           CRE020
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CRE020
      D  SCLCD        E                     EXTFLD(LCD)                                        CRE020
                                                                                               CRE020
       ** Currency details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** Nostro details
      D SDNOST        E DS                  EXTNAME(SDNOSTPD)
- 
+
       ** Midas API message header format definition
      D APHEAD        E DS                  EXTNAME(APHEADPD)
- 
+
       ** DS for access programs, short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for access programs, long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** SD data area                                                                        BUG3760
       *                                                                                      BUG3760
      D SDSTAT        E DS                  EXTNAME(SDSTAT) DTAARA(SDSTAT)                    BUG3760
@@ -442,7 +445,7 @@
      D AUSRC         E                     EXTFLD(AUSR)
      D XUSRC         E                     EXTFLD(XUSR)
      D CLASA         E                     EXTFLD(CLAS)                                       CLE042
- 
+
       ***  Loan details 'B' format
      D LoanDetsB     E DS                  EXTNAME(CLOAN:CLOANCKF)
      D                                     PREFIX(LO_)
@@ -480,18 +483,18 @@
      D FB_AFRT       E                     EXTFLD(AFRT)
      D FB_REPA       E                     EXTFLD(REPA)
      D FB_STMP       E                     EXTFLD(STMP)
- 
+
       ** Error indicators
      D LOAM_OK       E DS                  EXTNAME(LEELOAMPD)
- 
+
       ** New loan amendment in file format
      D ValidLoam     E DS                  EXTNAME(LEVLOAMPD)
- 
+
       ** External data structures for update of PRONO, MEMOS etc.
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
      D Z#WSTS        E DS                  EXTNAME(Z#WST)
- 
+
       ***  before image1 of update to LE position files                                       CLE055
      D                 DS                                                                     CLE055
      D Z#ZADTB                      256                                                       CLE055
@@ -542,18 +545,18 @@
      D   SHPEXR             1101   1107P 8                                                    CLE031
      D   SHPEXI             1108   1108                                                       CLE031
      D   SHSTAL             1109   1109                                                       CLE034
- 
+
      D Z#ADTH          DS                                                                     CLE134
      D  SHXRFI                        3A                                                      CLE134
      D  SHXRFN                       10S 0                                                    CLE134
- 
+
      D FCLKEY          DS
      D***WFCNM**               1      6  0                                                    CSD027
      D   WFCNM                 1      6                                                       CSD027
      D   WFACT                 7      9  0
      D   WFNUM                10     11  0
      D   WFRTP                12     12
- 
+
       ** Dates for Facility Exposure Array
      D                 DS
      D  FB_RUN0                1      3P 0
@@ -567,7 +570,7 @@
      D  FB_RUN8               25     27P 0
      D  FB_RUN9               28     30P 0
      D  FB_RUN                 1     30P 0 DIM(10) ASCEND
- 
+
       ** Facility Exposure Array
      D                 DS
      D  FB_OAM1                1      7P 0
@@ -587,7 +590,7 @@
      D  WREHRS                12     13                                                       CLE030
      D  WREMIN                15     16                                                       CLE030
      D  WRESEC                18     19                                                       CLE030
- 
+
       ** Data Structure for MPHAS Dataarea                                                  MD021423
                                                                                             MD021423
      D MPHAS           DS             1                                                     MD021423
@@ -596,20 +599,20 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Message file for ZAMSGTOOPR
      D DummyMsgF       S             10    INZ('LERMSGF')
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
       ** Currency conversion
      D POWR            S              7  3 DIM(7) CTDATA PERRCD(1)
- 
+
       ** Currencies and telex notice days
      D CYA             S              3    DIM(150)
      D TND             S              1  0 DIM(150)
- 
+
       ** Parameter for APLOGTRAN
      D TransDtl        S           5800A
                                                                                               CLE025
@@ -652,7 +655,7 @@
      D @ACCD           S             10A                                                      CGL029
      D PDealNo         S             24A                                                      CGL029
      D PADealNo        S             24A                                                      CGL029
- 
+
      D CAS016          S              1                                                       CAS019
      D CAS009          S              1                                                       CAS011
      D CSC011          S              1                                                      BUG3760
@@ -731,7 +734,7 @@
       **   Start of I-specs                      
       **   ================                      
       ** +--------------------------------------+
- 
+
       ** Loan transactions index file - Header record
      I*LTRIX**** NS        1 CH                                                             AR322732
      I**********                        1    1  RECI                                        AR322732
@@ -845,7 +848,7 @@
       **   executed at program activation.                                 
       **                                                                   
       ** +----------------------------------------------------------------+
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -853,7 +856,7 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUSER = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
       ***Processing*init***********************************************                       CLE106
      C**********         EXSR      SRINIT                                                     CLE106
       *
@@ -935,55 +938,55 @@
      C                   MOVEL     LoamFilFmt    LoamFilXFmt                                  CRE073
       ** Call to the retrieve module
      C                   CALLB     'LELOAMRTV'
- 
+
       ** Return code
      C                   PARM      *Blanks       RetCodeIn
- 
+
       * Mode = '*FRONT' (Front office transaction interface)
       * Mode = '      ' (Not front office transaction interface)
      C                   PARM                    ModeofOp          6
- 
+
       ** Response mode
      C                   PARM      *Blank        RespMode          1
- 
+
       ** Action Code
      C                   PARM                    DDACTN            1
- 
+
       ** Front Office Transaction ID
      C                   PARM      LAFRNT        FOTRID           20
- 
+
       * Loan number / value date / sequence / type
      C                   PARM                    DDLOAN            6
      C                   PARM                    DDVDAT            6
      C                   PARM                    DDSEQN            3
      C                   PARM                    DDATYP            2
- 
+
       * Where called from
      C                   PARM      'UPD'         CallModCod        3
- 
+
       ** Features
      C                   PARM                    CEU020
      C                   PARM                    CLE030                                       CLE030
- 
+
       * Multi-branching/date format indicators
      C                   PARM                    BGMBIN
      C                   PARM                    BJDFIN
- 
+
       * Current loan amendment in file format, plus loan/facility details
      C                   PARM                    LoamFilFmt
      C                   PARM                    LoanDetsA
      C                   PARM                    LoanDetsB
      C                   PARM                    FacilityA
      C                   PARM                    FacilityB
- 
+
       ** Error Indicators
      C                   PARM                    LOAM_OK
- 
+
       ** Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
      C                   PARM                    MsgIdArr
      C                   PARM                    MsgDtaArr
- 
+
       ** Array index (3P0) from/to caller
      C                   PARM                    Idx               3 0
      C                   PARM                    LoamFilXFmt                                  CRE073
@@ -1708,7 +1711,7 @@
       *
      C                   ENDIF
      C/COPY WNCPYSRC,LEH01191
- 
+
       ** If support system active, write transaction to 24x7 log
      C     System        IFEQ      'S'
      C                   EXSR      APLGTR
@@ -2346,7 +2349,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -2427,7 +2430,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -2490,7 +2493,7 @@
      C                   PARM      WMDINF        ZMDI2             1
      C                   PARM                    ZRATEX           13 8
      C                   PARM                    ZMDIX             1
- 
+
      C                   MOVE      WCCYL         ZCCYI
      C                   MOVE      WCCYF         ZCCYO
      C                   MOVE      WCDPL         ZCDPI
@@ -2498,7 +2501,7 @@
      C                   Z-ADD     ZRATEX        ZEXCH
      C                   MOVE      ZMDIX         ZMD
      C                   ENDIF
- 
+
      C     DDACTN        IFEQ      'I'
      C     LAPRAM        MULT(H)   OFCXRT        ILAAMF           13 0
       *
@@ -2566,7 +2569,7 @@
      C     PRAM          MULT(H)   WNFCE         ILAAMF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
       *
@@ -2621,7 +2624,7 @@
      C                   Eval      FB_RUN7 =  FA_RUN7
      C                   Eval      FB_RUN8 =  FA_RUN8
      C                   Eval      FB_RUN9 =  FA_RUN9
- 
+
      C                   IF        CLE025 = 'N'                                               CLE025
      C                   Eval      FB_OAM1 =  FA_OAM1
      C                   Eval      FB_OAM2 =  FA_OAM2
@@ -3055,7 +3058,7 @@
      C                   Z-ADD     A6SPRT        ZRATE2
      C                   MOVE      A6MDIN        ZMDI2
      C                   MOVE      A6NBDP        ZCDPO
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1
      C                   PARM                    ZMDI1
@@ -3125,7 +3128,7 @@
      C                   Eval      FA_OAM9 =  FB_OAM9
      C                   Eval      FA_OA10 =  FB_OA10
      C                   ENDIF                                                                CLE025
- 
+
      C                   Z-ADD     WRNDAY        LCD
      C                   MOVE      'A'           CHTP
      C                   Z-ADD     LATNLU        TNLU
@@ -3542,7 +3545,7 @@
      C                   PARM      *BLANKS       RetCodeIn
      C                   PARM                    DDACTN
      C                   PARM                    ValidLoam
- 
+
       * Date format indicator
      C                   PARM                    BJDFIN
      C                   PARM                    TransDtl
@@ -4644,22 +4647,22 @@
       *
       ** Program parameters
      C     *ENTRY        PLIST
- 
+
       ** Return code
      C                   PARM                    @@RTCD            7
- 
+
       ** Action requested
      C                   PARM                    DDACTN            1
- 
+
       ** Externally described DS for valid loan amendment
      C                   PARM                    ValidLoam
- 
+
       * Calling module code
      C                   PARM                    CallModCod        3
- 
+
       ** Reservation ID (input from VU only)
      C                   PARM                    ReservId         10
- 
+
       * Features
      C                   PARM                    CDE001            1
      C                   PARM                    CDE005            1
@@ -4671,20 +4674,20 @@
      C                   PARM                    CLE014            1
      C                   PARM                    CLE023            1
      C                   PARM                    CLE030            1                          CLE030
- 
+
       * Authorise amends / authorise principal tfr / consolidated conf.
      C                   PARM                    BPLMAU            1
      C                   PARM                    BPTPAU            1
      C                   PARM                    BPCONR            1
- 
+
       ** Date format indicator, local currency & run day number
      C                   PARM                    BJDFIN            1
      C                   PARM                    BJLCCY            3
      C                   PARM                    WRNDAY            5 0
- 
+
       ** Multi-branching
      C                   PARM                    BGMBIN            1
- 
+
       * Which system is active (24x7)
      C                   PARM                    System            1
       *
@@ -4943,9 +4946,9 @@
      C                   ENDDO
       *
      C                   ENDIF
- 
+
      C                   EVAL      @RTCD = *BLANKS
- 
+
       ** Check if CRE020 is enabled.                                                          CRE020
                                                                                               CRE020
      C                   CALLB     'AOSARDR0'                                                 CRE020
@@ -5297,7 +5300,7 @@
       ********************************************************************
       /EJECT
       ********************************************************************
- 
+
       ** Output LTRIX header record
      O*LTRIX**** E            LTRIXH                                                        AR322732
      O**********             NORE                11P                                        Bug03936

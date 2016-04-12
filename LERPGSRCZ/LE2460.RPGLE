@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -46,6 +47,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -110,29 +113,29 @@
       *    RESET for subsequent passes.                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Live Loan details
      FLELOANL0  UF   E           K DISK    INFSR(*PSSR) PREFIX(L0)
- 
+
       ** Live Rollover details
      FLELOANL2  IF   E           K DISK    INFSR(*PSSR) PREFIX(L2)
- 
+
      FLE2460AU  O    E             PRINTER INFSR(*PSSR) USROPN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
       *
       ** Local data area for database error details
@@ -145,41 +148,41 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** DS for Access Objects - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** DS for Access Objects - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Externally described DS for Bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** Externally described DS for Base Rate details
      D SDBSRT        E DS                  EXTNAME(SDBSRTPD)
       *
       ** Externally described DS for Historic Base rate
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRUN            S              1
      D WWorkBase       S              2S 0
      D WWorkCcy        S              3
@@ -188,20 +191,20 @@
      D WBaseRate       S             11P 7
      D WSpreadInd      S              1
      D WSpread         S             11P 7
- 
+
       ** Parameter definition
      D PRtnCde         S              7
      D POption         S              7
      D PCYCD           S              3
      D PBase           S              2
- 
+
       ** Parameter definition of standard modules
      D PZInpDay        S              5P 0
      D PZDaysFwd       S              2P 0
      D PZOutDay        S              5P 0
      D PZCcy           S              3
      D PZLocation      S              3
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -212,11 +215,11 @@
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
       *
       ** Do Initial reading on the primary file
       *
@@ -254,7 +257,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

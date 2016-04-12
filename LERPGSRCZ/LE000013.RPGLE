@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CLE064             Date 06Dec10               *
@@ -31,6 +32,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -63,42 +66,42 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Midas LE Facilities Detail A Record
      FFCLTYFM   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Customer Loans
      FCLOANCL   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Matured Customer Loans
      FMCLONCL   UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:MCLONCLF)
      F                                     COMMIT
- 
+
       ** Midas LE Midas LE Loans/Parts Purchased Invalid data
      FLEILONPD  UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE History Amount Details
      FHISTSHP   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas LE Matured History Amount Details
      FMHISTHP   UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(HISTSHPF:MHISTHPF)
      F                                     COMMIT
- 
+
       ** Midas LE Loan Amendments
      FLOAMSDK   UF   E             DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
       ** Midas MX Saved CLOANCL
      FMXSLECLPD UF   E             DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:MXSLECLF)
      F                                     COMMIT
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -117,34 +120,34 @@
       **                                    181 1830DBASE
       **                                    184 193 DBMOD
       **                                    194 203 DBPROC
- 
+
       ** Data Area giving Installation Control Details
      D RUNDAT        E DS                  EXTNAME(RUNDAT)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
       ** Program Status Data Structure
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WRUN            S              1
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -155,28 +158,28 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
       ** Initialise new fields
- 
+
      C     1             SETLL     FCLTYFM
      C                   READ      FCLTYFM                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      DTPX = DTPS
      C                   UPDATE    FCLTYFMF
      C                   READ      FCLTYFM                                01
      C                   ENDDO
- 
+
      C     1             SETLL     CLOANCL
      C                   READ      CLOANCL                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      ADIF = 'N'
      C                   EVAL      ADCF = 'N'
@@ -188,10 +191,10 @@
      C                   UPDATE    CLOANCLF
      C                   READ      CLOANCL                                01
      C                   ENDDO
- 
+
      C     1             SETLL     MCLONCL
      C                   READ      MCLONCL                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      ADIF = 'N'
      C                   EVAL      ADCF = 'N'
@@ -203,10 +206,10 @@
      C                   UPDATE    MCLONCLF
      C                   READ      MCLONCL                                01
      C                   ENDDO
- 
+
      C     1             SETLL     LEILONPD
      C                   READ      LEILONPD                               01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      SADIF = 'N'
      C                   EVAL      SADCF = 'N'
@@ -215,37 +218,37 @@
      C                   UPDATE    LEILONP0
      C                   READ      LEILONPD                               01
      C                   ENDDO
- 
+
      C     1             SETLL     LOAMSDK
      C                   READ      LOAMSDK                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   Z-ADD     *ZEROS        CHDU
      C                   UPDATE    LOAMSDKF
      C                   READ      LOAMSDK                                01
      C                   ENDDO
- 
+
      C     1             SETLL     HISTSHP
      C                   READ      HISTSHP                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   Z-ADD     *ZEROS        CHDU
      C                   UPDATE    HISTSHPF
      C                   READ      HISTSHP                                01
      C                   ENDDO
- 
+
      C     1             SETLL     MHISTHP
      C                   READ      MHISTHP                                01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   Z-ADD     *ZEROS        CHDU
      C                   UPDATE    MHISTHPF
      C                   READ      MHISTHP                                01
      C                   ENDDO
- 
+
      C     1             SETLL     MXSLECLPD
      C                   READ      MXSLECLPD                              01
- 
+
      C                   DOW       *IN01 = *OFF
      C                   EVAL      ADIF = 'N'
      C                   EVAL      ADCF = 'N'
@@ -257,10 +260,10 @@
      C                   UPDATE    MXSLECLF
      C                   READ      MXSLECLPD                              01
      C                   ENDDO
- 
+
      C                   COMMIT
      C                   EVAL      *INLR = *ON
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -275,19 +278,19 @@
       * Calls: DBERRCTL                                                   *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRUN = *BLANK
      C                   EVAL      WRUN = 'Y'
      C                   DUMP
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

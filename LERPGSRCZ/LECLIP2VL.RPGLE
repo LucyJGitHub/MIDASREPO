@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD031736           Date 02Mar15               *
-      *  Prev Amend No. MD031225           Date 10Dec14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *                 MD031225           Date 10Dec14               *
       *                 MD025521           Date 19Aug14               *
       *                 MD022807C          Date 15Oct13               *
       *                 MD000091           Date 09May13               *
@@ -106,6 +107,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD031736 - Make use of system values to condition use of rate*
       *             fixing on loan start date.                        *
       *  MD031225 - Show the correct error message when validating a  *

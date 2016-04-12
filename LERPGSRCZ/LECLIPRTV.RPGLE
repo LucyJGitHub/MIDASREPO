@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD032052           Date 23Jan15               *
-      *  Prev Amend No. MD031225           Date 10Dec14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD032052           Date 23Jan15               *
+      *                 MD031225           Date 10Dec14               *
       *                 MD025945           Date 19Aug14               *
       *                 MD000091           Date 09May13               *
       *                 AR1021136          Date 24Apr13               *
@@ -74,6 +75,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD032052 - Unable to authorize loan repaired from repair     *
       *             queue. Enhance MD031225 to bypass validation of   *
       *             loan number if record come from COB.              *

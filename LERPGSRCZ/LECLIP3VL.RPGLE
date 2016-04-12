@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. AR882700           Date 07Jun13               *
-      *  Prev Amend No. AR804863           Date 10Dec12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR882700           Date 07Jun13               *
+      *                 AR804863           Date 10Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
@@ -62,6 +63,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  AR882700 - LEC06A on MESSAGEWAIT on A1 TEST SYSTEM. Insert   *
       *             additional validation in Facility Currency        *
       *             Exchange Rate. (Child: AR882701)                  *
@@ -322,7 +325,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI3PD)
       ***  Flags to indicate whether transaction fields are valid
@@ -574,7 +577,7 @@
       ** +----------------------------------------------------------------+
       *
       /COPY WNCPYSRC,LECLIP3V03
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084

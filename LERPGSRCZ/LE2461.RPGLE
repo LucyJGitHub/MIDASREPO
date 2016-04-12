@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. MD031736           Date 02Mar15               *
-      *  Prev Amend No. AR988331           Date 03Dec12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *                 AR988331           Date 03Dec12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -36,6 +37,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  MD031736 - Use rate fixing days on loan for rate fixing at   *
       *             Start Date.                                       *
       *  AR988331 - Apply Rate Fixing process to a future valued Loan *

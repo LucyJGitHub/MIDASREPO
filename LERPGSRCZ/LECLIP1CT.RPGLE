@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -217,9 +220,9 @@
       ** SETFLD - Set output screen fields                            *
       *****************************************************************
      C     SETFLD        BEGSR
- 
+
       * Determine Loan type
- 
+
      C                   EXSR      DET_LOANTYPE
       *
       ***  Loan number.
@@ -584,7 +587,7 @@
       * DET_LOANTYPE - Determine Loan Type                            *
       *****************************************************************
      C     DET_LOANTYPE  BEGSR
- 
+
      C                   SELECT
      C     PTYP          WHENEQ    61
      C     PTYP          OREQ      62
@@ -602,7 +605,7 @@
      C     PTYP          OREQ      72
      C                   MOVEL     'PTSO'        LoanType          4
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -687,7 +690,7 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002 *
      C                   EXSR      *PSSR                                        *************
      C                   END
- 
+
      C                   EVAL      @RTCD = *BLANKS
       *                                                                                       CER020
       ** Check for Switchable Feature CER020                                                  CER020

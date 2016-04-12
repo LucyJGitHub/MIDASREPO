@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -39,6 +40,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions                                *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -125,6 +128,7 @@
       ** +--------------------------------------+
       *
      D LoanFilFmtCL  E DS                  EXTNAME(CLOANCL)
+     D  BsDayFilFmt         1906   2025                                                       CLE141
       ***  Loan in file Format CL
       *
      D LoanFilFmtCK  E DS                  EXTNAME(CLOANCK)
@@ -133,6 +137,7 @@
       *
      D LoanScnFmt4   E DS                  EXTNAME(LECLI4PD)
      D LoanScnFmt6   E DS                  EXTNAME(LECLI6PD)                                  CLE134
+     D LoanScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE141
       ***  Loan in Screen Format
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -155,6 +160,7 @@
      D PRTCD           S              7A                                                      CLE134
      D POPTN           S              7A                                                      CLE134
      D PSARD           S              6A                                                      CLE134
+     D CLE141          S              1                                                       CLE141
       *
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
@@ -269,6 +275,53 @@
       *                                                                                       CLE134
      C                   ENDIF                                                                CLE134
       *                                                                                       CLE134
+     C                   IF        CLE141 = 'N'                                               CLE141
+     C                   EVAL      LoanScnFmt7 = BsDayFilFmt                                  CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EVAL      DDC1PR = C1PR                                              CLE141
+     C                   EVAL      DDC2PR = C2PR                                              CLE141
+     C                   EVAL      DDC3PR = C3PR                                              CLE141
+     C                   EVAL      DDC4PR = C4PR                                              CLE141
+     C                   EVAL      DDC5PR = C5PR                                              CLE141
+     C                   EVAL      DDC6PR = C6PR                                              CLE141
+     C                   EVAL      DDC7PR = C7PR                                              CLE141
+     C                   EVAL      DDC8PR = C8PR                                              CLE141
+     C                   EVAL      DDC9PR = C9PR                                              CLE141
+     C                   EVAL      DDC0PR = C0PR                                              CLE141
+     C                   EVAL      DDL1PR = L1PR                                              CLE141
+     C                   EVAL      DDL2PR = L2PR                                              CLE141
+     C                   EVAL      DDL3PR = L3PR                                              CLE141
+     C                   EVAL      DDL4PR = L4PR                                              CLE141
+     C                   EVAL      DDL5PR = L5PR                                              CLE141
+     C                   EVAL      DDL6PR = L6PR                                              CLE141
+     C                   EVAL      DDL7PR = L7PR                                              CLE141
+     C                   EVAL      DDL8PR = L8PR                                              CLE141
+     C                   EVAL      DDL9PR = L9PR                                              CLE141
+     C                   EVAL      DDL0PR = L0PR                                              CLE141
+     C                   EVAL      DDC1PI = C1PI                                              CLE141
+     C                   EVAL      DDC2PI = C2PI                                              CLE141
+     C                   EVAL      DDC3PI = C3PI                                              CLE141
+     C                   EVAL      DDC4PI = C4PI                                              CLE141
+     C                   EVAL      DDC5PI = C5PI                                              CLE141
+     C                   EVAL      DDC6PI = C6PI                                              CLE141
+     C                   EVAL      DDC7PI = C7PI                                              CLE141
+     C                   EVAL      DDC8PI = C8PI                                              CLE141
+     C                   EVAL      DDC9PI = C9PI                                              CLE141
+     C                   EVAL      DDC0PI = C0PI                                              CLE141
+     C                   EVAL      DDL1PI = L1PI                                              CLE141
+     C                   EVAL      DDL2PI = L2PI                                              CLE141
+     C                   EVAL      DDL3PI = L3PI                                              CLE141
+     C                   EVAL      DDL4PI = L4PI                                              CLE141
+     C                   EVAL      DDL5PI = L5PI                                              CLE141
+     C                   EVAL      DDL6PI = L6PI                                              CLE141
+     C                   EVAL      DDL7PI = L7PI                                              CLE141
+     C                   EVAL      DDL8PI = L8PI                                              CLE141
+     C                   EVAL      DDL9PI = L9PI                                              CLE141
+     C                   EVAL      DDL0PI = L0PI                                              CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -331,6 +384,7 @@
       *
      C                   PARM                    LoanScnFmt4
      C                   PARM                    LoanScnFmt6                                  CLE134
+     C                   PARM                    LoanScnFmt7                                  CLE141
       *
       ***  Initialize program name
       *
@@ -372,6 +426,29 @@
      C                   ELSE                                                                 CLE134
      C                   EVAL      CLE134      = 'N'                                          CLE134
      C                   ENDIF                                                                CLE134
+                                                                                              CLE141
+      ** Determine if CLE141 is switched on                                                   CLE141
+                                                                                              CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       PRTCD                                        CLE141
+     C                   PARM      '*VERIFY'     POPTN                                        CLE141
+     C                   PARM      'CLE141'      PSARD                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+      *                                                                                       CLE141
+     C                   IF        PRTCD      <> *BLANKS       AND                            CLE141
+     C                             PRTCD      <> '*NRF   '                                    CLE141
+     C                   EVAL      DBFILE      = 'SCSARDPD'                                   CLE141
+     C                   EVAL      DBKEY       = 'CLE141'                                     CLE141
+     C                   EVAL      DBASE       = 003                                          CLE141
+     C                   EXSR      *PSSR                                                      CLE141
+     C                   ENDIF                                                                CLE141
+      *                                                                                       CLE141
+     C                   IF        PRTCD       = *BLANKS                                      CLE141
+     C                   EVAL      CLE141      = 'Y'                                          CLE141
+     C                   ELSE                                                                 CLE141
+     C                   EVAL      CLE141      = 'N'                                          CLE141
+     C                   ENDIF                                                                CLE141
+      *                                                                                       CLE141
      C                   ENDSR
       *****************************************************************
       /EJECT

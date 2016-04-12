@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. AR1056323          Date 14Nov12               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR1056323          Date 14Nov12               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR821740           Date 29Aug11               *
       *                 CRE073             Date 06Dec10               *
@@ -69,6 +70,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  AR1056323 - Revert back changes of CLE134 for LKEY1DP and    *
       *              LKEYFED (Recompile)                              *
       *  CLE134 - Past Due Call Loan Processing                       *
@@ -173,7 +176,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** LE004650 report files
      FLE004650AUO    E             PRINTER
      F                                     INFDS(SPOOLU)
@@ -181,28 +184,28 @@
      F                                     INFDS(SPOOL1)
      FLE004650P2O    E             PRINTER USROPN
      F                                     INFDS(SPOOL2)
- 
+
       ** Midas LE Loans by branch/loan number
      FCLOANLB   UF A E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Loans File
      FCLOAN     IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CK)
      F                                     IGNORE(CLOANHHF)
      F                                     IGNORE(CLOANCLF)
      F                                     IGNORE(CLOANZ1F)
- 
+
       ** Midas Loan Types/Sub-types Retrieval index
      FSDLOANL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Effective Interest Rate Details
      F***LEEIRDL0  UF   E           K DISK    INFSR(*PSSR)                                    233578
      FLEEIRDL8  UF   E           K DISK    INFSR(*PSSR)                                       233578
- 
+
       ** Midas LE Fees File by Loan reference and Fee sequence
      F***LEFEEDLC  UF   E           K DISK    INFSR(*PSSR)                                    CAS011
      FLEFEEDLD  UF   E           K DISK    INFSR(*PSSR)                                       CAS011
- 
+
       ** Midas LE Fees File/History File                                                      233601
      F***LEFEEDLG  UF   E           K DISK    INFSR(*PSSR)                             233601 CAS011
      FLEFEEDLH  UF   E           K DISK    INFSR(*PSSR)                                       CAS011
@@ -212,7 +215,7 @@
                                                                                               233601
       ** Midas LE Effective Interest Rate Amortisation File
      FLEEIRAL4  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Cash Flows Using All-in-Rate                                                231712
      FLECFSFL0  IF   E           K DISK    INFSR(*PSSR)                                       231712
                                                                                               231712
@@ -221,51 +224,51 @@
                                                                                               231712
       ** Midas Re-valued LE Customer Loans by Loan Number
      FLENPVAL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas Loans File Copy Pre-Update
      FPETEMPLN  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(CLOANCLF:CLOANRV)
- 
+
       ** Midas Lending Fees History
      FLEFHSTL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas Facility File "A" Record - By Branch
      FFCLTYL1   IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FC)
- 
+
       ** Midas LE Actions Today Header file
      FACTN5DH   IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas LE Action File Control
      FACTN5DNL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(CO)
- 
+
       ** Midas LE Action File Detail
      FACTN5DKL0 IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(AC)
- 
+
       ** Midas LE Lending Fee Account Keya Detail
      FLKEYFED   O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(F:1)
- 
+
       ** Midas LE Lending Fees Account Keys Trailer
      FLKEYFEZ   UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FZ:2)
- 
+
       ** Midas LE Loan Account Keys Detail
      FLKEY1DP   O  A E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(LK)
- 
+
       ** Midas LE Loan Account Keys Trailer
      FLKEY1ZZ   UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(LZ)
- 
+
       ** Midas Fee Extract Detail for Loans
      FLEPEFLD   UF   E           K DISK    INFSR(*PSSR)
- 
+
       ** Midas Fee Extract Trailer for Loans
      FLEPEFLZ   UF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -273,14 +276,14 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ External data areas                  ¦
       ** ¦ ===================                  ¦
       ** +--------------------------------------+
- 
+
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -289,27 +292,27 @@
       **       Defines:                     142 170 DBKEY
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** True and False can be used for indicators being on or off
      D True            C                   *ON
      D False           C                   *OFF
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Program Status Data Structure
       /COPY ZACPYSRC,PSDS
- 
+
       ** Array containing Copyright statement
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Array containing overrides                                                           231712
      D ##OVR           S             56    DIM(2)  CTDATA PERRCD(1)                           231712
                                                                                               231712
@@ -321,62 +324,62 @@
      D WFMDin          S              1A   DIM(99)
      D WAmortAmount    S             15P 0 DIM(99)                                            231710
      D WFeePostAmt     S             15P 0 DIM(99)                                            231710
- 
+
       ** File Information Data Structure for LE004620P1.
      D SPOOL1          DS
      D  SFILE1                83     92
      D  SFNUM1               123    124B 0
      D  OFLLN1               188    189B 0
      D  PRTLN1               367    368B 0
- 
+
       ** File Information Data Structure for LE004620P2.
      D SPOOL2          DS
      D  SFILE2                83     92
      D  SFNUM2               123    124B 0
      D  OFLLN2               188    189B 0
      D  PRTLN2               367    368B 0
- 
+
       ** File Information Data Structure for LE004620AU.
      D SPOOLU          DS
      D  SFILEU                83     92
      D  SFNUMU               123    124B 0
      D  OFLLNU               188    189B 0
      D  PRTLNU               367    368B 0
- 
+
      ** File Status Data Structure for LEFEEDLF                                               233601
      D FEESDS          DS                                                                     233601
      D  FEEREC           *RECORD                                                              233601
                                                                                               233601
       ** First DS for Access programs - short data structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access programs - long data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for Module Details
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
- 
+
       ** External data structure for Branch Details
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for Currency Details
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
- 
+
       ** External data structure for General Ledger Details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
- 
+
       ** External data structure for SC Switchable features
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External data structure for the Hedging ICD
      D SDHEDG        E DS                  EXTNAME(SDHEDGPD)
- 
+
       ** External data structure for SD Fee Codes
      D SDFEE         E DS                  EXTNAME(SDFEEPD)
- 
+
       ** Account key work data structure/variables
      D WkAkey          DS
      D  WkLTyp                 1      2
@@ -388,38 +391,38 @@
      D  Wk7to9                 7      9
      D  WkTyp2                10     10
      D  WkCLAS                11     14                                                       CLE042
- 
+
       *** Divide up start of month date
      D SMDT            DS             6
      D  SMDD                   1      2
      D  SM                     3      4  0
      D  SY                     4      6  0
- 
- 
+
+
       *** Divide up start of month date for U.S.A. format
      D SMDTUS          DS             6
      D  SMUS                   1      2
      D  SMDDUS                 3      4  0
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** QCMDEXC Parameters                                                                   231712
      D PCommand        S             56A                                                      231712
      D PCmdLen         S             15P 5 INZ(56)                                            231712
                                                                                               231712
       ** Whether or not *PSSR has been run previously
      D RunBefore       S              1A
- 
+
       ** Parameter variables for Access objects
      D PRtCd           S              7A
      D POpTn           S              7A
      D PSard           S              6A
      D PBrca           S              3A
      D PCcy            S              3A
- 
+
       ** ZINTDY parameters
      D PRetCdeOut      S             10A
      D PZINDY          S              5P 0
@@ -428,31 +431,31 @@
      D PZCALC          S              1A
      D***PINT6DY*      S             15P 7                                                    242286
      D PINT6DY         S             15P 9                                                    242286
- 
+
       ** ZDate2 parameters
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7A
- 
+
       ** ZSEdit parameters
      D ZFLD15          S             15  0
      D ZDECS           S              1  0
      D ZECODE          S              1A
      D ZOUT21          S             21A
- 
+
       ** ZSFile parameters
      D ZSEQ            S              5A
      D ZSENTY          S              3A
      D ZSNUM           S              6S 0
      D ZSERR           S              1A
- 
+
      D P1OPEN          S              1A
      D P2OPEN          S              1A
      D RQDLN1          S              3S 0
      D RQDLN2          S              3S 0
      D DIFLN1          S              3S 0
      D DIFLN2          S              3S 0
- 
+
       ** Work variables for trailer update
      D ZZAMT           S             15P 3
      D ZZAMTI          S             15P 0
@@ -462,7 +465,7 @@
      D ZZTOTD          S              3P 0
      D ZZWK2           S              4P 0
      D ZZWK3           S             15P 0
- 
+
       ** Work variables
      D WkIntDays       S              5P 0
      D WDaysInYear     S              5P 0
@@ -511,21 +514,21 @@
      D WOutAmt         S             15P 0
      D WTime           S              4F
      D WkFEAMTD        S             15P 0
- 
+
      D KFEESQ          S              2S 0
      D KRcdT           S              1A
      D KDate           S              5P 0                                                    231712
      D*KLoan****       S              6S 0                                             231712 CLE148
      D KLoan           S              6A                                                      CLE148
      D KFSeq           S              2S 0                                                    231712
- 
+
      D CLE004          S              1A
      D CLE005          S              1A
      D CEU004          S              1A
- 
+
      D WFEAUT          S              1A                                                      CLE134
      D CLE134          S              1A                                                      CLE134
- 
+
       ** ZAAMRTCALC Parameter (Alpha)                                                         231712
      D PAmortDSA       S            200A                                                      231712
                                                                                               231712
@@ -596,24 +599,24 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *INZSR is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       ** MAIN PROCEDURE                                                   *
       *********************************************************************
- 
+
       ** Process all loans whose corresponding amortised cost accounting
       ** indicator in the loan type and subtype file is set to 'Y'
      C                   READ      CLOANLB
- 
+
      C                   DOW       NOT %EOF(CLOANLB)
- 
+
       ** Check if the loan whose Loan Type/Sub Type has been flagged for                      232348
       ** non linear amortisation was entered before the cutoff date                           232348
      C                   IF        FSNLAC > VDAT                                              232348
@@ -624,23 +627,23 @@
       ** Initialise flags to update CLOANLB and LEEIRDL0 file
      C                   EVAL      WUpdCLOAN = 'N'
      C                   EVAL      WUpdLEEIR = 'N'
- 
+
      ** Control report processing (open or close reports)
      C                   EXSR      SrReportProc
- 
+
       ** Initially set-up part of account key for loans
      C                   EXSR      SrACKeyInit
- 
+
       ** Process loans that are live or for reversals
      C                   IF        RECI = 'D'
      C                             OR RECI = 'M'                                              232630
      C                             AND MDAT >= BJRDNB                                         232630
- 
+
      C     KLoanTS       CHAIN     SDLOANL1
- 
+
      C                   IF        %FOUND(SDLOANL1) AND
      C                             AYACAI = 'Y'
- 
+
       ** Access current EIR record and process if found and F/D/P amortising
       ** from EIR start date (EIFDPA) is not zero
      C*****LNRF*         CHAIN     LEEIRDL0                                                   233578
@@ -656,51 +659,51 @@
      C                             OR %FOUND(LEEIRDL8) AND                                    233578
      C                             EIRECI =  'T'    AND                                       232628
      C                             EIFDPA <> *ZERO                                            232628
- 
+
      ** Process all fee reversals for this loan
      C                   EXSR      SrReverseFee
- 
+
      ** Process today's amortisation
      C                   EXSR      SrAmortise
- 
+
       ** Generate account keys for non-linear amortisation adjustment
       ** not yet posted and unrealised re-valued profit
      C                   EXSR      SrOtherAckey
- 
+
       ** Update loan related files
      C                   IF        WkPropSum <> *ZERO
      C                   EXSR      SrLoanDBUpd
      C                   ENDIF
- 
+
      C                   IF        EIENDT <= WEvntCtlD                                        232628
      C                   EVAL      EIRECI = 'M'                                               232628
      C                   EVAL      WUpdLEEIR = 'Y'                                            232628
      C                   ENDIF                                                                232628
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Update CLOANLB if update flag has been set to 'Y'
      C                   IF        WUpdCLOAN = 'Y'
      C                   UPDATE    CLOANCLF
      C                   ENDIF
- 
+
       ** Update LEEIRDPD if update flag has been set to 'Y'
      C                   IF        WUpdLEEIR = 'Y'
      C                   UPDATE    LEEIRDD0
      C                   ENDIF
- 
+
      ** For reversed loans, generate reversal account keys
      C                   IF        WNewBrcaF = 'Y'
      C                   EXSR      SrReverseLoan
      C                   EVAL      WNewBrcaF = 'N'
      C                   ENDIF
- 
+
       ** Process next Loan detail
      C                   READ      CLOANLB
      C                   ENDDO
- 
+
       ** Close spool files and update trailer files
       ** Only when there are records read                                                    BUG9243
      C**********         IF        RALoanCnt > 0                                      BUG9243 243984
@@ -710,10 +713,10 @@
      C                   UPDATE    LKEY1ZZF
      C                   UPDATE    LKEYFEZF
      C                   ENDIF                                                               BUG9243
- 
+
       ** Process audit report
      C                   EXSR      SrAudit
- 
+
      C                   EVAL      *INLR = *ON
       *****************************************************************
       /EJECT
@@ -721,7 +724,7 @@
       *  SrACKeyInit - Initial account key set-up                     *
       *****************************************************************
      C     SrACKeyInit   BEGSR
- 
+
       ** Set Flag for Discount Loans
      C                   IF        PTYP = 63 OR
      C                             PTYP = 65 OR
@@ -730,22 +733,22 @@
      C                   ELSE
      C                   EVAL      WDiscLoanF = 'N'
      C                   ENDIF
- 
+
       ** To determine position 6-9 of account key, check for
       ** recourse indicator (CLOANCL), syndication and agent
       ** customer (FCLTYL1). Codes are adopted from SR/LOANA
       ** in LE0450. Value for pos 6-9 is saved to WkBKAKY.
- 
+
      C                   EVAL      WkBKAKY =  *BLANKS
- 
+
       ** Retrieve related record from facilities file
      C     KFacility     CHAIN     FCLTYL1
- 
+
      C                   EVAL      PBRCA = FCBRCA
      C                   EXSR      SrBranch
- 
+
      C                   IF        FCSYIN = 'Y'
- 
+
       ** Set position 8 to 'S' for syndicated. Unless Agent on
       ** Branch is not same as the Agent on the Facility.
      C                   IF        A8SYCU = FCANUM
@@ -761,7 +764,7 @@
      C                   EVAL      WkBKAKY =  '   '
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ELSE
      C                   IF        RCSI = 'Y'
      C                   EVAL      WkBKAKY =  'R  '
@@ -769,7 +772,7 @@
      C                   EVAL      WkBKAKY =  '   '
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -777,23 +780,23 @@
       *  SrReverseFee - Process fee reversals                         *
       *****************************************************************
      C     SrReverseFee  BEGSR
- 
+
       ** Process all fees that have been reversed today
      C*****LNRF          SETLL     LEFEEDLC                                                   CAS011
      C*****LNRF          READE     LEFEEDLC                                                   CAS011
      C     LNRF          SETLL     LEFEEDLD                                                   CAS011
      C     LNRF          READE     LEFEEDLD                                                   CAS011
- 
+
      C**********         DOW       NOT %EOF(LEFEEDLC)                                         CAS011
      C                   DOW       NOT %EOF(LEFEEDLD)                                         CAS011
- 
+
      C                   MOVE      FEAUTO        WFEAUT                                       CLE134
      C                   IF        CLE134 = 'Y'                                               CLE134
      C                   IF        WFEAUT = 'C' or FEAUT2 = 'C'                               CLE134
      C                   MOVE      'Y'           WFEAUT                                       CLE134
      C                   ENDIF                                                                CLE134
      C                   ENDIF                                                                CLE134
- 
+
      C                   IF        FERECI = '*'        AND
      C                             FELCHT =  'D'       AND
      C                             FELCHD =  WEvntCtlD AND
@@ -804,29 +807,29 @@
      C**********                   FEAUTO = 'Y'        AND                            BUG9472 CLE134
      C                             WFEAUT = 'Y'        AND                                    CLE134
      C                             FEAMTD <> *ZERO
- 
+
       ***Initialise*flag*to*update*LEFEEDLC*file***********************                       CAS011
       ***Initialise flag to update LEFEEDLD file                                              CAS011
      C                   EVAL      WUpdLEFEE = 'N'
- 
+
       ** Generate reversal account key for current fee
      C                   EXSR      SrFeeAcKey
- 
+
      C                   IF        FKEAMT <> *ZERO
       ** Output account key details to report
      C                   EXSR      SrFeeReprt
- 
+
       ** Update fee related files
      C                   EXSR      SrFeeDBUpd
      C                   ENDIF
- 
+
       ** Update LEFEED if update flag has been set to 'Y'
      C                   IF        WUpdLEFEE = 'Y'
      C                   UPDATE    LEFEEDF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C*****LNRF          READE     LEFEEDLC                                                   CAS011
      C     LNRF          READE     LEFEEDLD                                                   CAS011
      C                   ENDDO
@@ -872,17 +875,17 @@
       *  SrAmortise - Process loan's amortisation for today           *
       *****************************************************************
      C     SrAmortise    BEGSR
- 
+
       ** Compute for today's amortisation amount
      C                   EXSR      SrGetAmrtAmt
- 
+
       ** Process fee updates and report details
      C                   EVAL      WAllFeePostAmt = 0                                         232306
                                                                                               232306
      C                   IF        WkFeePropSum <> 0
      C                   EXSR      SrProcessFees
      C                   ENDIF
- 
+
       ** Process loan updates and report details
      C                   EVAL      WLoanPostAmt = 0                                           232306
                                                                                               232306
@@ -890,7 +893,7 @@
      C                             WPropTOTI <> *ZERO
      C                   EXSR      SrProcessLoan
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -898,34 +901,34 @@
       *  SrReverseLoan - Process loan reversals                       *
       *****************************************************************
      C     SrReverseLoan BEGSR
- 
+
       ** Process all reversed loans today
      C                   READ      PETEMPLN
- 
+
      C                   DOW       NOT %EOF(PETEMPLN)
- 
+
      C                   EVAL      WLoanReversF = 'N'
      C                   IF        RECI = 'R' AND
      C                             BRCA = BRCA AND
      C                             LCD  = WEvntCtlD AND
      C                             AMDS <> *ZERO
- 
+
      C     KLoanTS       CHAIN     SDLOANL1
      C                   IF        %FOUND(SDLOANL1) AND
      C                             AYACAI = 'Y'
- 
+
       ** Initially set-up part of account key for loans
      C                   EXSR      SrACKeyInit
- 
+
      ** Process all fee reversals for this loan
      C                   EXSR      SrReverseFee
- 
+
       ** Set loan reversal flag to 'Y'
      C                   EVAL      WLoanReversF = 'Y'
- 
+
       ** Generate account key for current loan
      C                   EXSR      SrLoanAcKey
- 
+
       ** Output account key details to report if posted amount
       ** is not zero
      C                   IF        LKEAMT <> *ZERO
@@ -935,7 +938,7 @@
      C                   ENDIF
      C                   READ      PETEMPLN
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -946,7 +949,7 @@
       *                      = Clean Price   -   Previous Clean Price *
       *****************************************************************
      C     SrGetAmrtAmt  BEGSR
- 
+
       ** Codes Relevant to the Computation of the Amortisation Amount has                     231712
       ** been commented out of this program and is now being done in                          231712
       ** ZAAMRTCALC                                                                           231712
@@ -955,7 +958,7 @@
       ** already determined by 'No. of Days in a Year' in Hedge ICD
      C                   IF        FSNDYR = *BLANK
      C                   EVAL      WIntCalcBasis = ICBS
- 
+
      C**********         SELECT                                                               231712
      C**********         WHEN      WIntCalcBasis = 2 OR                                       231712
      C**********                   WIntCalcBasis = 3 OR                                       231712
@@ -968,13 +971,13 @@
      C**********         Z-ADD     366           WDaysInYear                                  231712
      C**********         ENDSL                                                                231712
      C                   ENDIF
- 
+
       ** Compute for sum fee amounts and proportion of each fee
      C                   EXSR      SrAllFeeAmts
- 
+
       ** Compute for sum of settled amounts in lending fees history file
      C                   EXSR      SrAllFeeHist
- 
+
       ***Add*proportioned*TOTI*to*the*sum*of*proportioned*fee*amount***                       231710
       ** Set aside total interest (TOTI) amount from loan details                             231710
       ** which will be used later in allocating the amortised amount
@@ -997,7 +1000,7 @@
      C                   IF        TOTI <> *ZERO                                              231712
      C                   EVAL(R)   WPropTOTI = TOTI                                           231710
      C                   ENDIF
- 
+
       ***Add*proportion*from*Total*Interest*and*sum*of*all*Fees*to*****                       231710
       ***determine*the*sum*of*proportions******************************                       231710
       ** Add saved Total Interest and sum of all Fees associated to the                       231710
@@ -1005,12 +1008,12 @@
       ** be used in allocating the amortisation for the day across the                        231710
       ** different postings.                                                                  231710
      C                   EVAL(R)   WkPropSum = WPropTOTI + WkFeePropSum
- 
+
       ***Compute*for*Net*Principal*************************************                       231712
      C**********         EVAL(R)   WNetPrcpl = CPAM - WAllFeePaidTdy - TOTI            231710 231712
      C**********         EVAL(R)   WNetPrcpl = CPAM - WAllFeeAmts - TOTI                      231710
      C**********                               - WAllFeeHist                                  231710
- 
+
       ***Compute*for*Accrued*Interest**********************************                       231712
      C**********         EVAL(R)   WAccrdInt = AIPD - IPRD + AIAP                             231710
      C**********         EVAL(R)   WAccrdInt = AIPD + AIAP                             231710 231712
@@ -1027,7 +1030,7 @@
      C                   ELSE                                                                 231712
      C                   EVAL      WStartDate = EILADT                                        231712
      C                   ENDIF                                                                231710
- 
+
       ***Compute*for*t*(number*of*days*between*event*control***********                       231712
       ***date*and*value*date).*If*Accrue*on*Last*Day*Indicator*********                       231712
       ***from*SDGELRPD*is*set*to*first*day*accrual,*add*1.*************                       231712
@@ -1053,7 +1056,7 @@
      C                   ENDIF                                                                231710
                                                                                               231710
      C**********         EVAL(R)   WTime = PZINDY/WDaysInYear                                 231712
- 
+
       ***Compute*for*Dirty*Price***************************************                       231712
      C**********         IF        EIDPTD = 0                                          231710 231712
      C**********         EVAL(R)   WDrtPrcTdy = WNetPrcpl * ((1 + EIEIR)                      231712
@@ -1062,20 +1065,20 @@
      C**********         EVAL(R)   WDrtPrcTdy = EIDPTD * ((1 + EIEIR)                  231710 231712
      C**********                                ** WTime) - WAllFeePaidTdy             231710 231712
      C**********         ENDIF                                                         231710 231712
- 
+
       ***Compute*for*Clean*Price***************************************                       231712
      C**********         EVAL(R)   WClnPrcTdy = WDrtPrcTdy - WAccrdInt                        231712
- 
+
       ***Set*for*Previous*Clean*Price**********************************                       231712
      C**********         EVAL      WClnPrcPrv = EIPRCP                                        231712
- 
+
       ***Finally,*compute*today's*Amortisation*Amount******************                       231712
      C**********         IF        WClnPrcPrv <> *ZERO                                        231712
      C**********         EVAL(R)   WAmrtAmt = WClnPrcTdy - WClnPrcPrv                         231712
      C**********         ELSE                                                                 231712
      C**********         EVAL(R)   WAmrtAmt = WClnPrcTdy - WNetPrcpl                          231712
      C**********         ENDIF                                                                231712
- 
+
       ** Obtain Cashflows from LECFLSPD                                                       231712
      C     KCashFlow     SETLL     LECFSFL0                                                   231712
      C     KCashFlow     READE     LECFSFL0                                                   231712
@@ -1221,16 +1224,16 @@
       *                 fees history file                             *
       *****************************************************************
      C     SrAllFeeHist  BEGSR
- 
+
       ** Initialise total fee history amount
      C                   EVAL      WAllFeeHist = *ZERO
- 
+
       ** Process all live fees attached to the loan
      C     LNRF          SETLL     LEFHSTL0
      C     LNRF          READE     LEFHSTL0
- 
+
      C                   DOW       NOT %EOF(LEFHSTL0)
- 
+
       ** Process only if associated fee code has its Adjustment
       ** to Yield field set to 'Y'
      C                   CALL      'AOFEER0'
@@ -1238,9 +1241,9 @@
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    HIFCOD
      C     SDFEE         PARM      SDFEE         DSFDY
- 
+
      C                   IF        AUADJY = 'Y'
- 
+
       ** If loan currency is not the same as fee currency, retrieve
       ** equivalent value from the LE Effective Interest Rate
       ** Amortisation Details file.
@@ -1253,10 +1256,10 @@
      C                   EVAL(R)   WAllFeeHist = WAllFeeHist + HIAMTS
      C                   ENDIF
      C                   ENDIF
- 
+
      C     LNRF          READE     LEFHSTL0
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1265,7 +1268,7 @@
       *                 to be used for determining proportions        *
       *****************************************************************
      C     SrAllFeeAmts  BEGSR
- 
+
       ** Initialise total fee amount. Also the array and index for
       ** determining proportion of each fee
      C                   EVAL      WAllFeeAmts = *ZERO
@@ -1276,20 +1279,20 @@
      C                   EVAL      WFMDin(*) = *BLANKS
      C                   EVAL      WAmortAmount(*) = *ZERO                                    231710
      C                   EVAL      WIx = *ZERO
- 
+
       ***Set*end*date*for*determining*number*of*days*for*each*fee******                       231710
      C**********         EVAL      PZEND = EIENDT                                             231710
- 
+
       ** Process all live fees attached to the loan
      C*****LNRF          SETLL     LEFEEDLC                                                   CAS011
      C*****LNRF          READE     LEFEEDLC                                                   CAS011
      C     LNRF          SETLL     LEFEEDLD                                                   CAS011
      C     LNRF          READE(N)  LEFEEDLD                                                  Bug9428
      C*****LNRF*         READE     LEFEEDLD                                           CAS011 Bug9428
- 
+
      C**********         DOW       NOT %EOF(LEFEEDLC)                                         CAS011
      C                   DOW       NOT %EOF(LEFEEDLD)                                         CAS011
- 
+
       ***To*generate*account*keys,*conditions*when*they*were*suppressed                       231710
       ***in*LER130*must*be*met.*Notes*beside*the*conditions*below*are**                       231710
       ***the*subroutines*where*these*were*taken*from*for*reference.****                       231710
@@ -1369,10 +1372,10 @@
      C                             MDAT = EIENDT AND                                          232771
      C                             FEPEND <= EIENDT) OR                                       232771
      C                             FENPYD = *ZERO                                             231710
- 
+
       ** Increment array index
      C                   EVAL      WIx = WIx + 1
- 
+
       ***Get*number*of*days*between*EIR*end*date*and*Fee*start*date*to*                       231710
       ***be*used*for*determining*fee's*amortisation*per*day************                       231710
      C**********         IF        FECALC <> *ZERO                                            231710
@@ -1410,10 +1413,10 @@
      C**********         ELSE                                                                 231710
      C**********         EVAL      WkMult = WEvntCtlD - FELADT                                231710
      C**********         ENDIF                                                                231710
- 
+
       ** Store the respective fee sequences to array for chain/update later
      C                   EVAL(R)   WFSeq(WIx) = FEFSEQ
- 
+
       ** If loan currency is not the same as fee currency, retrieve
       ** equivalent value from the LE Effective Interest Rate
       ** Amortisation Details file.                                                           231710
@@ -1467,20 +1470,20 @@
      C**********         EVAL      WFPropAmt(WIx) = WFPropAmt(WIx) * WkMult                   231710
      C                   ENDIF
      C                   ENDIF                                                                231710
- 
+
      C*****LNRF          READE     LEFEEDLC                                                   CAS011
      C     LNRF          READE     LEFEEDLD                                                   CAS011
      C                   ENDDO
- 
+
       ** Note down number of fees processed
      C                   EVAL      WNumOfFees = WIx
- 
+
       ** Compute sum of proportioned fee amount
      C                   Z-ADD     0             WkFeePropSum                                 232305
      C                   IF        WIx > *ZERO
      C                   XFOOT     WFPropAmt     WkFeePropSum
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1488,16 +1491,16 @@
       *  SrProcessFees - Process fee updates and report details       *
       *****************************************************************
      C     SrProcessFees BEGSR
- 
+
       ** Process all fees whose fee details were previously stored in
       ** the fee sequence and amount arrays
      C                   EVAL      WIx = *ZERO
      C                   EVAL      WFeePostAmt(*) = *ZERO                                     231710
      C                   DOW       WNumOfFees > WIx
- 
+
       ** Increment array index
      C                   EVAL      WIx = WIx + 1
- 
+
       ** Calculate proportion of amortised amount to be posted for
       ** the current fee
      C**********         EVAL      WFeePostAmt = (WFPropAmt(WIx)/WkPropSum)                   231710
@@ -1505,7 +1508,7 @@
      C                   EVAL      WFeePostAmt(WIx) = (WFPropAmt(WIx)/WkPropSum               231710
      C**********                                 * WAmrtAmt)                           231710 231712
      C                                           * WAmrtAmt) - WAmortAmount(WIx)              231712
- 
+
       ** On the fee's last day of amortisation, post the difference
       ** between the fee's settled amount and it's non-linear
       ** amortisation amount to date thus avoid discrepancies between
@@ -1522,7 +1525,7 @@
      C                   EVAL      WFeePostAmt(WIx) = FEFAMT - FEAMTD                         231710
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Process only of posting amount is not zero
      C**********         IF        WFeePostAmt <> *ZERO                                       231710
      C                   IF        WFeePostAmt(WIx) <> *ZERO                                  231710
@@ -1531,29 +1534,29 @@
      C**********         IF        %FOUND(LEFEEDLC)                                           CAS011
      C     KFees         CHAIN     LEFEEDLD                                                   CAS011
      C                   IF        %FOUND(LEFEEDLD)                                           CAS011
- 
+
       ***Initialise*flag*to*update*LEFEEDLC*file***********************
       ** Initialise flag to update LEFEEDLD file                                              CAS011
      C                   EVAL      WUpdLEFEE = 'N'
- 
+
       ** Generate account key for current fee
      C                   EXSR      SrFeeAcKey
- 
+
      C                   IF        FKEAMT <> *ZERO
       ** Output account key details to report
      C                   EXSR      SrFeeReprt
- 
+
       ** Update fee related files
      C                   EXSR      SrFeeDBUpd
      C                   ENDIF
- 
+
       ** Update LEFEED if update flag has been set to 'Y'
      C                   IF        WUpdLEFEE = 'Y'
      C                   UPDATE    LEFEEDF
      C                   ELSE                                                                BUG9428
      C                   UNLOCK    LEFEEDLD                                                  BUG9428
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
      C                   ENDDO
@@ -1562,7 +1565,7 @@
      C                   IF        WIx > *ZERO                                                231710
      C                   XFOOT     WFeePostAmt   WAllFeePostAmt                               231710
      C                   ENDIF                                                                231710
- 
+
       ** Post Fee amount to be amortised non-linearly                                         233601
                                                                                               233601
      C*****LNRF*         SETLL     LEFEEDLG                                            233601 CAS011
@@ -1620,14 +1623,14 @@
       *  SrProcessLoan - Process loan updates and report details      *
       *****************************************************************
      C     SrProcessLoan BEGSR
- 
+
       ** Calculate proportion of amortised amount to be posted for
       ** the current loan
      C                   EVAL      WLoanPostAmt = (WPropTOTI/WkPropSum)
      C**********                                   * WAmrtAmt                                 231712
      C**********                                   * WAmrtAmt - AFDP                   231712 232630
      C                                             * WAmrtAmt - AMDS                          232630
- 
+
       ** On the loan's last day of amortisation, post the difference                          231710
       ** between the total interest amount and it's non-linear                                231710
       ** amortisation amount to date thus avoid discrepancies between                         231710
@@ -1638,29 +1641,29 @@
                                                                                               231710
       ** Initialise flag for Reversal amendment type
      C                   EVAL      WReversAMTPF = 'N'
- 
+
       ** Chain action file control
      C     KActTdy       CHAIN     ACTN5DNL0
      C                   IF        %FOUND(ACTN5DNL0)
- 
+
       ** Read thru on file control
      C     KActTdy       SETLL     ACTN5DKL0
      C     KActTdy       READE     ACTN5DKL0
- 
+
      C                   DOW       NOT %EOF(ACTN5DKL0)
- 
+
       ** Set flag to 'Y' if one of the amendment types associated to
       ** the loan is a reversal.
      C                   IF        ACAMTP = 'RV'
      C                   EVAL      WReversAMTPF = 'Y'
      C                   ENDIF
- 
+
       ** Process loan details for Amendment type 'MC' or Multicurrency
       ** rollovers.
      C                   IF        ACAMTP = 'MC'
      C                   EXSR      SrMCcyRoll
      C                   ENDIF
- 
+
       ** Process amendment types where account keys were suppressed in
       ** LE0450 (when non-linear amortisation method is used)
      C                   IF        ACAMTP = 'RE' AND
@@ -1678,26 +1681,26 @@
      C                             ACAMTP = 'RO' AND
      C                             PTYP = 67 AND
      C                             CLE004 = 'Y'
- 
+
      C                   EVAL      WkACAMTP = ACAMTP
- 
+
       ** Generate account key for current loan
      C                   EXSR      SrLoanAcKey
- 
+
       ** Output account key details to report if posted amount
       ** is not zero
      C                   IF        LKEAMT <> *ZERO
      C                   EXSR      SrLoanReprt
      C                   ENDIF
      C                   ENDIF
- 
+
      C     KActTdy       READE     ACTN5DKL0
      C                   ENDDO
      C                   ENDIF
- 
+
      C                   IF        WReversAMTPF = 'N' AND
      C                             WDiscLoanF = 'Y'
- 
+
      C                   EVAL      WkACAMTP = *BLANK
      C                   TESTB     '01'          ACEI                     89
      C     KCLoanB       CHAIN     CLOAN
@@ -1705,21 +1708,21 @@
      C                             *IN89 = *ON AND
      C                             (CKRECI = 'D' OR
      C                              CKRECI = 'R')
- 
+
       ** Generate account key for current loan
      C                   EVAL      WkLoanBF = 'Y'
      C                   EXSR      SrLoanAcKey
      C                   EVAL      WkLoanBF = 'N'
- 
+
       ** Output account key details to report if posted amount
       ** is not zero
      C                   IF        LKEAMT <> *ZERO
      C                   EXSR      SrLoanReprt
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1729,40 +1732,40 @@
       *                 and unrealised re-valued profit               *
       *****************************************************************
      C     SrOtherAckey  BEGSR
- 
+
       ** Generate account key if non-linear amortisation
       ** adjustment not yet posted is not zero
      C                   EVAL      WkANADJF = 'N'
      C                   EVAL      WkACAMTP = *BLANK
      C                   IF        ANADJ <> *ZERO
- 
+
      C                   EVAL      WkANADJF = 'Y'
      C                   EXSR      SrLoanAcKey
      C                   EVAL      WkANADJF = 'N'
- 
+
       ** Output account key details to report if posted amount
       ** is not zero
      C                   IF        LKEAMT <> *ZERO
      C                   EXSR      SrLoanReprt
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Generate account key for Unrealised re-valued profit
      C                   EVAL      WkNPVAF  = 'N'
      C     LNRF          CHAIN     LENPVAL0
      C                   IF        %FOUND(LENPVAL0)
- 
+
      C                   EVAL      WkNPVAF  = 'Y'
      C                   EXSR      SrLoanAcKey
      C                   EVAL      WkNPVAF  = 'N'
- 
+
       ** Output account key details to report if posted amount
       ** is not zero
      C                   IF        LKEAMT <> *ZERO
      C                   EXSR      SrLoanReprt
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1770,39 +1773,39 @@
       *  SrFeeAcKey - Generate account key for current fee            *
       *****************************************************************
      C     SrFeeAcKey    BEGSR
- 
+
       ** Initialise LKEYFED fields
      C                   CLEAR                   LKEYFEDF
- 
+
       ** Initialise account key work DS
      C                   EVAL      WkAkey = *BLANKS
- 
+
       ** Set loan type (pos 1-2) and sub type (pos 4-5) for account key
      C                   EVAL      WkLTyp = LTYP
      C                   EVAL      WkLSTp = SUTP
      C                   EVAL      WkCLAS = CLAS                                              CLE042
- 
+
       ** Set position 3 to 'A' to denote an accrual date event and
       ** position 6 to 'N' to denote non-linear amortisation
      C                   EVAL      WkTyp1 = 'A'
      C                   EVAL      WkNlnr = 'N'
- 
+
       ** Set position 7 to 9
      C                   IF        RCSI  = 'R' OR
      C                             RCSI  = 'Y'
      C                   EVAL      WkRcrs = 'R'
      C                   ENDIF
- 
+
      C                   IF        CLE004 = 'Y' AND
      C                             CLE005 = 'Y' AND
      C                             (PTFI = 'I' OR
      C                              PTFI = 'P')
      C                   EVAL      WkRcrs = PTFI
      C                   ENDIF
- 
+
      C                   MOVE      FEFCOD        WkFCOD
      C                   EVAL      WkTyp2 = 'F'
- 
+
       ** Lending Fees account key details
      C                   EVAL      FKRECI = 'L'
      C                   EVAL      FKAKEY = WkAkey
@@ -1839,16 +1842,16 @@
      C                   ENDIF                                                                232309
                                                                                               232309
      C                   EVAL      FKSLID = FEPSTD
- 
+
       ** For reversals, post Non-Linear Amortised Fee to Date
      C                   IF        FERECI = '*'
      C                   EVAL      FKREVI = 1
      C                   EVAL      FKEAMT = FEAMTD
      C                   ELSE
- 
+
       ** else, post Non-Linear Amortised Fee for the day
      C                   EVAL      FKREVI = 0
- 
+
       ** If fee currency is not the same as loan currency, convert amount
       ** to be posted back to fee currency, except for last amortisation
       ** to be posted since value is already in fee currency (this is
@@ -1869,7 +1872,7 @@
      C**********         EVAL      FKEAMT = WFeePostAmt                                       231710
      C                   EVAL      FKEAMT = WFeePostAmt(WIx)                                  231710
      C                   ENDIF
- 
+
       ** If the settlement currency is entered and the amount is not 0
       ** then output the settlement currency on the account key
      C                   IF        CEU004 = 'Y' AND
@@ -1878,21 +1881,21 @@
      C                             FKEAMT <>  *ZERO
      C                   EVAL      FKSCCY = FESCCY
      C                   ENDIF
- 
+
      C                   IF        FKEAMT <> *ZERO
- 
+
       ** Increment number of fee account key processed
      C                   ADD       1             RFeesCnt
      C                   ADD       1             RAFeesCnt
- 
+
       ** Write new account key to file
      C                   WRITE     LKEYFEDF
- 
+
       ** Update fee account keys trailer
      C                   EXSR      SrFeeAKTrail
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT                                                                                  233601
@@ -2020,10 +2023,10 @@
       *  SrFeeReprt - Output generated account key detail to report   *
       *****************************************************************
      C     SrFeeReprt    BEGSR
- 
+
       ** Initialise report detail fields
      C                   CLEAR                   DETAIL11
- 
+
       ** Set report details fields
      C                   MOVE      FKCNUM        RCNUM
      C                   MOVE      FKLNNO        RLOAN
@@ -2031,21 +2034,21 @@
      C                   MOVE      FKAKEY        RAKEY
      C                   MOVE      FEFCCY        RCCY
      C                   MOVE      FKREVI        RRIND
- 
+
      C                   EVAL      PCCY = RCCY
      C                   MOVE      FKEAMT        ZFLD15
      C                   EXSR      ZSEdit
      C                   MOVE      ZOUT21        RAMNT
- 
+
       ** Write P1 header if required
      C                   Z-ADD     8             RQDLN1
      C     OFLLN1        SUB       PRTLN1        DIFLN1
      C     DIFLN1        IFLE      RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL11
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2055,35 +2058,35 @@
       *               ZCONV                                           *
       *****************************************************************
      C     SrConvAmnt    BEGSR
- 
+
       ** Get exchange rate and multiply/divide indicator if 'IN' or
       ** 'OUT' currency has changed if either of the previously used
       ** currencies has changed
      C                   IF        WSavedInCCY <> WInCCY OR
      C                             WSavedOutCCY <> WOutCcy
- 
+
       ** Retrieve details of 'IN' currency
      C                   EVAL      PCCY = WInCCY
      C                   EVAL      WSavedInCCY = WInCCY
      C                   EXSR      SrCurrency
- 
+
      C                   MOVE      A6MDIN        ZMDI1
      C                   Z-ADD     A6SPRT        ZRATE1
      C                   Z-ADD     A6NBDP        ZNBDP1            1 0
- 
+
       ** Retrieve details of 'OUT' currency
      C                   EVAL      PCCY = WOutCcy
      C                   EVAL      WSavedOutCCY = WOutCcy
      C                   EXSR      SrCurrency
- 
+
      C                   MOVE      A6MDIN        ZMDI2
      C                   Z-ADD     A6SPRT        ZRATE2
      C                   Z-ADD     A6NBDP        ZNBDP2            1 0
- 
+
       ** Obtain cross exchange rate & cross multiply/divide indicator
      C                   EXSR      SrZXRATE
      C                   ENDIF
- 
+
       ** Convert 'IN' amount to 'OUT' amount
      C                   MOVE      WInCcy        ZCCYI
      C                   MOVE      WOutCcy       ZCCYO
@@ -2091,10 +2094,10 @@
      C                   Z-ADD     ZNBDP2        ZCDPO
      C                   EVAL      ZAMTCI = WInAmt
      C                   EXSR      SrZCONV
- 
+
       ** Set output work amount to converted amount
      C                   EVAL      WOutAmt = ZAMTCO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2102,46 +2105,46 @@
       *  SrMCcyRoll - Multi-Ccy rollover file processing              *
       *****************************************************************
      C     SrMCcyRoll    BEGSR
- 
+
       ** Retrieve Loan B (CLOANCK) record to get new currency (CKNCCY)
      C     KCLoanB       CHAIN     CLOAN
- 
+
       ** Set 'IN' and 'OUT' currencies
      C                   EVAL      WInCcy = CCY
      C                   EVAL      WOutCcy = CKNCCY
- 
+
       ** Reset the following fields based on new currency
      C                   EVAL      WInAMT = TFDP
      C                   EXSR      SrConvAmnt
      C                   EVAL      TFDP   = WOutAmt
- 
+
      C                   EVAL      WInAMT = TFDPA
      C                   EXSR      SrConvAmnt
      C                   EVAL      TFDPA  = WOutAmt
- 
+
      C                   EVAL      WInAMT = TFAM
      C                   EXSR      SrConvAmnt
      C                   EVAL      TFAM   = WOutAmt
- 
+
      C                   EVAL      WInAMT = TFAC
      C                   EXSR      SrConvAmnt
      C                   EVAL      TFAC   = ZAMTCO
- 
+
      C                   EVAL      WInAMT = AFDP - TOTI
      C                   EXSR      SrConvAmnt
      C                   EVAL      AFDP   = WOutAmt
- 
+
      C                   EVAL      WInAMT = CFDP
      C                   EXSR      SrConvAmnt
      C                   EVAL      CFDP   = WOutAmt
- 
+
      C                   EVAL      AMDS   = *ZERO
      C                   EVAL      AMADJ  = *ZERO
      C                   EVAL      ANADJ  = *ZERO
- 
+
       ** Set on flag to update CLOANLB
      C                   EVAL      WUpdCLOAN = 'Y'
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2149,10 +2152,10 @@
       *  SrFeeDBUpd - Update fee related files                        *
       *****************************************************************
      C     SrFeeDBUpd    BEGSR
- 
+
       ** File Updates for Reversals
      C                   IF        FERECI = '*'
- 
+
       ** Update LEEIRDL0 file fields
      C     KEffIntR      SETLL     LEEIRAL4
      C     KEffIntR      READE     LEEIRAL4
@@ -2164,7 +2167,7 @@
      C**********         ENDIF                                                                231710
      C     KEffIntR      READE     LEEIRAL4
      C                   ENDDO
- 
+
       ** If loan and fee currencies are not the same, compute for the
       ** equivalent of Non-Linear Amortised Fee to Date in loan currency
      C                   EVAL      WkFEAMTD = 0                                               232306
@@ -2175,37 +2178,37 @@
      C                   EVAL(R)   WkFEAMTD = FEAMTD / EAXRAT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      EIAMTD = EIAMTD - WkFEAMTD
- 
+
      C                   EVAL      WUpdLEEIR = 'Y'
- 
+
       ** Update CLOANLB file fields
      C                   EVAL      TFDP  = TFDP  - EAAMNT
      C                   EVAL      TFDPA = TFDPA - EAAMNT
      C                   EVAL      TFAM  = TFAM  - EAAMNT
      C                   EVAL      AFDP  = AFDP  - WkFEAMTD
- 
+
      C                   EVAL      WUpdCLOAN = 'Y'
- 
+
       ** Zeroise Non-Linear Amortised Fee to Date to prevent reposting
      C                   EVAL      FEAMTD = *ZERO
- 
+
      C                   EVAL      WUpdLEFEE = 'Y'
- 
+
       ** File Updates for Non-Reversals
      C                   ELSE
- 
+
       ***Update*LEFEEDLC*file******************************************                       CAS011
       ** Update LEFEEDLD file                                                                 CAS011
      C**********         EVAL      FEAMTD = WFeePostAmt + FEAMTD                              231710
      C                   EVAL      FEAMTD = WFeePostAmt(WIx) + FEAMTD                         231710
      C                   EVAL      FEAFES = FEAMTD
      C                   EVAL      FELADT = WEvntCtlD
- 
+
      C                   EVAL      WUpdLEFEE = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2213,28 +2216,28 @@
       *  SrLoanAcKey - Generate account key for current loan          *
       *****************************************************************
      C     SrLoanAcKey   BEGSR
- 
+
       ** Initialise LKEY1DP fields
      C                   CLEAR                   LKEY1DPF
- 
+
       ** Initialise account key work DS
      C                   EVAL      WkAkey = *BLANKS
      C                   EVAL      WkACAMNT = *ZERO
- 
+
       ** Set loan type (pos 1-2) and sub type (pos 4-5) for account key
      C                   EVAL      WkLTyp = LTYP
      C                   EVAL      WkLSTp = SUTP
      C                   EVAL      WkCLAS = CLAS                                              CLE042
- 
+
       ** Set position 3 to 'A' to denote an accrual date event
      C                   EVAL      WkTyp1 = 'A'
- 
+
       ** Set position 6 to 'N' for nonlinear
      C                   EVAL      WkNlnr = 'N'
- 
+
       ** Set position 7 to 9
      C                   EVAL      Wk7to9 = WkBKAKY
- 
+
       ** Set fields for LKEY1DP based on output in LE0450
      C                   EVAL      LKRECI  =  'D'
      C                   EVAL      LKLNNO  =  LNRF
@@ -2277,48 +2280,48 @@
      C                   EVAL      LKANUM  =  FCANUM
      C                   EVAL      LKROLN  =  ACROLN
      C                   EVAL      LKGASS  =  *BLANK
- 
+
       ** Set particular fields for LKEY1DP depending on the amendment
       ** type as coded in LE0450
      C                   SELECT
- 
+
       ** Start Date
      C                   WHEN      WkACAMTP = 'ST'
- 
+
       ** Set pos 3 to 'V' to denote start/value date event
      C                   EVAL      WkTyp1 = 'V'
      C                   EVAL      LKAKEY  =  WkAkey
      C                   EVAL      WkACAMNT = TOTI
- 
+
       ** Repayment Schedule
      C                   WHEN      WkACAMTP = 'RE'
- 
+
      C                   EVAL      WkACAMNT = TOTI + AITC - AMADJ
      C                   EVAL      LKPACD  =  IACD
      C                   EVAL      LKICBS  =  WIntCalcBasis
- 
+
       ** Maturity
      C                   WHEN      WkACAMTP = 'MA'
- 
+
      C**********         EVAL      WkACAMNT = TOTI + AITC - AMADJ                             232630
      C                   EVAL      WkACAMNT = WLoanPostAmt                                    232630
      C                   EVAL      LKPACD  =  IACD
      C                   EVAL      LKICBS  =  WIntCalcBasis
- 
+
       ** Loan Subtype
      C                   WHEN      WkACAMTP = 'LS'
- 
+
       ** For SR/LOANSR in LE0450, 2 account key generations were suppressed
       ** by this enhancement. First was the generation of the old loan type
       ** subtype account key. The other was the generation of the new loan
       ** subtype account key.
      C                   EVAL      WkACAMNT = AMADJ
      C                   EVAL      LKEDAT  =  BJRDNB
- 
+
      C                   EVAL      WkTyp2 = 'D'
      C                   EVAL      LKAKEY  =  WkAkey
      C                   EVAL      LKEAMT  =  WkACAMNT
- 
+
      C**********         IF        WkACAMNT > *ZERO                                           231708
      C                   IF        TOTI > *ZERO                                               231708
      C                   EVAL      WkTyp2 = 'D'
@@ -2326,79 +2329,79 @@
      C                   EVAL      WkTyp2 = 'P'
      C                   EVAL      WkACAMNT = 0 - WkACAMNT
      C                   ENDIF
- 
+
       ** Old loan type/sub type (first account key)
      C                   EVAL      LKREVI  =  1
      C                   IF        LKEAMT <> *ZERO
      C                   ADD       1             RLoanCnt
      C                   ADD       1             RALoanCnt
- 
+
       ** Write new account key to file
      C                   WRITE     LKEY1DPF
- 
+
       ** Update loan account keys trailer
      C                   EXSR      SrLoanAKTrail
- 
+
       ** Write report detail for old loan type/sub type
      C                   EXSR      SrLoanReprt
      C                   ENDIF
- 
+
       ** New loan type/sub type (second account key)
      C                   EVAL      LKREVI  =  *ZERO
      C                   EVAL      WkLTyp = ACLTYP
      C                   EVAL      WkLSTp = ACSUTP
      C                   EVAL      WkCLAS = ACCLAS                                            CLE042
- 
- 
+
+
       ** Rollovers
      C                   WHEN      WkACAMTP = 'RO'
- 
+
      C                   EVAL      WkACAMNT = TOTI + AITC - AMADJ
      C                   EVAL      LKMDAT  =  NROD
      C                   EVAL      LKBRTT  =  ACBRTT
      C                   EVAL      LKBRTE  =  ACBRTE
      C                   EVAL      LKRTSP  =  ACRTSP
- 
+
      C                   EVAL      LKPACD  =  IACD
      C                   EVAL      LKICBS  =  WIntCalcBasis
- 
+
       ** Loan 'B' Record
      C                   WHEN      WkLoanBF = 'Y'
- 
+
       ** Posting of daily non-linear amortisation
      C                   EVAL      WkACAMNT = WLoanPostAmt
      C                   EVAL      LKEDAT   =  WEvntCtlD
- 
+
       ** Loan reversals
      C                   WHEN      WLoanReversF = 'Y'
- 
+
      C                   EVAL      LKREVI  =  1
      C                   EVAL      WkACAMNT = AMDS
      C                   EVAL      LKEDAT   =  WEvntCtlD
- 
+
       ** Posting for Non-linear Amortisation Adjustment not yet posted
      C                   WHEN      WkANADJF = 'Y'
- 
+
      C                   EVAL      WkACAMNT = ANADJ
- 
+
       ** Posting for Unrealised revalued profit
      C                   WHEN      WkNPVAF  = 'Y'
- 
+
       ** Reverse posting for Yesterday's Accrued Interest
      C                   EVAL      LKEDAT  =  BJRDNB
      C                   EVAL      WkNlnr = *BLANK
      C                   EVAL      Wk7to9 = ' NU'
- 
+
      C                   IF        YAINT <> *ZERO
      C                   EVAL      WkACAMNT = YAINT
- 
+
      C                   IF        WkACAMNT > *ZERO
      C                   EVAL      WkTyp2 = 'P'
      C                   ELSE
      C                   EVAL      WkTyp2 = 'L'
      C                   EVAL      WkACAMNT = 0 - WkACAMNT
      C                   ENDIF
- 
+
       ** Set account key and event amount                                                   BUG13407
      C                   EVAL      LKAKEY  =  WkAkey                                        BUG13407
      C                   EVAL      LKEAMT  =  WkACAMNT                                      BUG13407
@@ -2407,26 +2410,26 @@
      C                   IF        LKEAMT <> *ZERO
      C                   ADD       1             RLoanCnt
      C                   ADD       1             RALoanCnt
- 
+
       ** Write new account key to file
      C                   WRITE     LKEY1DPF
- 
+
       ** Update loan account keys trailer
      C                   EXSR      SrLoanAKTrail
- 
+
       ** Write report detail for old loan type/sub type
      C                   EXSR      SrLoanReprt
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      LKREVI  =  *ZERO                                         BUG13407
      C**********         EVAL(R)   YAINT = LNNPVA - WClnPrcTdy                                231712
      C                   EVAL(R)   YAINT = LNNPVA - PClnPrcTdy                                231712
      C                   EVAL      WkACAMNT = YAINT
      C                   EVAL      WUpdCLOAN = 'Y'
- 
+
      C                   ENDSL
- 
+
       ** Determine position 10 of account key accordingly:
       ** For NLA discount/premium not yet posted -> D (+) or C (-)
       ** For Unrealised revalued profit/loss -> P (+) or L (-)
@@ -2474,25 +2477,25 @@
      C                   EVAL      WkACAMNT = 0 - WkACAMNT                                    231708
      C                   ENDIF                                                                231708
      C                   ENDSL                                                                231708
- 
+
       ** Set account key and event amount
      C                   EVAL      LKAKEY  =  WkAkey
      C                   EVAL      LKEAMT  =  WkACAMNT
- 
+
      C                   IF        LKEAMT <> *ZERO
- 
+
       ** Increment number of loan account key processed
      C                   ADD       1             RLoanCnt
      C                   ADD       1             RALoanCnt
- 
+
       ** Write new account key to file
      C                   WRITE     LKEY1DPF
- 
+
       ** Update loan account keys trailer
      C                   EXSR      SrLoanAKTrail
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2500,10 +2503,10 @@
       *  SrLoanReprt - Output generated account key detail to report  *
       *****************************************************************
      C     SrLoanReprt   BEGSR
- 
+
       ** Initialise report detail fields
      C                   CLEAR                   DETAIL21
- 
+
       ** Set report details fields
      C                   MOVE      LKCNUM        RCNUM
      C                   MOVE      LKLNNO        RLOAN
@@ -2514,21 +2517,21 @@
      C                   MOVE      LKEAMT        RAMNT
      C                   MOVE      LKECCY        RCCY
      C                   MOVE      LKREVI        RRIND
- 
+
      C                   EVAL      PCCY = RCCY
      C                   MOVE      LKEAMT        ZFLD15
      C                   EXSR      ZSEdit
      C                   MOVE      ZOUT21        RAMNT
- 
+
       ** Write P2 header if required
      C                   Z-ADD     8             RQDLN2
      C     OFLLN2        SUB       PRTLN2        DIFLN2
      C     DIFLN2        IFLE      RQDLN2
      C                   WRITE     HEADP2
      C                   ENDIF
- 
+
      C                   WRITE     DETAIL21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2536,18 +2539,18 @@
       *  SrLoanDBUpd - Update loan details to file                    *
       *****************************************************************
      C     SrLoanDBUpd   BEGSR
- 
+
       ** For loan reversals no need to update CLOANCL but set record id
       ** for LEEIRDPD to '*'
      C                   IF        CHTP = 'R' AND
      C                             LCD = BJRDNB
      C                   EVAL      WUpdCLOAN = 'N'
- 
+
      C                   EVAL      EIRECI = '*'
      C                   EVAL      WUpdLEEIR = 'Y'
- 
+
      C                   ELSE
- 
+
       ** Update Loan details file for non-reversals
      C**********         EVAL      AFDP = AFDP + WAmrtAmt + ANADJ                             231710
      C**********         EVAL      AMDS = AMDS + WLoanPostAmt + ANADJ                         231710
@@ -2560,9 +2563,9 @@
      C**********         EVAL      AMCOST = WClnPrcTdy                                        231712
      C**********         EVAL      AMCOST = PClnPrcTdy                                 231712 232630
      C                   EVAL      AMCOST = PDrtPrcTdy                                        232630
- 
+
      C                   EVAL      WUpdCLOAN = 'Y'
- 
+
       ** Update EIR details file
      C                   EVAL      EIRECI = RECI
      C**********         EVAL      EIAMTD = WAmrtAmt + EIAMTD + ANADJ                         231710
@@ -2575,12 +2578,12 @@
      C**********         EVAL(R)   EIDPTD = WDrtPrcTdy                                        231712
      C                   EVAL(R)   EICPTD = PClnPrcTdy                                        231712
      C                   EVAL(R)   EIDPTD = PDrtPrcTdy                                        231712
- 
+
      C                   EVAL      ANADJ = *ZERO
- 
+
      C                   EVAL      WUpdLEEIR = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2588,33 +2591,33 @@
       *  SrReportProc - Control open and close of reports            *
       *****************************************************************
      C     SrReportProc  BEGSR
- 
+
       ** Check for change in branch being processed
      C                   IF        BRCA <> WCurrentBRCA
- 
+
       ** Close the previous branch's spool files if any is open
      C                   IF        WCurrentBRCA <> *BLANK
      C                   EXSR      SrClsP1
      C                   EXSR      SrClsP2
      C                   ENDIF
- 
+
       ** Access the next Branch's Details
      C                   EVAL      PBRCA = BRCA
      C                   EXSR      SrBranch
      C                   EVAL      RBRCA = A8BRCD
      C                   EVAL      RBRNM = A8BRNM
- 
+
       ** Open the next branch's spool files
      C                   EXSR      SrOpnP1
      C                   EXSR      SrOpnP2
- 
+
       ** Set current working branch
      C                   EVAL      WCurrentBRCA = BRCA
- 
+
       ** Set new branch flag to 'Y'
      C                   EVAL      WNewBrcaF = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2622,7 +2625,7 @@
       *  SrZINTDY - Compute number of days between 2 dates            *
       *****************************************************************
      C     SrZINTDY      BEGSR
- 
+
      C                   CALLB     'ZINTDY'
      C                   PARM                    PRetCdeOut
      C                   PARM                    PZINDY
@@ -2630,7 +2633,7 @@
      C                   PARM                    PZEND
      C                   PARM                    PZCALC
      C                   PARM                    PINT6DY
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2638,7 +2641,7 @@
       *  SrZXRATE - Cross currency rate calculation                   *
       *****************************************************************
      C     SrZXRATE      BEGSR
- 
+
      C                   CALLB     'ZXRATE'
      C                   PARM                    ZRATE1           13 8
      C                   PARM                    ZMDI1             1
@@ -2646,7 +2649,7 @@
      C                   PARM                    ZMDI2             1
      C                   PARM      *ZERO         ZRATEX           13 8
      C                   PARM      *BLANKS       ZMDIX             1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2654,7 +2657,7 @@
       *  SrZCONV - Cross currency amount conversion                   *
       *****************************************************************
      C     SrZCONV       BEGSR
- 
+
      C                   CALLB     'ZCONV'
      C                   PARM                    ZAMTCI           15 0
      C                   PARM      ZRATEX        ZEXCH            13 8
@@ -2664,7 +2667,7 @@
      C                   PARM                    ZCDPI             1 0
      C                   PARM                    ZCDPO             1 0
      C                   PARM                    ZAMTCO           15 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2672,27 +2675,27 @@
       *  SrReportInit - Report initialisation                         *
       *****************************************************************
      C     SrReportInit  BEGSR
- 
+
       ** Printer file "open" flags
      C                   MOVE      'N'           P1OPEN
      C                   MOVE      'N'           P2OPEN
- 
+
       ** Report work fields
      C                   Z-ADD     0             RQDLN1
      C                   Z-ADD     0             DIFLN1
- 
+
      C                   Z-ADD     0             RQDLN2
      C                   Z-ADD     0             DIFLN2
- 
+
       ** Record counts
      C                   Z-ADD     0             RLoanCnt
      C                   Z-ADD     0             RFeesCnt
      C                   Z-ADD     0             RALoanCnt
      C                   Z-ADD     0             RAFeesCnt
- 
+
       ** Current brance being processed
      C                   MOVE      *BLANKS       WCurrentBRCA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2700,7 +2703,7 @@
       ** SrAudit - Output audit report                                *
       *****************************************************************
      C     SrAudit       BEGSR
- 
+
       ** Ensure report spool file recorded by RCF
      C                   Z-ADD     SFNUMU        ZSNUM
      C                   CALL      'ZSFILE'
@@ -2709,7 +2712,7 @@
      C                   PARM                    SFILEU
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If error occurs during ZSFILE processing, then return to the
       ** calling program
      C     ZSERR         IFEQ      'Y'
@@ -2718,31 +2721,31 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Output report header
      C                   WRITE     HEADAU
- 
+
      C                   SELECT
- 
+
       ** If DB error occured, print the DB error information
      C                   WHEN      (*INU7 = *ON)
      C                   WRITE     DBERROR
- 
+
       ** If no records read, print "No Details" message
      C                   WHEN      RALoanCnt = *ZERO AND
      C                             RAFeesCnt = *ZERO
      C                   WRITE     NODTLS
- 
+
       ** If records were processed, print file control details
      C                   OTHER
      C                   WRITE     CONTROL
- 
+
      C                   ENDSL
- 
+
       ** Set on last record indicator and end program
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2750,14 +2753,14 @@
       *  SrOpnP1 - Open P1 processing                                 *
       *****************************************************************
      C     SrOpnP1       BEGSR
- 
+
       ** Open P1 printer file
      C                   IF        P1OPEN = 'N'
      C                   OPEN      LE004650P1
      C                   EVAL      P1OPEN = 'Y'
      C                   EVAL      RFeesCnt = *ZERO
      C                   ENDIF
- 
+
       ** Ensure report spool file recorded by RCF
      C                   Z-ADD     SFNUM1        ZSNUM
      C                   CALL      'ZSFILE'
@@ -2766,7 +2769,7 @@
      C                   PARM                    SFILE1
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If error occurs during ZSFILE processing, then return to the
       ** calling program.
      C     ZSERR         IFEQ      'Y'
@@ -2775,10 +2778,10 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write header
      C                   WRITE     HEADP1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2786,24 +2789,24 @@
       *  SrOpnP2 - Open P2 processing                                 *
       *****************************************************************
      C     SrOpnP2       BEGSR
- 
+
       ** Open P2 printer file
      C                   IF        P2OPEN = 'N'
      C                   OPEN      LE004650P2
      C                   EVAL      P2OPEN = 'Y'
      C                   EVAL      RLoanCnt = *ZERO
      C                   ENDIF
- 
+
       ** Ensure report spool file recorded by RCF
      C                   Z-ADD     SFNUM2        ZSNUM
- 
+
      C                   CALL      'ZSFILE'
      C                   PARM                    ZSEQ
      C                   PARM                    ZSENTY
      C                   PARM                    SFILE2
      C                   PARM                    ZSNUM
      C                   PARM                    ZSERR
- 
+
       ** If error occurs during ZSFILE processing, then return to the
       ** calling program
      C     ZSERR         IFEQ      'Y'
@@ -2812,10 +2815,10 @@
      C                   EVAL      *INLR = *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Write header
      C                   WRITE     HEADP2
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2823,7 +2826,7 @@
       *  SrClsP1 - Close P1 Processing                                *
       *****************************************************************
      C     SrClsP1       BEGSR
- 
+
       ** If no details are generated for this branch, write no details
      C                   IF        RFeesCnt = *ZERO
      C                   EVAL      RQDLN1 = 4
@@ -2833,7 +2836,7 @@
      C                   ENDIF
      C                   WRITE     DETAIL13
      C                   ELSE
- 
+
       ** Print number of account keys generated for this branch
      C                   EVAL      RQDLN1 = 4
      C                   EVAL      DIFLN1 = OFLLN1 - PRTLN1
@@ -2842,7 +2845,7 @@
      C                   ENDIF
      C                   WRITE     DETAIL12
      C                   ENDIF
- 
+
       ** Check that sufficient lines remain for the footer. If not,
       ** write out the header on a new page
      C                   EVAL      RQDLN1 = 4
@@ -2850,16 +2853,16 @@
      C                   IF        DIFLN1 <= RQDLN1
      C                   WRITE     HEADP1
      C                   ENDIF
- 
+
       ** Write footer
      C                   WRITE     TRAILP1
- 
+
       ** Close the spool file
      C                   IF        P1OPEN = 'Y'
      C                   CLOSE     LE004650P1
      C                   EVAL      P1OPEN = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2867,7 +2870,7 @@
       *  SrClsP2 - Close P2 Processing                                *
       *****************************************************************
      C     SrClsP2       BEGSR
- 
+
       ** If no details are generated for this branch, write no details
      C                   IF        RLoanCnt = *ZERO
      C                   EVAL      RQDLN2 = 4
@@ -2877,7 +2880,7 @@
      C                   ENDIF
      C                   WRITE     DETAIL23
      C                   ELSE
- 
+
       ** Print number of account keys generated for this branch
      C                   EVAL      RQDLN2 = 4
      C                   EVAL      DIFLN2 = OFLLN2 - PRTLN2
@@ -2886,7 +2889,7 @@
      C                   ENDIF
      C                   WRITE     DETAIL22
      C                   ENDIF
- 
+
       ** Check that sufficient lines remain for the footer. If not,
       ** write out the header on a new page
      C                   EVAL      RQDLN2 = 4
@@ -2894,16 +2897,16 @@
      C                   IF        DIFLN2 <= RQDLN2
      C                   WRITE     HEADP2
      C                   ENDIF
- 
+
       ** Write footer
      C                   WRITE     TRAILP2
- 
+
       ** Close the spool file
      C                   IF        P2OPEN = 'Y'
      C                   CLOSE     LE004650P2
      C                   EVAL      P2OPEN = 'N'
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2912,8 +2915,8 @@
       *                 from SR/INIT in LER130.                       *
       *****************************************************************
      C     SrComputeAPD  BEGSR
- 
- 
+
+
       ** Use previous end of year and month of RUNDAY to check whether
       ** the current month should be used for the array index
      C     BJPEYD        ADD       1             START             5 0
@@ -2930,13 +2933,13 @@
      C                   ENDIF
      C                   Z-ADD     ZDATE         STDTN             6 0
      C                   MOVE      ZADATE        STDTA             7
- 
+
       ** Store the day fields of the start of year date
      C                   MOVEL     STDTA         DDSY              2
- 
+
       ** Set up next working day minus 1
      C     BJDNWD        SUB       1             WNWDS1            5 0
- 
+
       ** Calculate the start of month date by converting the date of
       ** next working day to date format and inserting the start of
       ** year day number
@@ -2953,36 +2956,36 @@
      C                   ENDIF
      C                   Z-ADD     ZDATE         WDATE             6 0
      C                   MOVE      ZADATE        GADATE            7
- 
+
       ** If the date format is to be European (DDMMYY) then use the
       ** correct data structure
      C                   MOVE      WDATE         SMDT              6
      C     BJDFIN        IFEQ      'D'
      C                   MOVEL     DDSY          SMDT
- 
+
       ** Divide WDATE (converted date of next working day) by 10000
       ** to get the day number (2 DIGITS)
      C     WDATE         DIV       10000         DNWDDD            2 0
- 
+
      C                   ELSE
- 
+
       ** Otherwise use the U.S.A.-defined date data structure
       ** (MMDDYY) for manipulation.
      C                   MOVE      WDATE         SMDTUS            6
      C                   MOVE      DDSY          SMDDUS
      C                   MOVE      SMDDUS        SMDD
      C                   MOVE      SMUS          SM
- 
+
       ** Divide WDATE (converted date of next working day) by 100
       ** to get the day number (2 DIGITS) by putting the result in a
       ** 2 digit field.
      C     WDATE         DIV       100           DNWDDD            2 0
- 
+
      C                   ENDIF
- 
+
       ** Move the start of year day into a 2 digit field for later comp   E45703
      C                   MOVEL     DDSY          WKDDSY            2 0
- 
+
       ** If the day number of the date of next working
       ** day is less than the start of month day subtract
       ** one from the month number of the date of next working day
@@ -2995,9 +2998,9 @@
      C                   SUB       1             SY
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   MOVE      SMDT          GDATE             6 0
- 
+
       ** Convert the constructed start date to day format
      C                   MOVE      '0'           GRTCD
      C                   CALL      'LERDATEF'
@@ -3005,7 +3008,7 @@
      C                   PARM                    GDAYNO            5 0
      C                   PARM                    GRTCD             1
      C                   Z-ADD     GDAYNO        SMDY              5 0
- 
+
       ** Check whether the start of the new month falls after RUND
       ** and on or before the date of next working day and if so
       ** use the last day of the month as the accrual/profit day
@@ -3014,10 +3017,10 @@
      C     BKAPDT        ANDEQ     BJRDNB
      C     SMDY          SUB       1             WAPDAT
      C     SM            SUB       1             A                 2 0
- 
+
      C                   ELSE
      C                   Z-ADD     SM            A
- 
+
       ** Find the lesser of next working day minus 1 and accrual profit
       ** day
      C     BKAPDT        IFLT      WNWDS1
@@ -3026,7 +3029,7 @@
      C                   Z-ADD     WNWDS1        WAPDAT
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3034,16 +3037,16 @@
       *  ZSEdit - Call to 'ZSEDIT'                                    *
       *****************************************************************
      C     ZSEdit        BEGSR
- 
+
      C                   EXSR      SrCurrency
      C                   EVAL      ZDECS = A6NBDP
- 
+
      C                   CALL      'ZSEDIT'
      C                   PARM                    ZFLD15
      C                   PARM                    ZDECS
      C                   PARM      *BLANKS       ZECODE
      C                   PARM                    ZOUT21
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3051,13 +3054,13 @@
       *  SrZDate2 - Convert day number to date                        *
       *****************************************************************
      C     SrZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM      *ZERO         ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3065,13 +3068,13 @@
       *  SrBranch - Retrieve branch details                           *
       *****************************************************************
      C     SrBranch      BEGSR
- 
+
      C                   CALL      'AOBRCHR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY'        POptn
      C                   PARM                    PBRCA
      C     SDBRCH        PARM      SDBRCH        DSSDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -3081,7 +3084,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3089,13 +3092,13 @@
       *  SrCurrency - Retrieve Currency Details                       *
       *****************************************************************
      C     SrCurrency    BEGSR
- 
+
      C                   CALL      'AOCURRR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*KEY   '     POptn
      C                   PARM                    PCCY
      C     SDCURR        PARM      SDCURR        DSSDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -3105,7 +3108,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3113,20 +3116,20 @@
       *  SrGLZAdd - Adds a running amount to a total amount           *
       *****************************************************************
      C     SrGLZAdd      BEGSR
- 
+
      C                   IF        ZZAMT = *ZERO
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** Split ZZAMT into integer and decimal fields.
- 
+
      C                   EVAL      ZZAMTI = ZZAMT
      C                   MOVE      ZZAMT         ZZAMTD
- 
+
       ** Both ZZAMTI and ZZAMTD now contain a 'sign' zone.
- 
+
      C                   EXSR      SrGLZSum
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3134,29 +3137,29 @@
       *  SrGLZSum - Carries out the addition for SrGLZAdd             *
       *****************************************************************
      C     SrGLZSum      BEGSR
- 
+
      C                   EVAL      *IN91 = *OFF
      C                   EVAL      *IN92 = *OFF
      C                   EVAL      *IN93 = *OFF
      C                   EVAL      *IN94 = *OFF
      C                   EVAL      *IN95 = *OFF
      C                   EVAL      *IN99 = *OFF
- 
+
      C                   IF        ZZAMTI = *ZERO AND
      C                             ZZAMTD = *ZERO
      C                   EXSR      SrZSEnd
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** Determine the sign of ZZAMTI & ZZAMTD
- 
+
      C                   IF        ZZAMTI < *ZERO OR
      C                             ZZAMTD < *ZERO
      C                   EVAL      *IN92 = *ON
      C                   ENDIF
- 
+
       ** Determine the sign of ZZTOTI and ZZTOTD
- 
+
      C                   IF        ZZTOTI = *ZERO AND
      C                             ZZTOTD = *ZERO
      C                   EVAL      ZZTOTI = ZZAMTI
@@ -3164,38 +3167,38 @@
      C                   EXSR      SrZSEnd
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   IF        ZZTOTI < *ZERO OR
      C                             ZZTOTD < *ZERO
      C                   EVAL      *IN91 = *ON
      C                   ENDIF
- 
+
       ** If the signs differ, bypass overflow checks
- 
+
      C                   IF        *IN91 <> *IN92
      C                   EXSR      SrZOfPs
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   EVAL      ZZWK2 = ZZAMTD + ZZTOTD
- 
+
      C                   IF        ZZWK2 > 999 OR
      C                             ZZWK2 < -999
- 
+
      C                   IF        *IN92 = *ON
      C                   EVAL      ZZWK3 = ZZAMTI - 1
      C                   ELSE
      C                   EVAL      ZZWK3 = ZZAMTI + 1
      C                   ENDIF
- 
+
      C                   EVAL      ZZWK3 = ZZWK3 + ZZTOTI
- 
+
      C                   ELSE
      C                   EVAL      ZZWK3 = ZZTOTI + ZZAMTI
      C                   ENDIF
- 
+
       ** If mod. ZZWK3 is < mod. ZZTOTI, then overflow has occurred.
- 
+
      C                   IF        (*IN92 = *ON AND ZZWK3 > ZZTOTI) OR
      C                             (*IN92 = *OFF AND ZZWK3 < ZZTOTI)
      C                   EVAL      ZZAMT = *ZERO
@@ -3204,9 +3207,9 @@
      C                   Z-ADD     ZZWK2         ZZTOTD
      C                   Z-ADD     ZZWK3         ZZTOTI
      C                   ENDIF
- 
+
      C                   EXSR      SrZSEnd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3214,23 +3217,23 @@
       *  SrZOfPs - Bypass overflow processing for SrGLZSum            *
       *****************************************************************
      C     SrZOfPs       BEGSR
- 
+
       ** If ZZAMT was negative, make it positive for comparison with ZZTOT
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     ZZAMTI        ZZAMTI
      C                   Z-SUB     ZZAMTD        ZZAMTD
      C                   ENDIF
- 
+
       ** If ZZTOT was negative, make it positive for comparison with ZZAMT
- 
+
      C                   IF        *IN91 = *ON
      C                   Z-SUB     ZZTOTI        ZZTOTI
      C                   Z-SUB     ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
       ** If ZZTOT = ZZAMT, return zero
- 
+
      C                   IF        ZZTOTI = ZZAMTI AND
      C                             ZZTOTD = ZZAMTD
      C                   EVAL      ZZTOTI = *ZERO
@@ -3238,14 +3241,14 @@
      C                   EXSR      SrZSEnd
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   EVAL      *IN93 = *OFF
- 
+
      C                   IF        ZZTOTI > ZZAMTI OR
      C                             ZZTOTD > ZZAMTD
- 
+
      C                   EVAL      *IN93 = *ON
- 
+
      C                   IF        ZZAMTD > ZZTOTD
      C                   EVAL      ZZTOTI = ZZTOTI - 1
      C                   EVAL      ZZWK2 = ZZTOTD + 1000
@@ -3253,11 +3256,11 @@
      C                   ELSE
      C                   EVAL      ZZTOTD = ZZTOTD - ZZAMTD
      C                   ENDIF
- 
+
      C                   EVAL      ZZTOTI = ZZTOTI - ZZAMTI
- 
+
      C                   ELSE
- 
+
      C                   IF        ZZTOTD > ZZAMTD
      C                   EVAL      ZZWK3 = ZZAMTI - 1
      C                   EVAL      ZZWK2 = ZZAMTD + 1000
@@ -3267,29 +3270,29 @@
      C                   EVAL      ZZTOTI = ZZAMTI - ZZTOTI
      C                   EVAL      ZZTOTD = ZZAMTD - ZZTOTD
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Reverse the sign of ZZTOT if the larger I/P fields were negative
- 
+
      C                   EVAL      *IN94 = *OFF
- 
+
      C                   IF        (*IN93 = *ON AND *IN91 = *ON) OR
      C                             (*IN93 = *OFF AND *IN92 = *ON)
      C                   EVAL      *IN94 = *ON
      C                   Z-SUB     ZZTOTI        ZZTOTI
      C                   Z-SUB     ZZTOTD        ZZTOTD
      C                   ENDIF
- 
+
       ** Restore the sign of ZZAMTI & ZZAMTD if it was reversed
- 
+
      C                   IF        *IN92 = *ON
      C                   Z-SUB     ZZAMTI        ZZAMTI
      C                   Z-SUB     ZZAMTD        ZZAMTD
      C                   ENDIF
- 
+
      C                   EXSR      SrZSEnd
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3297,19 +3300,19 @@
       *  SrZSEnd - End processing for SrGLZSum                        *
       *****************************************************************
      C     SrZSEnd       BEGSR
- 
+
       ** If ZZTOTD = zero and ZZTOTI is negatuive, set ZZNEGD
- 
+
      C                   EVAL      *IN96 = *OFF
      C                   EVAL      *IN91 = *OFF
- 
+
      C                   IF        ZZTOTD = *ZERO AND
      C                             ZZTOTI < *ZERO
      C                   EVAL      ZZNEGD = '.000-'
      C                   EVAL      *IN96 = *ON
      C                   EVAL      *IN91 = *ON
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3317,10 +3320,10 @@
       * SrLoanAKTrail - Update loans account key trailer              *
       *****************************************************************
      C     SrLoanAKTrail BEGSR
- 
+
       ** Increment number of records on file
      C                   EVAL      LZNORE = LZNORE + 1
- 
+
       ** Update value of records
      C                   EVAL      ZZAMT  = LKEAMT / 1000
      C                   IF        ZZAMT < 0                                                  232304
@@ -3331,7 +3334,7 @@
      C                   EXSR      SrGLZAdd
      C                   EVAL      LZVLRF = ZZTOTI
      C                   EVAL      LZVLRL = ZZTOTD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3339,10 +3342,10 @@
       * SrFeeAkTrail - Update fees account key trailer                *
       *****************************************************************
      C     SrFeeAKTrail  BEGSR
- 
+
       ** Increment number of records on file
      C                   EVAL      FZNORE = FZNORE + 1
- 
+
       ** Update value of records
      C                   EVAL      ZZAMT  = FKEAMT / 1000
      C                   IF        ZZAMT < 0                                                  232304
@@ -3353,7 +3356,7 @@
      C                   EXSR      SrGLZAdd
      C                   EVAL      FZVLRF = ZZTOTI
      C                   EVAL      FZVLRL = ZZTOTD
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3361,21 +3364,21 @@
       * *INZSR - Program initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
       ** Set up standard DB error fields
      C     *LOCK         IN        LDA
       /COPY ZACPYSRC,DBFIELDS
      C                   OUT       LDA
- 
+
       ** Call access program for bank details - title, run date and
       ** run day number
      C                   CALL      'AOBANKR0'
      C                   PARM      '*MSG   '     PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -3385,14 +3388,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access the Midas Modules
- 
+
      C                   CALL      'AOMMODR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST '     POptn
      C     SDMMOD        PARM      SDMMOD        DSSDY
- 
+
      C                   IF        PRtcd <> *Blanks
      C     *LOCK         IN        LDA
      C                   EVAL      DBFILE =  'SDMMODPD'
@@ -3401,13 +3404,13 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check System if Multi-Branch environment
- 
+
      C                   IF        BGMBIN = 'Y'
      C                   SETON                                        32
      C                   ENDIF
- 
+
       ** Access General Ledger details
      C**********         CALL      'AOGELRR0'                                                 CAS011
      C                   CALL      'AOGELRR1'                                                 CAS011
@@ -3415,7 +3418,7 @@
      C                   PARM      '*FIRST '     POptn
      C*****SDGELR        PARM      SDGELR        DSFDY                                        CAS011
      C     SDGELR        PARM      SDGELR        DSSDY                                        CAS011
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -3425,14 +3428,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Check if CLE004 is installed
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CLE004'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF    '
@@ -3443,20 +3446,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CLE004 = 'Y'
      C                   ELSE
      C                   EVAL      CLE004 = 'N'
      C                   ENDIF
- 
+
       ** Check if CLE005 is installed
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CLE005'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF    '
@@ -3467,20 +3470,20 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CLE005 = 'Y'
      C                   ELSE
      C                   EVAL      CLE005 = 'N'
      C                   ENDIF
- 
+
       ** Check if CEU004 is installed
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*VERIFY'     POptn
      C                   PARM      'CEU004'      PSard
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS AND
      C                             PRtCd <> '*NRF    '
@@ -3491,7 +3494,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PRtCd = *BLANKS
      C                   EVAL      CEU004 = 'Y'
      C                   ELSE
@@ -3510,13 +3513,13 @@
      C                   IF        PRtCd = *BLANKS                                            CLE134
      C                   EVAL      CLE134 = 'Y'                                               CLE134
      C                   ENDIF                                                                CLE134
- 
+
       ** Access Hedging details
      C                   CALL      'AOHEDGR0'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM      '*FIRST '     POptn
      C     SDHEDG        PARM      SDHEDG        DSFDY
- 
+
       ** Database error
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
@@ -3526,14 +3529,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** If Amortisation Method is 'L', end program since this only
       ** generates account keys for the Non-linear method
      C                   IF        FSAMRM = 'L'
      C                   EVAL      *INLR  =  *ON
      C                   RETURN
      C                   ENDIF
- 
+
       ** Use the following as calculation basis if No. of days in
       ** a year has been specified in the Hedging ICD file
      C                   IF        FSNDYR <> *BLANK
@@ -3547,25 +3550,25 @@
      C                   EVAL      WIntCalcBasis = 6
      C                   ENDSL
      C                   ENDIF
- 
+
       ** Compute for Accrual Profit work date
      C                   EXSR      SrComputeAPD
- 
+
       ** Key list for CLOANCL keyed on loan type and subtype
      C     KLoanTS       KLIST
      C                   KFLD                    LTYP
      C                   KFLD                    SUTP
      C                   KFLD                    CLAS                                         CLE042
- 
+
       ** Key list for LEEIRAL4 keyed on loan number and fee sequence
      C     KEffIntR      KLIST
      C                   KFLD                    FELOAN
      C                   KFLD                    FEFSEQ
- 
+
      C     KEffIntR2     KLIST
      C                   KFLD                    HILNRF
      C                   KFLD                    HIFSEQ
- 
+
       ** Key list for LEEIRAL4 keyed on loan number and fee sequence                          231712
      C     KLoanFSeq     KLIST                                                                231712
      C                   KFLD                    KLoan                                        231712
@@ -3576,18 +3579,18 @@
      C     KFees         KLIST
      C                   KFLD                    LNRF
      C                   KFLD                    KFeeSq
- 
+
       ** Key list for CLOAN keyed on loan number and record type = 'B'
      C     KCLoanB       KLIST
      C                   KFLD                    LNRF
      C                   KFLD                    KRcdT
      C                   EVAL      KRCDT = 'B'
- 
+
       ** Key list for LEACT5L0 keyed on branch and loan number
      C     KActTdy       KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    LNRF
- 
+
       ** Key list for FCLTYL1 keyed on facility branch, facility
       ** customer, facility type, and facility sequence
      C     KFacility     KLIST
@@ -3600,20 +3603,20 @@
      C     KCashFlow     KLIST                                                                231712
      C                   KFLD                    LNRF                                         231712
      C                   KFLD                    KDate                                        231712
- 
+
       ** Determine event control date
      C                   EVAL      WEvntCtlD = BJDNWD - 1
      C                   IF        BKAPDT < WEvntCtlD
      C                   EVAL      WEvntCtlD = BKAPDT
      C                   ENDIF
- 
+
       ** Read LE Action file to retrieve Previous profit accrual date
      C                   READ      ACTN5DH
      C                   EVAL      WkPELAP = PELAP
- 
+
       ** Set file pointer to first record in the loans trailer file
      C                   READ      LKEY1ZZ
- 
+
       ** Database error
      C                   IF        %EOF(LKEY1ZZ)
      C     *LOCK         IN        LDA
@@ -3622,10 +3625,10 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Set file pointer to first record in the fees trailer file
      C                   READ      LKEYFEZ
- 
+
       ** Database error
      C                   IF        %EOF(LKEYFEZ)
      C     *LOCK         IN        LDA
@@ -3634,14 +3637,14 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Initialise report processing
      C                   EXSR      SrReportInit
- 
+
       ** Initialise work variables
      C                   EVAL      WSavedInCCY  = *BLANKS
      C                   EVAL      WSavedOutCCY = *BLANKS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -3652,17 +3655,17 @@
       *          This subroutine DUMPs the program just once.         *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   IF        RunBefore = *BLANK
      C                   DUMP
      C                   EVAL      RunBefore = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   EXSR      SrAudit
- 
+
      C                   ENDSR
       *****************************************************************
 **  CPY@

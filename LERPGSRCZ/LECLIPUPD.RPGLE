@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD034771           Date 23Jun15               *
-      *  Prev Amend No. CGL165             Date 17Mar15               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD034771           Date 23Jun15               *
+      *                 CGL165             Date 17Mar15               *
       *                 MD030621           Date 26Feb15               *
       *                 MD032052           Date 23Jan15               *
       *                 CLE164             Date 18Aug14               *
@@ -141,6 +142,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions                                *
       *  MD034771 - Transactions sent via SOAP and MQ are still in    *
       *             Complete status even auto-auth is set to Y        *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -598,7 +601,7 @@
       *
      D WNOST           S              2  0 DIM(5) CTDATA PERRCD(5)
       ***  Settlements through nostros
- 
+
      D XOT             S             25A   DIM(Elements) PERRCD(1) CTDATA                    BUG3760
       ** XML Opening Tags for the Compliance Engine                                          BUG3760
                                                                                              BUG3760
@@ -609,7 +612,8 @@
       ** Switchable feature CER020                                                            CER020
      D CER020          S              1A                                                      CER020
      D CRE073          S              1A                                                      CRE073
- 
+     D CLE141          S              1A                                                      CLE141
+
      D LEVCliL       E DS                  EXTNAME(LEVCLILPD)
      D                                     PREFIX(L_)
       ***  Externally desc'd DS for valid loan Details CL
@@ -618,15 +622,15 @@
       ***  Externally desc'd DS for valid loan Details CL
      D TranInExt     E DS                  EXTNAME(LESTMP2PD)                                 CER049
       ***  Externally desc'd DS for screen Loans extension                                    CER049
- 
- 
+
+
      D LoanL         E DS                  EXTNAME(CLOANCL)
      D LoanK         E DS                  EXTNAME(CLOANCK)
      D                                     PREFIX(K_)
- 
+
      D LoanC         E DS                  EXTNAME(CLOANCL)                                  BUG3760
      D                                     PREFIX(CH)                                        BUG3760
- 
+
       ** Data Structure for MPHAS Dataarea                                                   CLE134
                                                                                              CLE134
      D MPHAS           DS             1                                                      CLE134
@@ -635,8 +639,8 @@
       ** Data Structure for LTRIX
       *
      D  TXSTS            *STATUS
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  Data structure for bank details
      D SDLENO        E DS                  EXTNAME(SDLENOPD)
@@ -684,7 +688,7 @@
       ***  First DS for access programs, short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ***  Second DS for access programs, long data structure
- 
+
      D SDWLCC        E DS                  EXTNAME(SDWLCCPD)                                 BUG3760
       ** Midas Functions for Watch List Checking Details File                                BUG3760
       *                                                                                      BUG3760
@@ -702,7 +706,7 @@
                                                                                              BUG3760
      D WLF             S             18A   DIM(Elements)                                     BUG3760
       ** Watch List Fields Array.                                                            BUG3760
- 
+
      D Z#BSTS        E DS                  EXTNAME(Z#BST)
       ***  before image of update to LE position files
      D Z#ASTS        E DS                  EXTNAME(Z#AST)
@@ -726,7 +730,7 @@
                                                                                               CAS011
      D Z#ASTK          DS          2048                                                       222373
      D Z#BSTK          DS          2048                                                       222373
- 
+
      D Z#BSTF        E DS                  EXTNAME(Z#BST)                                     262735
      D                                     PREFIX(FB_)                                        262735
      D Z#ASTF        E DS                  EXTNAME(Z#AST)                                     262735
@@ -738,13 +742,13 @@
       *                                                                                       262735
      DCrFeFilFmt     E DS                  EXTNAME(LEFEEDL1)                                  262735
      D                                     PREFIX(F_)                                         262735
- 
+
      D SC24X7        E DS                  EXTNAME(SC24X7)
       ***  24X7 Data Structure
- 
+
      D SDSTAT        E DS                  EXTNAME(SDSTAT)
       ***  SDSTAT Data Structure
- 
+
      D LELWNE        E DS                  EXTNAME(LELWNEPD)                                MD020954
      D                                     PREFIX(PD)                                       MD020954
       ** New PDCL record on CLOANCL (COB)                                                   MD020954
@@ -774,7 +778,7 @@
       ***  ZAMSGTOOPR
       *
      D TRANSDTL        S           5800A
- 
+
      D                 DS
       ***  Data structure of key list used in chaining to FCLTY
      D  FCTREC                 1     12
@@ -783,7 +787,7 @@
      D  WFFACT                 7      9  0
      D  WFFCNO                10     11  0
      D  WFRCTP                12     12
- 
+
      D                 DS
       ***  Data structure of key list used in chaining to LEREF
      D  LERFKY                 1     17
@@ -793,7 +797,7 @@
      D  WFCNO                 10     11  0
      D**WLNRF***              12     17  0                                                    CLE148
      D  WLNRF                 12     17                                                       CLE148
- 
+
      D                 DS
       ***  Data structure for ZDAT10
      D  ZZDTIN                 1      8  0
@@ -801,8 +805,8 @@
      D  ZWCC                   1      2  0
      D  ZWMTH                  5      6  0
      D  ZWDAY                  7      8  0
- 
- 
+
+
      D***PrvLOAN        DS           200                                                      CGL029
      D  PrvLOAN        DS                                                                     CGL029
       ***  Fields used in setting confirmation indicators (old record)
@@ -815,7 +819,7 @@
      D  Prv_RFRQ              21     21
      D  Prv_RAMT              22     34  0
      D  Prv_LNDTLS             1     34
- 
+
      D  Prv_SDST              35     36  0
      D***Prv_OSDA              37     48                                                      CGL029
      D  QQOSD1                37     48                                                       CGL029
@@ -826,7 +830,7 @@
      D  Prv_SPI3             129    158
      D  Prv_SPI               69    158
      D  Prv_STRINS            35    158
- 
+
      D  Prv_MDST             159    160  0
      D***Prv_OMDA             161    172                                                      CGL029
      D  QQOMD1               161    172                                                       CGL029
@@ -849,7 +853,7 @@
      D  Prv_AUTO             291    291                                                       252789
      D  Prv_OCDT             292    296  0                                                    CLE143
      D  Prv_EAIR             297    311  8                                                    CLE143
- 
+
      D***Prv_FAMU            291    291                                                CLE134 CLE164
      D***Prv_RIDT            292    296  0                                             CLE134 CLE164
      D***Prv_RCAT            297    297  0                                             CLE134 CLE164
@@ -860,7 +864,7 @@
      D  Prv_RCAT             318    318  0                                                    CLE164
      D  Prv_BIDT             319    323  0                                                    CLE164
      D  Prv_BCAT             324    324  0                                                    CLE164
- 
+
      D***NewLOAN        DS           200                                                      CGL029
      D  NewLOAN        DS                                                                     CGL029
       ***  Fields used in setting confirmation indicators (old record)
@@ -873,7 +877,7 @@
      D  New_RFRQ              21     21
      D  New_RAMT              22     34  0
      D  New_LNDTLS             1     34
- 
+
      D  New_SDST              35     36  0
      D***New_OSDA              37     48                                                      CGL029
      D  QQOSD2                37     48                                                       CGL029
@@ -884,7 +888,7 @@
      D  New_SPI3             129    158
      D  New_SPI               69    158
      D  New_STRINS            35    158
- 
+
      D  New_MDST             159    160  0
      D***New_OMDA             161    172                                                      CGL029
      D  QQOMD2               161    172                                                       CGL029
@@ -910,7 +914,7 @@
      D  New_AUTO             299    299                                                       252789
      D  New_OCDT             300    304  0                                                    CLE143
      D  New_EAIR             305    319  8                                                    CLE143
- 
+
      D***New_FAMU            299    299                                                CLE134 CLE164
      D***New_RIDT            300    304  0                                             CLE134 CLE164
      D***New_RCAT            305    305  0                                             CLE134 CLE164
@@ -921,7 +925,7 @@
      D  New_RCAT             326    326  0                                                    CLE164
      D  New_BIDT             327    331  0                                                    CLE164
      D  New_BCAT             332    332  0                                                    CLE164
- 
+
       ** Break up timestamp field to get RETIME for Release Authorisation Report
      D  L_CLTMST       DS            26
      D  WREHRS                12     13
@@ -938,7 +942,7 @@
      D RRNTD           S              5P 0                                                  AR322732
      D VDATD           S              5S 0                                                  AR322732
       *
- 
+
       ** Fields redefined by CGL029                                                           CGL029
      D PACCD           S             10A                                                      CGL029
      D PDEALNO         S             24A                                                      CGL029
@@ -1102,7 +1106,7 @@
       *  =============
       ** Rename fields
       *  =============
- 
+
      ICLOANCKF
      I              NLRA                        NLRAK
      I              ORED                        OREDK
@@ -1266,7 +1270,7 @@
       *****************************************************************
       * MAIN - Main body                                              *
       *****************************************************************
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -1274,9 +1278,9 @@
      C                   IF        USER <> *BLANKS                              CAP084
      C                   EVAL      PSUSER = USER                                CAP084
      C                   ENDIF                                                  CAP084
- 
+
       * Determine Loan type
- 
+
      C                   EXSR      DET_LOANTYPE
       *
       ***  Ensure the loan has not been updated by another workstation
@@ -1293,16 +1297,16 @@
      C                   IF        @@RTCD <> *BLANKS
      C                   GOTO      EXIT
      C                   ENDIF
- 
+
       *** Access related loan (if a partication sold)
- 
+
      C                   Z-ADD     *ZERO         PTYP_M
      C     *IN83         IFEQ      '1'
      C                   EXSR      ACSREL
      C                   ENDIF
- 
+
       * Access Loan Currency details
- 
+
      C                   MOVEL     L_CLCCY       @CYCD
      C                   EXSR      ACS_CURR
      C                   Z-ADD     A6TXND        LoanCyTXND        2 0
@@ -1424,7 +1428,7 @@
       * DET_LOANTYPE - Determine Loan Type                            *
       *****************************************************************
      C     DET_LOANTYPE  BEGSR
- 
+
      C                   SELECT
      C     L_CLPTYP      WHENEQ    61
      C     L_CLPTYP      OREQ      62
@@ -1443,10 +1447,10 @@
      C     L_CLPTYP      OREQ      72
      C                   MOVEL     'PTSO'        LoanType          4
      C                   ENDSL
- 
+
      C                   MOVE      '0'           *IN82
      C                   MOVE      '0'           *IN83
- 
+
      C                   SELECT
      C     LoanType      WHENEQ    'PTPU'
      C                   MOVE      '1'           *IN82
@@ -1467,7 +1471,7 @@
      C***********        MOVE      '70'          W72TP                                       BUG8464
      C***********        ENDSL                                                               BUG8464
      C                   ENDSL
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -1486,9 +1490,9 @@
      C                   ENDIF
       *
      C                   CALLB     'LECLIPRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM      *BLANK        RetCodeOut
       *
@@ -1512,14 +1516,14 @@
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
- 
+
       * OUTPUTS
- 
+
       * Loan Processing Type
      C                   PARM                    @@LoanPtyp        2 0
       * Loan Type
      C                   PARM                    @@LoanType        4
- 
+
       * (Current) Customer loan CL in file format
      C                   PARM                    LoanL
       * (Current) Customer loan CK in file format
@@ -1763,7 +1767,7 @@
      C                   ENDIF                                                              MD021395
                                                                                             MD021395
      C                   WRITE     CLOANCLF
- 
+
      C                   IF        CLE134 = 'Y'                                               CLE134
      C**********                   AND MPHAS <> 'A'                                  CLE134 MD025467
      C                             AND MPHAS =  'C'                                         MD025467
@@ -1814,13 +1818,13 @@
      C                   ENDIF                                                              MD020954
      C                   ENDIF                                                              MD020954
       *                                                                                     MD020954
- 
+
       * Access the LTRIX header record
- 
+
      C**********         EXSR      SRACSLTH                                                 AR322732
- 
+
       * Update FCLTY, LEREF
- 
+
      C                   IF        CLE134 = 'N'                                               CLE134
      C**********                   OR  CLE134 = 'Y'                                    CLE134 263840
      C**********                   AND %SUBST(LTYP: 1: 1) = 'X'                        CLE134 263840
@@ -1840,10 +1844,10 @@
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
      C                   EXSR      SRLREF
- 
+
       * Write an LTRIX record
       * Update the LTRIX header record
- 
+
      C     CLE002        IFEQ      'N'
      C     CLE002        OREQ      'Y'                                                      MD034771
      C     L_CLAUTH      ANDEQ     'Y'                                                      MD034771
@@ -1861,9 +1865,9 @@
      C**********         EXSR      SRUPDLTH                                                 AR322732
      C                   ENDIF                                                                CLE134
      C                   ENDIF
- 
+
       * Update CLOAN trailer
- 
+
      C     CLE134        IFEQ      'N'                                                      MD021423
      C*****MPHAS         OREQ      'A'                                             MD021423 MD025467
      C     MPHAS         ORNE      'C'                                                      MD025467
@@ -1981,7 +1985,7 @@
      C                   ENDIF                                                             AR1021983
      C                   ENDIF                                                              MD023203
      C                   ENDIF                                                             AR1021983
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2164,7 +2168,7 @@
      C                   IF        CAS009 = 'Y'                                               CAS011
      C                   EXSR      EIRRTN                                                     CAS011
      C                   ENDIF                                                                CAS011
-                                                                                              CAS011
+
      C                   UPDATE    CLOANCLF
       *
      C                   IF        CLE134 = 'Y' and MDAT = 0 and                            AR819476
@@ -2275,14 +2279,14 @@
      C     NOPS          ANDGT     0                                                          241196
      C                   EXSR      PSOLDUPD                                                   241196
      C                   ENDIF                                                                241196
- 
+
      C                   MOVEL     LoanK         Z#ASTK                                       222373
       * Access the LTRIX header record
- 
+
      C**********         EXSR      SRACSLTH                                                 AR322732
- 
+
       * Update FCLTY
- 
+
      C                   IF        CLE134      = 'N'           OR                             263840
                                                                                               263840
      C                             CLE134      = 'Y'           AND                            263840
@@ -2296,10 +2300,10 @@
      C                             AND @DEPI  <> 'Y'                                        MD030621
      C                   EXSR      SRFCLT
      C                   ENDIF                                                                263840
- 
+
       * Write an LTRIX record
       * Update the LTRIX header record
- 
+
      C     CLE002        IFEQ      'N'
      C     @TYPE         OREQ      '1'                                                     AR1093201
      C     BPLOAU        ANDNE     'Y'                                                     AR1093201
@@ -2449,15 +2453,15 @@
       *
      C                   EXSR      LONK_AUT
      C                   UPDATE    CLOANCKF
- 
+
      C                   MOVEL     LoanK         Z#ASTK                                       222373
       * Access the LTRIX header record
- 
+
      C**********         EXSR      SRACSLTH                                                 AR322732
- 
+
       * Write an LTRIX record
       * Update the LTRIX header record
- 
+
      C     L_CLCHTP      IFEQ      'X'
      C     L_CLLSTS      ANDNE     'Q'
      C     L_CLCHTP      OREQ      'Q'
@@ -2625,14 +2629,14 @@
       *
      C                   EXSR      LONK_REV
      C                   UPDATE    CLOANCKF
- 
+
      C                   MOVEL     LoanK         Z#ASTK                                       222373
       * Access the LTRIX header record
- 
+
      C**********         EXSR      SRACSLTH                                                 AR322732
- 
+
       * Update FCLTY, LEREF
- 
+
      C                   IF        CLE134      = 'N'           OR                             263840
                                                                                               263840
      C                             CLE134      = 'Y'           AND                            263840
@@ -2649,10 +2653,10 @@
      C                   ENDIF                                                                263840
                                                                                               263840
      C                   EXSR      SRLREF
- 
+
       * Write an LTRIX record
       * Update the LTRIX header record
- 
+
      C     CLE002        IFEQ      'N'
      C     XUSR          ORNE      *BLANKS
      C     @TYPE         OREQ      '1'                                                     AR1093201
@@ -2664,7 +2668,7 @@
      C                   EXSR      SRWRTLTX
      C**********         EXSR      SRUPDLTH                                                 AR322732
      C                   ENDIF
- 
+
       ***If*a*record*exists*in*LEACCNPD*then*delete*it****************               AR574498 CLE164
                                                                                             AR574498
      C**********         EVAL      KRPLNRF     = L_CLLNRF                            AR574498 CLE164
@@ -2678,7 +2682,7 @@
      C                   EXSR      DeleteExtFile                                              CLE164
                                                                                             AR574498
       * Update CLOAN trailer
- 
+
      C                   EXSR      SRUPDTRL
       *                                                                                       CLE055
       * If authorization required clear settlement deatils.                                   CLE055
@@ -2722,7 +2726,7 @@
                                                                                               CLE055
      C                   Endif                                                                CLE055
      C                   Endif                                                                CLE055
- 
+
      C                   ENDSR
       ****************************************************************                        245719
       /EJECT                                                                                  245719
@@ -2748,7 +2752,7 @@
       * CNFIND_INS Confirmation Required Ind setting for INSERT      *
       ****************************************************************
      C     CNFRQD_INS    BEGSR
- 
+
      C                   MOVE      'N'           CNRQD
      C                   BITOFF    '01234567'    L_CLCNFI
       *
@@ -2765,7 +2769,7 @@
      C                   MOVE      'N'           CNRQD
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2773,7 +2777,7 @@
       * CNFIND_AMD Confirmation Required Ind setting for AMEND       *
       ****************************************************************
      C     CNFRQD_AMD    BEGSR
- 
+
      C                   MOVE      'N'           CNRQD
       *
       ***  Check if basic loan details or start or maturity instructions
@@ -2807,7 +2811,7 @@
      C                   MOVE      'Y'           CONF                                        255752A
      C                   ENDIF                                                               255752A
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2815,11 +2819,11 @@
       * CNFIND_AUT Confirmation Required Ind setting for AUTHORISE   *
       ****************************************************************
      C     CNFRQD_AUT    BEGSR
- 
+
      C                   MOVE      'N'           CNRQD
- 
+
       ** First authorisation
- 
+
      C     XUSR          IFEQ      *BLANKS
      C                   BITOFF    '01234567'    L_CLCNFI
      C                   MOVE      'Y'           CNRQD
@@ -2829,9 +2833,9 @@
      C                   MOVE      'N'           CNRQD
      C                   ENDIF
      C                   ENDIF
- 
+
       * Not first authorisation
- 
+
      C     XUSR          IFNE      *BLANKS
      C     BLL2II        IFNE      'Y'
      C     L_CLSDST      ORNE      *ZEROS
@@ -2846,7 +2850,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2854,7 +2858,7 @@
       * CNFIND_REV Confirmation Required Ind setting for REVERSE     *
       ****************************************************************
      C     CNFRQD_REV    BEGSR
- 
+
      C                   MOVE      'N'           CNRQD
       *
       ***  For reverse, if confirmation control is ON, request
@@ -2865,7 +2869,7 @@
      C                   BITOFF    '0'           L_CLCNFI
      C                   MOVE      'Y'           CNRQD
      C                   ENDIF
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -2873,7 +2877,7 @@
       * S_PrvLoan - Save Previous Loan details                       *
       ****************************************************************
      C     S_PrvLOAN     BEGSR
- 
+
      C                   Z-ADD     MDAT          Prv_MDAT
      C                   Z-ADD     NIDT          Prv_NIDT
      C                   Z-ADD     NRPD          Prv_NRPD
@@ -2952,7 +2956,7 @@
       * S_NewLoan - Save New Loan details                            *
       ****************************************************************
      C     S_NewLOAN     BEGSR
- 
+
      C                   Z-ADD     L_CLMDAT      New_MDAT
      C                   Z-ADD     L_CLNIDT      New_NIDT
      C                   Z-ADD     L_CLNRPD      New_NRPD
@@ -3650,7 +3654,7 @@
       *
       * Timestamp
      C                   EVAL      TMST=TimeStamp
- 
+
       * Yield Curve                                                                           225959
      C     CAS001        IFEQ      'Y'                                                        225959
      C                   MOVEL     L_CLYLDC      FSYLDC                                       225959
@@ -3767,6 +3771,48 @@
      C                   EVAL      OFLN = L_CLOFLN                                         AR1021983
      C                   ENDIF                                                             AR1021983
                                                                                            AR1021983
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EVAL      C1PR = L_CLC1PR                                            CLE141
+     C                   EVAL      C2PR = L_CLC2PR                                            CLE141
+     C                   EVAL      C3PR = L_CLC3PR                                            CLE141
+     C                   EVAL      C4PR = L_CLC4PR                                            CLE141
+     C                   EVAL      C5PR = L_CLC5PR                                            CLE141
+     C                   EVAL      C6PR = L_CLC6PR                                            CLE141
+     C                   EVAL      C7PR = L_CLC7PR                                            CLE141
+     C                   EVAL      C8PR = L_CLC8PR                                            CLE141
+     C                   EVAL      C9PR = L_CLC9PR                                            CLE141
+     C                   EVAL      C0PR = L_CLC0PR                                            CLE141
+     C                   EVAL      L1PR = L_CLL1PR                                            CLE141
+     C                   EVAL      L2PR = L_CLL2PR                                            CLE141
+     C                   EVAL      L3PR = L_CLL3PR                                            CLE141
+     C                   EVAL      L4PR = L_CLL4PR                                            CLE141
+     C                   EVAL      L5PR = L_CLL5PR                                            CLE141
+     C                   EVAL      L6PR = L_CLL6PR                                            CLE141
+     C                   EVAL      L7PR = L_CLL7PR                                            CLE141
+     C                   EVAL      L8PR = L_CLL8PR                                            CLE141
+     C                   EVAL      L9PR = L_CLL9PR                                            CLE141
+     C                   EVAL      L0PR = L_CLL0PR                                            CLE141
+     C                   EVAL      C1PI = L_CLC1PI                                            CLE141
+     C                   EVAL      C2PI = L_CLC2PI                                            CLE141
+     C                   EVAL      C3PI = L_CLC3PI                                            CLE141
+     C                   EVAL      C4PI = L_CLC4PI                                            CLE141
+     C                   EVAL      C5PI = L_CLC5PI                                            CLE141
+     C                   EVAL      C6PI = L_CLC6PI                                            CLE141
+     C                   EVAL      C7PI = L_CLC7PI                                            CLE141
+     C                   EVAL      C8PI = L_CLC8PI                                            CLE141
+     C                   EVAL      C9PI = L_CLC9PI                                            CLE141
+     C                   EVAL      C0PI = L_CLC0PI                                            CLE141
+     C                   EVAL      L1PI = L_CLL1PI                                            CLE141
+     C                   EVAL      L2PI = L_CLL2PI                                            CLE141
+     C                   EVAL      L3PI = L_CLL3PI                                            CLE141
+     C                   EVAL      L4PI = L_CLL4PI                                            CLE141
+     C                   EVAL      L5PI = L_CLL5PI                                            CLE141
+     C                   EVAL      L6PI = L_CLL6PI                                            CLE141
+     C                   EVAL      L7PI = L_CLL7PI                                            CLE141
+     C                   EVAL      L8PI = L_CLL8PI                                            CLE141
+     C                   EVAL      L9PI = L_CLL9PI                                            CLE141
+     C                   EVAL      L0PI = L_CLL0PI                                            CLE141
+     C                   ENDIF                                                                CLE141
                                                                                               CLE164
      C                   ENDSR
       ****************************************************************
@@ -4252,7 +4298,7 @@
      C                   EVAL      SLST = L_CLSLST                                            CLE106
      C                   EVAL      SLCL = L_CLSLCL                                            CLE042
      C                   ENDIF                                                                CLE106
- 
+
      C                   EVAL      STAL = L_CLSTAL                                            CLE034
                                                                                               CLE034
       ** Original Contract Date                                                               CLE143
@@ -4397,6 +4443,51 @@
      C**********         ENDIF                                                         CLE134 CLE164
      C                   ENDIF                                                                CLE134
                                                                                               CLE134
+                                                                                              CLE034
+      ** Currency and Location Business Day Convention                                        CLE141
+                                                                                              CLE141
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EVAL      C1PR = L_CLC1PR                                            CLE141
+     C                   EVAL      C2PR = L_CLC2PR                                            CLE141
+     C                   EVAL      C3PR = L_CLC3PR                                            CLE141
+     C                   EVAL      C4PR = L_CLC4PR                                            CLE141
+     C                   EVAL      C5PR = L_CLC5PR                                            CLE141
+     C                   EVAL      C6PR = L_CLC6PR                                            CLE141
+     C                   EVAL      C7PR = L_CLC7PR                                            CLE141
+     C                   EVAL      C8PR = L_CLC8PR                                            CLE141
+     C                   EVAL      C9PR = L_CLC9PR                                            CLE141
+     C                   EVAL      C0PR = L_CLC0PR                                            CLE141
+     C                   EVAL      L1PR = L_CLL1PR                                            CLE141
+     C                   EVAL      L2PR = L_CLL2PR                                            CLE141
+     C                   EVAL      L3PR = L_CLL3PR                                            CLE141
+     C                   EVAL      L4PR = L_CLL4PR                                            CLE141
+     C                   EVAL      L5PR = L_CLL5PR                                            CLE141
+     C                   EVAL      L6PR = L_CLL6PR                                            CLE141
+     C                   EVAL      L7PR = L_CLL7PR                                            CLE141
+     C                   EVAL      L8PR = L_CLL8PR                                            CLE141
+     C                   EVAL      L9PR = L_CLL9PR                                            CLE141
+     C                   EVAL      L0PR = L_CLL0PR                                            CLE141
+     C                   EVAL      C1PI = L_CLC1PI                                            CLE141
+     C                   EVAL      C2PI = L_CLC2PI                                            CLE141
+     C                   EVAL      C3PI = L_CLC3PI                                            CLE141
+     C                   EVAL      C4PI = L_CLC4PI                                            CLE141
+     C                   EVAL      C5PI = L_CLC5PI                                            CLE141
+     C                   EVAL      C6PI = L_CLC6PI                                            CLE141
+     C                   EVAL      C7PI = L_CLC7PI                                            CLE141
+     C                   EVAL      C8PI = L_CLC8PI                                            CLE141
+     C                   EVAL      C9PI = L_CLC9PI                                            CLE141
+     C                   EVAL      C0PI = L_CLC0PI                                            CLE141
+     C                   EVAL      L1PI = L_CLL1PI                                            CLE141
+     C                   EVAL      L2PI = L_CLL2PI                                            CLE141
+     C                   EVAL      L3PI = L_CLL3PI                                            CLE141
+     C                   EVAL      L4PI = L_CLL4PI                                            CLE141
+     C                   EVAL      L5PI = L_CLL5PI                                            CLE141
+     C                   EVAL      L6PI = L_CLL6PI                                            CLE141
+     C                   EVAL      L7PI = L_CLL7PI                                            CLE141
+     C                   EVAL      L8PI = L_CLL8PI                                            CLE141
+     C                   EVAL      L9PI = L_CLL9PI                                            CLE141
+     C                   EVAL      L0PI = L_CLL0PI                                            CLE141
+     C                   ENDIF
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -4447,7 +4538,7 @@
       *
       * Timestamp
      C                   EVAL      TMST=TimeStamp
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -4490,7 +4581,7 @@
      C**********         EXSR      xeXRF                                            CLE134 AR1022006
      C                   EVAL      XRFI = 'CLI'                                            AR1022006
      C                   ENDIF                                                                CLE134
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -4577,9 +4668,9 @@
      C                   MOVE      PSUser        RIUS                                         242751
       *
       *** Rollover PC trans ref
- 
+
      C     3             SUBST(P)  PCRFL         RPCR
- 
+
      C******LOCK         IN        LEALLO                                                     CLE148
      C*****PCLAST        ADD       1             PCNEXT            8 0                        CLE148
                                                                                               CLE148
@@ -5039,7 +5130,7 @@
       *
      C     LPFI          IFNE      *BLANK
      C*****LPFI*         ANDNE     'R'                                                        CLE106
- 
+
      C                   MOVE      *BLANK        WPRME
      C                   MOVE      'Y'           WPART
      C**********         Z-ADD     PTFC          WFCNUM                                       CSD027
@@ -5829,7 +5920,7 @@
      C                   MOVE      'M'           ZMD                                          CLE023
      C                   ENDIF                                                                CLE023
      C                   ENDIF                                                                CLE023
- 
+
       * If NOT Credit Agreement Update                                                        CLE023
       * ==============================
                                                                                               CLE023
@@ -5840,7 +5931,7 @@
       ***  ----------
       *
      C     L_CLCHTP      IFEQ      'I'
- 
+
      C     FMDI          IFEQ      'D'
      C     FCXR          DIV(H)    POWER(CX)     W_FcEXRT
      C     1             DIV(H)    W_FcEXRT      W_FcEXRT
@@ -6088,12 +6179,12 @@
      C                   ENDIF
       *
      C                   ELSE
- 
+
       * If Credit Agreement Update                                                            CLE023
       * ==========================
- 
+
       **  Get loan amount in credit agreement currency
- 
+
      C     WFCMDI        IFEQ      'D'
      C     WFCAXR        DIV(H)    POWER(CX)     W_FcEXRT         15 8
      C     1             DIV(H)    W_FcEXRT      W_FcEXRT
@@ -7332,7 +7423,7 @@
       * SRSHDW  -  Update shadow files                                *
       *****************************************************************
      C     SRSHDW        BEGSR
- 
+
      C*****PCRFL         CHAIN     LESTALLA                           99             BUG9225 CSF011A
      C     PTREF         CHAIN     LESTALLA                           99                     CSF011A
      C     *IN99         DOWEQ     *OFF                                                      BUG9225
@@ -7560,7 +7651,7 @@
      C                   MOVE      '70'          W72TP                                       BUG8464
      C                   ENDSL                                                               BUG8464
      C                   ENDIF                                                               BUG8464
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -7676,7 +7767,7 @@
       * WRT_LERELE - WRITE TO LERELEPD                               *
       ****************************************************************
      C     WRT_LERELE    BEGSR
- 
+
       *
       ** And move fields to and update the released items file - LERELEPD
       *
@@ -7702,9 +7793,9 @@
      C                   MOVE      *BLANKS       WTIME             6
      C                   EVAL      WTIME  = WREHRS + WREMIN + WRESEC
      C                   MOVE      WTIME         RETIME
- 
+
      C                   WRITE     LERELED0
- 
+
      C                   ENDSR
       ****************************************************************
       /EJECT
@@ -8645,7 +8736,7 @@
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CLE002
      C                   ENDIF
- 
+
       ** Determine if CDE005 is switched on                                                   CDE005
       ** (include reservation ID as part of data export)                                      CDE005
      C                   MOVE      'N'           CDE005            1                          CDE005
@@ -9069,7 +9160,7 @@
      C                   EXSR      *PSSR                                                     BUG9491
      C                   ENDIF                                                               BUG9491
      C                   ENDIF                                                               BUG9491
- 
+
      C                   Eval      @RTCD = *BLANKS
       *
       ***  Determine whether program is running interactively or in batch
@@ -9240,6 +9331,30 @@
      C                   ELSE                                                                 CRE073
      C                   EVAL      CRE073 = 'N'                                               CRE073
      C                   ENDIF                                                                CRE073
+                                                                                              CLE141
+      ** Access SAR details to see if CLE141 is switched on.                                  CLE141
+                                                                                              CLE141
+     C                   EVAL      CLE141 = 'N'                                               CLE141
+     C                   CALL      'AOSARDR0'                                                 CLE141
+     C                   PARM      *Blanks       PRetCode                                     CLE141
+     C                   PARM      '*VERIFY'     POption                                      CLE141
+     C                   PARM      'CLE141'      PSARD                                        CLE141
+     C     SCSARD        PARM      *Blanks       DSFDY                                        CLE141
+                                                                                              CLE141
+     C                   IF        PRetCode = *BLANKS                                         CLE141
+                                                                                              CLE141
+     C                   EVAL      CLE141 = 'Y'                                               CLE141
+     C                   ELSE                                                                 CLE141
+                                                                                              CLE141
+     C                   IF        PRetCode <> '*NRF'                                         CLE141
+     C     *LOCK         IN        LDA                                                        CLE141
+     C                   EVAL      DBKey = 'CLE141'                                           CLE141
+     C                   EVAL      DBFile = 'SCSARDPD'                                        CLE141
+     C                   EVAL      DBase = 913                                                CLE141
+     C                   OUT       LDA                                                        CLE141
+     C                   EXSR      *PSSR                                                      CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ENDIF                                                                CLE141
                                                                                               CRE073
       ** If Past Due Call Loans Processing;                                                   CLE134
       ** Set Basel II Classification Period Description & Days Arrays.                        CLE134

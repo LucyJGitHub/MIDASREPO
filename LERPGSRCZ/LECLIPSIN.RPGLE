@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD036070           Date 19Oct15               *
-      *  Prev Amend No. LLN022A            Date 13Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD036070           Date 19Oct15               *
+      *                 LLN022A            Date 13Aug12               *
       *                 LLN022             Date 13Aug12               *
       *                 MD030621           Date 26Feb15               *
       *                 MD032052           Date 23Jan15               *
@@ -68,6 +69,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  MD036070 - No way to go back to main deal details screen     *
       *             after reaching settlement screen.  Introduce new  *
       *             function key F11.                                 *
@@ -219,8 +222,8 @@
       ***  Current Loan in File Format CL
      D CrLnFilFmtCK  E DS                  EXTNAME(CLOANCK) PREFIX(K)
       ***  Current Loan in File Format CK
- 
- 
+
+
      D CrLnScnFmt1   E DS                  EXTNAME(LECLI1PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 1
      D CrLnScnFmt2   E DS                  EXTNAME(LECLI2PD)  PREFIX(@)
@@ -229,8 +232,8 @@
       ***  (Current) Loan in Screen Format - Screen 3
      D CrLnScnFmt4   E DS                  EXTNAME(LECLI4PD)  PREFIX(@)
       ***  (Current) Loan in Screen Format - Screen 4
- 
- 
+
+
      D NwLnFilFmtCL  E DS                  EXTNAME(LEVCLILPD)
       ***  New Loan in File Format CL
      D***CLREC**              459    527                                                      CGL029
@@ -241,11 +244,11 @@
      D***CLPAYEX             1597   1614                                               CGL029 TDA023
      D  CLRECEx             1597   1614                                                       TDA023
      D  CLPAYEX             1615   1632                                                       TDA023
- 
+
      D NwLnFilFmtCK  E DS                  EXTNAME(LEVCLIKPD) PREFIX(K_)
       ***  New Loan in File Format CK
- 
- 
+
+
      D NwLnScnFmt1   E DS                  EXTNAME(LECLI1PD)
       ***  New Loan in Screen Format - Screen 1
      D NwLnScnFmt2   E DS                  EXTNAME(LECLI2PD)
@@ -254,8 +257,8 @@
       ***  New Loan in Screen Format - Screen 3
      D NwLnScnFmt4   E DS                  EXTNAME(LECLI4PD)
       ***  New Loan in Screen Format - Screen 4
- 
- 
+
+
      D OKLnScn1      E DS                  EXTNAME(LEECLI1PD)
       ***  Error indicators Screen 1
      D OKLnScn2      E DS                  EXTNAME(LEECLI2PD)
@@ -264,11 +267,11 @@
       ***  Error indicators Screen 3
      D OKLnScn4      E DS                  EXTNAME(LEECLI4PD)
       ***  Error indicators Screen 4
- 
+
       *****************************
       ** Settlement instructions **
       *****************************
- 
+
      D ##RECF        E DS                  EXTNAME(SDESFRPD)
       ***  File Receive Instructions
      D***FLREC**                1     69                                                      CGL029
@@ -279,16 +282,16 @@
      D  FLPAY                 21    565                                                       CGL029
      D ##FRIF        E DS                  EXTNAME(SDESFFPD)
       ***  File FRA/IRS Instructions
- 
- 
+
+
      D ##RECS        E DS                  EXTNAME(SDESSRPD)
       ***  Screen Receive Instructions
      D ##PAYS        E DS                  EXTNAME(SDESSPPD)
       ***  Screen Payment Instructions
      D ##FRIS        E DS                  EXTNAME(SDESSFPD)
       ***  Screen FRA/IRS Instructions
- 
- 
+
+
      D @CCI@           DS
       ***  Current control indicators for details screens 1, 2, 3, and 4
       *
@@ -1096,12 +1099,12 @@
       *
      C     @SCRN         IFEQ      '1'
      C     DDACTN        ANDNE     'I'
- 
+
      C     DDACTN        IFNE      @PACTN
      C     DDLNRF        ORNE      @PLNRF
      C                   EXSR      CVTLOAN
      C                   END
- 
+
      C                   END
       *
       ***  If Loan number or screen control indicators have changed
@@ -1209,7 +1212,7 @@
       *
       *    should be done only once otherwise the fields in NwLnFilFmt
       *    are lost (settlement instructions)
- 
+
      C     FrstTimLoan   IFEQ      'Y'
      C                   MOVEL     CrLnFilFmtCL  NwLnFilFmtCL
      C                   MOVEL     CrLnFilFmtCK  NwLnFilFmtCK
@@ -2147,9 +2150,9 @@
       ***  Retrieve loan
       *
      C                   CALLB     'LECLIPRTV'
- 
+
       * INPUTS
- 
+
       * Return code
      C                   PARM      *BLANK        RetCodeOut
       *
@@ -2173,14 +2176,14 @@
                                                                                              BUG3721
       ** Switchable features                                                                 BUG3721
      C                   PARM                    CLE028                                      BUG3721
- 
+
       * OUTPUTS
- 
+
       * Loan Processing Type
      C                   PARM                    LoanPtyp          2 0
       * Loan Type
      C                   PARM                    @@LoanType        4
- 
+
       * (Current) Customer loan CL in file format
      C                   PARM                    CrLnFilFmtCL
       * (Current) Customer loan CK in file format
@@ -2704,7 +2707,7 @@
       *
      C                   PARM      '0'           @INKK             1                        MD036070
      C                   PARM      '0'           @INKL             1
- 
+
       *
       * If Part Sold, move Rec settl insts into Our start date settl insts
       *               and  Pay settl insts into Our maturity date settl insts
@@ -2735,9 +2738,9 @@
       ***  Extra validation after the Extended Settlements
       *
      C                   CALLB     'LECLIPEVL'
- 
+
       * INPUTS
- 
+
       * Response mode
      C                   PARM                    RespMode
       * Loan details screen 1 and 2
@@ -2751,9 +2754,9 @@
      C                   PARM                    DDRSCY                                       CLE031
       ***  Loan Type                                                                          CLE031
      C                   PARM                    LoanType                                     CLE031
- 
+
       * OUTPUTS
- 
+
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKLnScn1
      C                   PARM                    OKLnScn2
@@ -2804,9 +2807,9 @@
       * DETP@S - Determine parameters for settlement details screen   *
       *****************************************************************
      C     DETP@S        BEGSR
- 
+
       ** If loan is not a participation sold
- 
+
      C     LoanType      IFNE      'PTSO'
       *
       ** ... set up date of receipt.
@@ -2835,7 +2838,7 @@
       ** .. set up date of payment
       *
      C                   Z-ADD     WSVVD         ##DATP
- 
+
      C                   ELSE
       *
       ** ... set up date of payment.
@@ -2864,7 +2867,7 @@
       ** .. set up date of receipt
       *
      C                   Z-ADD     WSVVD         ##DATR
- 
+
      C                   ENDIF
       *
       ** .. set up customer
@@ -2920,7 +2923,7 @@
      C                   MOVE      CLSCCY        FLRSCY                                       CLE031
      C                   MOVE      CLPSCY        FLPSCY                                       CLE031
      C                   ENDIF                                                                CLE031
- 
+
       *
       ***  If settlement instructions are not defined,
       ***  and payment/receipt dates are ,no in the past, default them
@@ -3117,13 +3120,13 @@
      C                   MOVEL     WOSDA         CLOSDA
      C                   MOVE      WOMDB         CLOMDB
      C                   MOVEL     WTSTN         CLTSTN
- 
+
      C                   MOVE      WMDST         CLMDST
      C                   MOVEL     WOMDA         CLOMDA
      C                   MOVE      WOSDB         CLOSDB
      C                   MOVEL     WTMAN         CLTMAN
      C                   MOVEL     WFACO         CLFACO
- 
+
      C                   END
       *
      C                   ENDSR
@@ -3626,9 +3629,9 @@
       *
       ***  Hook to enable non-core initial processing to be included
       *
- 
+
      C                   EVAL      @RTCD = *BLANKS
- 
+
       /COPY WNCPYSRC,LECLIPS009
       *
       * Determine if CSC022 is switched on                                                    CSC022

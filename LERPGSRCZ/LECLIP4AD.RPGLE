@@ -16,10 +16,12 @@
       *             the calling process.                              *
       *             If can optionally reset fields wrongly amended.   *
       *                                                               *
+      *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CER059             Date 19Jul10               *
@@ -39,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transaction                                 *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -135,6 +139,13 @@
      D NewLoanScn6   E DS                  EXTNAME(LECLI6PD)                                  CLE134
       ***  New Loan in Screen Format 6                                                        CLE134
       *                                                                                       CLE134
+     D LoanScnFm7    E DS                  EXTNAME(LECLI7PD)                                  CLE141
+      ***  (Current) Loan in Screen Format 6                                                  CLE141
+     D                                     PREFIX(@)                                          CLE141
+      *                                                                                       CLE141
+     D NewLoanScn7   E DS                  EXTNAME(LECLI7PD)                                  CLE141
+      ***  New Loan in Screen Format 6                                                        CLE141
+      *                                                                                       CLE141
      D LnCLFilFmt    E DS                  EXTNAME(CLOANCL)
       ***  (Current) Loan CL in File Format
      D                                     PREFIX(CL_)
@@ -168,6 +179,7 @@
       *
      D OKLnScr4      E DS                  EXTNAME(LEECLI4PD)
      D OKLnScr6      E DS                  EXTNAME(LEECLI6PD)                                 CLE134
+     D OKLnScr7      E DS                  EXTNAME(LEECLI7PD)                                 CLE141
       ***  Error indicators screen 4
       *
       ** +--------------------------------------+
@@ -241,7 +253,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       ***  INPUTS
@@ -252,10 +264,12 @@
       ***  New Customer loan in Screen Format :
      C                   PARM                    NewLoanScn4
      C                   PARM                    NewLoanScn6                                  CLE134
+     C                   PARM                    NewLoanScn7                                  CLE141
       *
       ***  (Current) Customer loan in Screen Format :
      C                   PARM                    LoanScnFm4
      C                   PARM                    LoanScnFm6                                   CLE134
+     C                   PARM                    LoanScnFm7                                   CLE141
       *
       ***  Current Loan in file format
      C                   PARM                    LnCLFilFmt
@@ -269,6 +283,7 @@
       ***  Error Indicators
      C                   PARM                    OKLnScr4
      C                   PARM                    OKLnScr6                                     CLE134
+     C                   PARM                    OKLnScr7                                     CLE141
       *
       ***  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr

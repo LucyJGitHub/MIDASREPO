@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD031089           Date 12Feb15               *
-      *  Prev Amend No. MD032052           Date 23Jan15               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD031089           Date 12Feb15               *
+      *                 MD032052           Date 23Jan15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD025521           Date 19Aug14               *
       *                 MD025864           Date 12May14               *
@@ -151,6 +152,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions                                *
       *  MD031089 - Add validation on maturity date against fee start *
       *             fee start date for calc loan fees 90/97/98/99.    *
       *  MD032052 - Unable to authorize loan repaired from repair     *
@@ -751,6 +754,10 @@
      D ValidLnCl     E DS                  EXTNAME(LEVCLILPD)
       ***  Valid Loans CL layout -> CLOANCL
      D                                     PREFIX(C)
+     D  ValidCurPR          1906   1935                                                       CLE141
+     D  ValidLocPR          1936   1965                                                       CLE141
+     D  ValidCurPI          1966   1995                                                       CLE141
+     D  ValidLocPI          1996   2025                                                       CLE141
       *
      D ValidLnCk     E DS                  EXTNAME(LEVCLIKPD)
       ***  Valid Loans CK layout -> CLOANCK
@@ -766,6 +773,13 @@
       *                                                                                       CLE134
      D TranInScr6    E DS                  EXTNAME(LECLI6PD)                                  CLE134
       ***  Incoming Transaction - 4th screen                                                  CLE134
+                                                                                              CLE141
+     D TranInScr7    E DS                  EXTNAME(LECLI7PD)                                  CLE141
+     D  TrCurPR                1     30                                                       CLE141
+     D  TrLocPR               31     60                                                       CLE141
+     D  TrCurPI               61     90                                                       CLE141
+     D  TrLocPI               91    120                                                       CLE141
+      ** Incoming Transaction - Business Day Conv Screen                                      CLE141
                                                                                               CLE106
      D CLOANCLfmt    E DS                  EXTNAME(CLOAN:CLOANCLF)                            CLE106
                                                                                               CLE106
@@ -774,6 +788,11 @@
 
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI1PD)
+     D OKFlagsDS2    E DS                  EXTNAME(LEECLI7PD)                                 CLE141
+     D  OKFlgCurPR             1     10                                                       CLE141
+     D  OKFlgLocPR            11     20                                                       CLE141
+     D  OKFlgCurPI            21     30                                                       CLE141
+     D  OKFlgLocPI            31     40                                                       CLE141
       ***  Flags to indicate whether transaction fields are valid
       *
                                                                                               CAP086
@@ -1024,6 +1043,23 @@
      D CLE025          S              1                                                       CLE025
      D CLE134          S              1                                                       CLE134
                                                                                               CLE134
+      ** Work Variables for CLE141                                                            CLE141
+     D CLE141          S              1A                                                      CLE141
+     D LCUR            S              3A                                                      CLE141
+     D LoanITYPE       S              4A                                                      CLE141
+     D OKFlgBDYCL      S              1A                                                      CLE141
+                                                                                              CLE141
+      ** Index for arrays of error message ids etc                                            CLE141
+     D Ix              S                   LIKE(Idx)                                          CLE141
+                                                                                              CLE141
+      ** Array for error message ids                                                          CLE141
+     D MsgIDErr        S                   DIM(ArrayMax)                                      CLE141
+     D                                     LIKE(#MsgID)                                       CLE141
+                                                                                              CLE141
+      ** Array for fields in error                                                            CLE141
+     D FldNamErr       S                   DIM(ArrayMax)                                      CLE141
+     D                                     LIKE(FldNameArr)                                   CLE141
+                                                                                              CLE141
      D PRTCD           S              7                                                       CLE025
      D POPTN           S              7                                                       CLE025
      D PSARD           S              6                                                       CLE025
@@ -1686,6 +1722,11 @@
      C                   EXSR      SRMCRA
       *
       /COPY WNCPYSRC,LECLIP1V20
+                                                                                              CLE141
+      ** Validate Business Day Convention Details                                             CLE141
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EXSR      SRBDYCL                                                    CLE141
+     C                   ENDIF                                                                CLE141
       *
       ***  Validate the rollover date
      C                   EXSR      SRRLDT
@@ -8814,6 +8855,77 @@ B001 C     ZERR          IFNE      *BLANKS
       *****************************************************************                     MD019830
      C/EJECT                                                                                MD019830
       *****************************************************************                       CLE134
+      *                                                               *                       CLE141
+      * SRBDYCL - Validate Currency and Location Business Day Conv    *                       CLE141
+      *                                                               *                       CLE141
+      *****************************************************************                       CLE141
+     C     SRBDYCL       BEGSR                                                                CLE141
+                                                                                              CLE141
+      ** Validate Currency and Location Bus Day Conv for Rollover Date                        CLE141
+                                                                                              CLE141
+     C                   EVAL      OKFlgBDYCL = 'Y'                                           CLE141
+     C                   CALLB     'LEVBDYCL'                                                 CLE141
+     C                   PARM      *BLANKS       RetCodeIn                                    CLE141
+     C                   PARM      CCLCCY        LCUR                                         CLE141
+     C                   PARM                    TrCurPR                                      CLE141
+     C                   PARM                    TrLocPR                                      CLE141
+     C                   PARM      'RARF'        LoanITYPE                                    CLE141
+     C                   PARM                    OKFlgCurPR                                   CLE141
+     C                   PARM                    OKFlgLocPR                                   CLE141
+     C                   PARM      *BLANKS       MsgIDErr                                     CLE141
+     C                   PARM      *BLANKS       FldNamErr                                    CLE141
+                                                                                              CLE141
+      ** Update error info with that returned from validation module                          CLE141
+                                                                                              CLE141
+     C                   EVAL      Ix = 1                                                     CLE141
+     C                   DOW       FldNamErr(Ix) <> *BLANKS and                               CLE141
+     C                             Idx < XArrayMax                                            CLE141
+     C                   EVAL      Idx = Idx + 1                                              CLE141
+     C                   EVAL      OKFlgBDYCL = 'N'                                           CLE141
+     C                   EVAL      FldNamXAr(Idx) = FldNamErr(Ix)                             CLE141
+     C                   EVAL      MsgIDXAr(Idx) = MsgIDErr(Ix)                               CLE141
+     C                   EVAL      Ix = Ix + 1                                                CLE141
+     C                   ENDDO                                                                CLE141
+                                                                                              CLE141
+      ** Validate Currency and Location Bus Day Conv for Fees, Interest                       CLE141
+      ** and Principal Settlement                                                             CLE141
+                                                                                              CLE141
+     C                   CALLB     'LEVBDYCL'                                                 CLE141
+     C                   PARM      *BLANKS       RetCodeIn                                    CLE141
+     C                   PARM      CCLCCY        LCUR                                         CLE141
+     C                   PARM                    TrCurPI                                      CLE141
+     C                   PARM                    TrLocPI                                      CLE141
+     C                   PARM      'IPRI'        LoanITYPE                                    CLE141
+     C                   PARM                    OKFlgCurPI                                   CLE141
+     C                   PARM                    OKFlgLocPI                                   CLE141
+     C                   PARM      *BLANKS       MsgIDErr                                     CLE141
+     C                   PARM      *BLANKS       FldNamErr                                    CLE141
+                                                                                              CLE141
+      ** Update error info with that returned from validation module                          CLE141
+                                                                                              CLE141
+     C                   EVAL      Ix = 1                                                     CLE141
+     C                   DOW       FldNamErr(Ix) <> *BLANKS and                               CLE141
+     C                             Idx < XArrayMax                                            CLE141
+     C                   EVAL      Idx = Idx + 1                                              CLE141
+     C                   EVAL      OKFlgBDYCL = 'N'                                           CLE141
+     C                   EVAL      FldNamXAr(Idx) = FldNamErr(Ix)                             CLE141
+     C                   EVAL      MsgIDXAr(Idx) = MsgIDErr(Ix)                               CLE141
+     C                   EVAL      Ix = Ix + 1                                                CLE141
+     C                   ENDDO                                                                CLE141
+                                                                                              CLE141
+      ** If no error, update Valid File with Business Day Conv details                        CLE141
+                                                                                              CLE141
+     C                   IF        OKFlgBDYCL <> 'N'                                          CLE141
+     C                   EVAL      ValidCurPR = TrCurPR                                       CLE141
+     C                   EVAL      ValidLocPR = TrLocPR                                       CLE141
+     C                   EVAL      ValidCurPI = TrCurPI                                       CLE141
+     C                   EVAL      ValidLocPI = TrLocPI                                       CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
+     C                   ENDSR                                                                CLE141
+      *****************************************************************                       CLE141
+      /EJECT                                                                                  CLE141
+      *****************************************************************                       CLE141
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
      C     *INZSR        BEGSR
@@ -8860,9 +8972,13 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   PARM                    TranInScr3                                   CLE106
       ** Loan details screen 6                                                                CLE134
      C                   PARM                    TranInScr6                                   CLE134
+                                                                                              CLE141
+      ** Business Day Convention Screen Detail                                                CLE141
+     C                   PARM                    TranInScr7                                   CLE141
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFlagsDS
+     C                   PARM                    OKFlagsDS2                                   CLE141
       *
       ***  Error fields/message IDs/message data (arrays) from/to caller
      C                   PARM                    FldNameArr
@@ -9362,6 +9478,27 @@ E004 C                   ENDIF
      C                   MOVE      'Y'           CLE143                                       CLE143
      C                   ENDIF                                                                CLE143
                                                                                               CLE143
+      ** Determine if CLE141 is switched on                                                   CLE141
+                                                                                              CLE141
+     C                   EVAL      CLE141 = 'N'                                               CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       PRtcd                                        CLE141
+     C                   PARM      '*VERIFY'     POptn                                        CLE141
+     C                   PARM      'CLE141'      PSard                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+                                                                                              CLE141
+     C                   IF        PRtcd = *BLANKS                                            CLE141
+     C                   EVAL      CLE141 = 'Y'                                               CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
+     C                   IF        PRtcd <> *BLANKS AND                                       CLE141
+     C                             PRtcd <> '*NRF   '                                         CLE141
+     C                   EVAL      DBKEY = PSard                                              CLE141
+     C                   EVAL      DBFILE = 'SCSARDPD'                                        CLE141
+     C                   EVAL      DBASE = 24                                                 CLE141
+     C                   EXSR      *PSSR                                                      CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
       ** Check for auto allocation of loan numbers system value.                             BUG6108
      C                   CALLB     'AOSVALR0'                                                BUG6108
      C                   PARM      *BLANKS       PRtCd                                       BUG6108

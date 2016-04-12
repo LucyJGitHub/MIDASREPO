@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
       *                 CRE075             Date 06Dec10               *
@@ -30,6 +31,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  CRE073 - Interest Rate Rounding (Recompile)                  *
@@ -74,35 +77,35 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** LE Guarantees/Securities/Collaterals file
      FGTEES     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(GTEESHHF)
      F                                     IGNORE(GTEESZZF)
- 
+
       ** SD Collateral Types Retrieval Index
      FSDCOTPL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** GL Accounts file
      FACCNT     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(ACCNTAAF)
      F                                     IGNORE(ACCNTACF)
      F                                     PREFIX(AC_)
      F                                     USROPN
- 
+
       ** LE Facilities File
      FFCLTYL1   UF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(FC_)
- 
+
       ** LE Loans file
      FCLOAN     UF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(CLOANCKF)
      F                                     IGNORE(CLOANZ1F)
      F                                     PREFIX(CL_)
- 
+
       ** GL Collateral details file
      FGLCOLLPD  O    E             DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -110,7 +113,7 @@
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** Local data area for database error details
       ** *LOCK IN LDA immediately before and OUT LDA immediately
       ** after each database error handling.
@@ -119,32 +122,32 @@
       **                                    171 180 DBPGM
       **                                    181 1830DBASE
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** External DS for bank details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for access programs (short)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRetCode        S              7
      D POption         S              7
      D PModule         S              2
@@ -153,33 +156,33 @@
      D PGenRef         S             10
      D PReturn         S             10
      D PTrnNo          S              5  0
- 
+
      D WFCLN1          S              1
      D WFCLN5          S              5
      D WFound          S              1
      D WFirst          S              1
      D WRun            S              1
      D TimeStamp       S               Z
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Process files
- 
+
      C                   EXSR      SRProcess
- 
+
       ** End program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -187,35 +190,35 @@
       *  SRProcess - Process files                                    *
       *                                                               *
       *****************************************************************
- 
+
      C     SRProcess     BEGSR
- 
+
       ** Read through the accounts file and initialise the
       ** Collateral flag and Collateral amounts
- 
+
      C                   OPEN      ACCNT
      C                   READ      ACCNT
- 
+
      C                   DOW       NOT %EOF(ACCNT)
- 
+
      C                   EVAL      AC_COLF = 'N'
      C                   EVAL      AC_BCOA = 0
      C                   EVAL      AC_COLA = 0
- 
+
      C                   UPDATE    ACCNTABF
- 
+
      C                   READ      ACCNT
      C                   ENDDO
      C                   CLOSE     ACCNT
- 
+
       ** Transfer all lending guarantees to the collateral details file
- 
+
      C                   READ      GTEES
- 
+
      C                   DOW       NOT %EOF(GTEES)
- 
+
      C                   IF        RECI = 'D'
- 
+
      C                   EVAL      CDRECI = RECI
      C                   EVAL      CDVDAT = STTD
      C                   EVAL      CDEDAT = EDDT
@@ -232,10 +235,10 @@
      C                   EVAL      CDFCUS = CNUM
      C                   EVAL      CDPR01 = GBCN
      C                   EVAL      CDVAMT = TAMT
- 
+
       ** Determine if record is a facility or loan, then
       ** set the affected fields accordingly
- 
+
      C                   MOVEL     FCLN          WFCLN1
      C**********         IF        WFCLN1 = 'F'                                               CLE148
      C                   IF        WFCLN1 = *BLANK                                            CLE148
@@ -249,33 +252,33 @@
      C                   EVAL      CDFSEQ = 0
      C                   MOVE      FCLN          CDLNLM
      C                   ENDIF
- 
+
       ** If first record, access collateral types details
- 
+
      C                   IF        WFirst = 'Y'
      C                   EXSR      SRCollType
      C                   EVAL      WFirst = 'N'
      C                   ENDIF
- 
+
       ** Retrieve reference number
- 
+
      C                   EXSR      SRGenRefNo
      C                   EVAL      CDCREF = PGenRef
- 
+
       ** Retrieve next available transaction number
- 
+
      C                   EXSR      SRGenTrnNo
      C                   EVAL      CDTNLU = PTrnNo
- 
+
       ** Set timestamp
- 
+
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   MOVE      TimeStamp     CDTMST
- 
+
       ** Set standard default values of other fields
- 
+
      C                   EVAL      CDLCD  = BJRDNB
      C                   EVAL      CDTYLC = 'I'
      C                   EVAL      CDENTY = 'B'
@@ -288,20 +291,20 @@
      C                   EVAL      CDPCTA = 100
      C                   EVAL      CDLAMT = CDMARG * CDVAMT
      C                   EVAL      CDTOTA = CDLAMT
- 
+
      C                   WRITE     GLCOLLD0
- 
+
       ** Update facility/loan file accordingly
- 
+
      C                   EXSR      SRFacLoan
- 
+
      C                   ENDIF
- 
+
      C                   READ      GTEES
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -309,37 +312,37 @@
       *  SRFacLoan - Update Facility/Loan file                        *
       *                                                               *
       *****************************************************************
- 
+
      C     SRFacLoan     BEGSR
- 
+
       ** If Secured Loan/Limit is zero, access facilities file
       ** and set Facility Secured Flag = 'Y'
- 
+
      C**********         IF        CDLNLM = 0                                                 CLE148
      C                   IF        CDLNLM = *Blanks                                           CLE148
- 
+
      C     KFCLTY        CHAIN     FCLTYL1
- 
+
      C                   IF        %FOUND(FCLTYL1)
      C                   EVAL      FC_SECI = 'Y'
      C                   UPDATE    FCLTYFMF
      C                   ENDIF
- 
+
       ** Else, access loans file and set Loan Secured Flag = 'Y'
- 
+
      C                   ELSE
- 
+
      C     CDLNLM        CHAIN     CLOAN
- 
+
      C                   IF        %FOUND(CLOAN)
      C                   BITOFF    '0'           CL_RELI
      C                   UPDATE    CLOANCLF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -347,26 +350,26 @@
       *  SRCollType - Access Collateral Type details                  *
       *                                                               *
       *****************************************************************
- 
+
      C     SRCollType    BEGSR
- 
+
      C                   EVAL      WFound = 'N'
- 
+
      C                   DOU       %EOF(SDCOTPL1)  OR  WFound = 'Y'
      C                   READ      SDCOTPL1
      C                   IF        CTCOPT = 'G'
      C                   EVAL      WFound = 'Y'
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        WFound = 'Y'
      C                   EVAL      CDCOPT = 'G'
      C                   EVAL      CDCOLT = CTCOLT
      C                   EVAL      CDMARG = CTMPCT
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -374,38 +377,38 @@
       *  SRGenRefNo - Generate Reference Number processing            *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGenRefNo    BEGSR
- 
+
       ** Call generate reference module
- 
+
      C                   CALLB     'GLCOLLGEN'
- 
+
       ** INPUTS
       ** Return code
       ** Module
       ** Transaction Type
       ** Front Office Id
- 
+
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      'GL'          PModule
      C                   PARM      'C'           PTType
      C                   PARM      *BLANKS       PFrontID
- 
+
       ** OUTPUTS
       ** Generated Reference
- 
+
      C                   PARM      *BLANKS       PGenRef
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      DBFILE = 'GLCOLLGEN'
      C                   EVAL      DBKEY  = '*CALL'
      C                   EVAL      DBASE  = 2
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -413,24 +416,24 @@
       *  SRGenTrnNo - Generate Transaction Number process             *
       *                                                               *
       *****************************************************************
- 
+
      C     SRGenTrnNo    BEGSR
- 
+
       ** Get the next available transaction number
- 
+
      C                   CALLB     'ZTNLU1'
      C                   PARM      *BLANKS       PReturn
      C                   PARM      0             PTrnNo
- 
+
      C                   IF        PReturn <> *BLANKS
      C                   EVAL      DBFILE = 'ZTNLU1'
      C                   EVAL      DBKEY  = '*CALL'
      C                   EVAL      DBASE  = 3
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -438,37 +441,37 @@
       *  *INZSR - Program Initialisation routine                      *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Access bank details
- 
+
      C                   CALLB     'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database error
- 
+
      C                   IF        PRetCode <> *BLANKS
      C                   EVAL      DBFILE = 'SDBANKPD'
      C                   EVAL      DBKEY  = '*FIRST'
      C                   EVAL      DBASE  = 1
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Key list for LF/FCLTYL1
- 
+
      C     KFCLTY        KLIST
      C                   KFLD                    CDBRCA
      C                   KFLD                    CDFCUS
      C                   KFLD                    CDFTYP
      C                   KFLD                    CDFSEQ
- 
+
      C                   EVAL      WFirst = 'Y'
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -479,21 +482,21 @@
       *           This subroutine DUMPs the program just once.        *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   IF        WRun = *BLANK
      C                   EVAL      WRun = 'Y'
      C                   DUMP
      C                   CALLB     'DBERRCTL'
      C                   ENDIF
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************

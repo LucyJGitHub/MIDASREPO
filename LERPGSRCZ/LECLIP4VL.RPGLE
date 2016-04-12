@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. AR567846           Date 01Aug12               *
-      *  Prev Amend No. AR317161           Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. AR567846           Date 01Aug12               *
+      *                 AR317161           Date 01Aug12               *
       *                 263840             Date 01Aug12               *
       *                 264080             Date 01Aug12               *
       *                 263080             Date 01Aug12               *
@@ -44,6 +45,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions (Recompile)                    *
       *  AR567846 - Cann't change repayment date- Basel 2 reporting   *
       *             fields (Child: AR567846)                          *
       *  AR317161 - Inability to amend Loan transaction               *
@@ -215,7 +218,7 @@
       *
      D ClilFilFmt    E DS                  EXTNAME(CLOANCL) PREFIX(@@)
       * (Current) Loans record CL in file Format
- 
+
       *
      D OKFlagsDS     E DS                  EXTNAME(LEECLI4PD)
      D OKFlagsDS6    E DS                  EXTNAME(LEECLI6PD)                                 CLE134

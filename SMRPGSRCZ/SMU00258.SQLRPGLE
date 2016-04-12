@@ -15,10 +15,13 @@
       *  Function:  This program will correct LASQ field in CLOANCL   *
       *             file for PDCL Loan Fees                           *
       *                                                               *
-      *  Last Amend No. MD025112 *CREATE   Date 20Feb14               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD025112 *CREATE   Date 20Feb14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  MD025112 - Incorrect LASQ field of PDCL loan fees in         *
       *             CLOANCL file                                      *
       *                                                               *
@@ -104,7 +107,7 @@
       *                                                               *
       *****************************************************************
      C     SRGetLoanF    BEGSR
- 
+
      C/EXEC SQL
      C+ declare Pcursor cursor for
      C+ Select distinct a.*
@@ -117,7 +120,7 @@
      C+ And b.yeseq  = c.fefseq
      C+ And b.yporg  = a.OFLN
      C/End-Exec
- 
+
      C/EXEC SQL
      C+ Open Pcursor
      C/End-Exec
@@ -132,7 +135,7 @@
      C+ Fetch NEXT from Pcursor into :CLON
      C/End-Exec
      C                   ENDDO
- 
+
      C/EXEC SQL
      C+ Close Pcursor
      C/End-Exec
@@ -163,7 +166,7 @@
       *                                                               *
       *****************************************************************
      C     SrGenDFile    BEGSR
- 
+
      C/EXEC SQL
      C+ declare Pcursor2 cursor for
      C+ Select distinct a.*
@@ -171,7 +174,7 @@
      C+ Where a.ofln = b.lnrf
      C+ And a.lasq <> b.fseq
      C/End-Exec
- 
+
      C/EXEC SQL
      C+ Open Pcursor2
      C/End-Exec
@@ -186,7 +189,7 @@
      C+ Fetch NEXT from Pcursor2 into :CLON
      C/End-Exec
      C                   ENDDO
- 
+
      C/EXEC SQL
      C+ Close Pcursor2
      C/End-Exec
@@ -272,15 +275,15 @@
       * *INZSR - Program Initialisation routine                       *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
       ** Check if Window Maintenance is activated
- 
+
      C                   EVAL      @RTCD = *BLANKS
      C                   EVAL      POP01 = 'PDCLAccSeqNo'
      C                   EVAL      PVL01 = *BLANKS
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM                    @RTCD
      C                   PARM                    POP01
@@ -303,7 +306,7 @@
      C                   PARM      *BLANKS       PVL09
      C                   PARM      *BLANKS       POP10
      C                   PARM      *BLANKS       PVL10
- 
+
      C                   EVAL      SeqFlg = *BLANKS
      C                   IF        @RTCD = *BLANKS
      C                   MOVEL     PVL01         SeqFlg

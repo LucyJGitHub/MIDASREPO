@@ -14,8 +14,9 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD033999           Date 29Jun15               *
-      *  Prev Amend No. AR1014455          Date 23Jan14               *
+      *  Last Amend No. MD037536           Date 26Apr16               *
+      *  Prev Amend No. MD033999           Date 29Jun15               *
+      *                 AR1014455          Date 23Jan14               *
       *                 MD020563           Date 21May13               *
       *                 AR1097176          Date 22Mar13               *
       *                 AR1096328          Date 15Mar13               *
@@ -154,6 +155,10 @@
 0008 F*                                                               *
 0013 F*---------------------------------------------------------------*
       *                                                               *
+      *  MD037536 - GLC43 components failed with �Record in file      *
+      *             GL0420P4 truncated at end of line�.               *
+      *             Review GL0420P4 definition and make it            *
+      *             consistent with PRTF page size.                   *
       *  MD033999 - GLC43 decimal data error. Patterned fix after     *
       *             MD-19902 which added validation for starting date *
       *             to consider if previous month has 29 or 30.       *
@@ -551,7 +556,8 @@
      F                                     OFLIND(*INOA)
      F                                     USROPN
      F/COPY WNCPYSRC,GL0420F003
-0025 FGL0420P4  O    F  132        PRINTER INFDS(SPOOL4)                        S01117
+0025 F***GL0420P4  O    F  132        PRINTER INFDS(SPOOL4)                          S01117 MD037536
+0025 FGL0420P4  O    F  100        PRINTER INFDS(SPOOL4)                                    MD037536
      F                                     OFLIND(*INOB)
      F                                     USROPN
      F/COPY WNCPYSRC,GL0420F001

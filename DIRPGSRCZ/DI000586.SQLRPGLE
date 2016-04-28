@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027107           Date 11Dec14               *
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. MD031513           Date 26Apr16               *
+      *  Prev Amend No. MD027107           Date 11Dec14               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD029683           Date 19Aug14               *
       *                 MD027197A          Date 03Jun14               *
       *                 MD027197           Date 29May14               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD031513 - Serious midas error due to Cheque No. 00000000.   *
+      *             Make Cheque No blank if equal to zeros.           *
+      *           - Applied for MD036733                              *
       *  MD027107 - Split the Accounting Rules Journal Batch Entry    *
       *             once it reach 998 entries.                        *
       *  MD029739 - File renaming for integration layer.              *
@@ -6272,6 +6276,7 @@ e1   C                   Endif
      C                   MOVEL     ZDATE         BDVLDT
       ** Cheque Number
      C                   IF        WATYP = 'R'                                              MD023767
+     C                             AND IFCHQN <> 0                                          MD031513
      C                   MOVEL     IFCHQN        BDCQNB
      C                   ELSE                                                               MD023767
      C                   MOVEL     *Blanks       BDCQNB                                     MD023767
@@ -7149,6 +7154,7 @@ e1   C                   Endif
      C                   MOVEL     ZDATE         BDVLDT
       ** Cheque Number
      C                   IF        WATYP = 'R'                                              MD023767
+     C                             AND IFCHQN <> 0                                          MD031513
      C                   MOVEL     IFCHQN        BDCQNB
      C                   ELSE                                                               MD023767
      C                   MOVEL     *Blanks       BDCQNB                                     MD023767
@@ -8339,6 +8345,7 @@ e1   C                   Endif
      C                   MOVEL     ZDATE         BDVLDT
       ** Cheque Number
      C                   IF        WATYP = 'R'                                              MD023767
+     C                             AND IFCHQN <> 0                                          MD031513
      C                   MOVEL     IFCHQN        BDCQNB
      C                   ELSE                                                               MD023767
      C                   MOVEL     *Blanks       BDCQNB                                     MD023767

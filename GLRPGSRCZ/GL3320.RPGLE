@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD031642           Date 15Dec14               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. 253181             Date 26Apr16               *
+      *  Prev Amend No. MD031642           Date 15Dec14               *
+      *                 CRE095             Date 25Apr14               *
       *                 MD033737           Date 05May15               *
       *                 CGL165             Date 17Feb15               *
       *                 235284             Date 16Feb15               *
@@ -80,6 +81,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  253181 - Delete record from the shadow file REMEMLPD when    *
+      *           account has been dropped from ACCNTAB               *
+      *         - Applied for MD022061                                *
       *  MD031642 - Error when no record exists between the first and *
       *             last RRNs for a task split job.                   *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
@@ -222,6 +226,11 @@
      F                                     COMMIT                                             CGL120
      FREHISBL   UF   E           K DISK    EXTIND(*INU5)
      F                                     COMMIT                                             CGL120
+      *                                                                                       253181
+      ** Midas Outward Clearing Shadow File                                                   253181
+     FREMEMLL0  UF   E           K DISK    USROPN                                             253181
+     F                                     COMMIT                                             253181
+      *                                                                                       253181
      FPMMFHLL1  UF   E           K DISK    USROPN                               S01486
      F                                     COMMIT                                             CGL120
      FACNTDLPD  O    E             DISK    USROPN                                             CGP013
@@ -886,6 +895,23 @@
      C                   ELSE                                                                 CGL142
      C                   MOVEL     'N'           CSD023                                       CGL142
      C                   ENDIF                                                                CGL142
+                                                                                              253181
+      ** Check if the 2 o'clock flag (SAR CRE023) is switched on                              253181
+                                                                                              253181
+     C                   MOVE      *BLANKS       @RTCD                                        253181
+     C                   MOVEL     *BLANKS       CRE023            1                          253181
+     C                   CALL      'AOSARDR0'                                                 253181
+     C                   PARM      *BLANKS       @RTCD                                        253181
+     C                   PARM      '*VERIFY'     @OPTN                                        253181
+     C                   PARM      'CRE023'      @SARD                                        253181
+     C                   PARM      *BLANKS       DSFDY                                        253181
+                                                                                              253181
+     C     @RTCD         IFEQ      *BLANK                                                     253181
+     C                   OPEN      REMEMLL0                                                   253181
+     C                   MOVEL     'Y'           CRE023                                       253181
+     C                   ELSE                                                                 253181
+     C                   MOVEL     'N'           CRE023                                       253181
+     C                   END                                                                  253181
      C*
      C***SDRETLPD                                                         080809
      C*******                                                             080809
@@ -1081,6 +1107,7 @@
      C                   MOVE      ACOD          @ACOD
      C                   MOVE      ACSQ          @ACSQ
      C                   MOVE      ACNO          @ACNO                                        137916
+     C                   MOVE      ACNO          KACNO            10 0                        253181
      C                   CALL      'GL3320D'
      C                   PARM      *BLANKS       @TERM             1
      C                   PARM                    @BRCA             3
@@ -1104,6 +1131,15 @@
      C*                                                                   S01408
      C/COPY WNCPYSRC,GL3320CCPG                                           S01408
      C*                                                                   S01408
+      ** If CRE023 is on, chain acno to file REMEMLPD and delete it                           253181
+      *                                                                                       253181
+     C     CRE023        IFEQ      'Y'                                                        253181
+     C                   SETOFF                                       37                      253181
+     C     KACNO         CHAIN     REMEMLL0                           37                      253181
+     C     *IN37         IFEQ      '0'                                                        253181
+     C                   DELETE    REMEMLL0                                                   253181
+     C                   END                                                                  253181
+     C                   END                                                                  253181
      C*
      C                   ADD       1             NODROP            5 0
      C     ATYP          IFEQ      'R'

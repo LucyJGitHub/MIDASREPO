@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033630           Date 23Jun15               *
-      *  Prev Amend No. MD031298           Date 20Feb15               *
+      *  Last Amend No. AR922022A          Date 26Apr16               *
+      *  Prev Amend No. AR922022           Date 26Apr16               *
+      *                 MD033630           Date 23Jun15               *
+      *                 MD031298           Date 20Feb15               *
       *                 MD023889           Date 10Dec13               *
       *                 CGL135A            Date 23Oct13               *
       *                 AR1093096          Date 30Sep13               *
@@ -67,6 +69,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR922022A - Added Submission of REC000881 when CRE023 and    *
+      *              CRE016 is both on.                               *
+      *            - Applied for MD033905                             *
+      *  AR992022 - On line Retail Advices are not being printed for  *
+      *             journal entries (CRE020). Pattern retail advice   *
+      *             process after GLC1400 and in other modules.       *
+      *           - Applied for MD033905                              *
       *  MD033630 - Limit CRE023 functionality to those whose trans-  *
       *             action types are in RETTYPPD.                     *
       *  MD031298 - 4-Eyes Principle Error - Journal Entries          *
@@ -213,6 +222,16 @@
       *                                                                                    AR792734A
       ** Outward Clearing Balance File                                                     AR792734A
       *                                                                                    AR792734A
+     FGLJENPL1  IF   E           K DISK    USROPN                                           AR992022
+     F                                     PREFIX(M)                                       AR992022A
+      *                                                                                     AR992022
+      ** Midas GL Journal entry posting Rtv                                                 AR992022
+      *                                                                                     AR992022
+     FREADVCL1  UF A E           K DISK    COMMIT                                           AR992022
+     F                                     USROPN                                           AR992022
+      *                                                                                     AR992022
+      ** MIDAS RE Settled Transaction Index file                                            AR992022
+      *                                                                                     AR992022
      F/COPY WNCPYSRC,GLH00301
       *****************************************************************
       /EJECT
@@ -386,6 +405,32 @@
       *                                                                                     BUG26246
       ** Define variable for switchable CGL013.                                             BUG26246
      D CGL013          S              1A   INZ(*BLANKS)                                     BUG26246
+      *                                                                                     AR992022
+      ** Switchable Features Flags                                                          AR992022
+      *                                                                                     AR992022
+     D CRE020          S              1A   INZ('N')                                         AR992022
+     D POption         S              7A                                                    AR992022
+     D PRtnCode        S              7A                                                    AR992022
+      *                                                                                     AR992022
+      ** Parameters for System Values Access Object                                         AR992022
+      *                                                                                     AR992022
+     D PRtCd           S              7A                                                    AR992022
+     D PSValOpt        S             20A   INZ('JournalEntry')                              AR992022
+     D PSysVal         S            200A   INZ(' ')                                         AR992022
+     D PSValOptB       S             20A   INZ(' ')                                         AR992022
+     D PSysValB        S            200A   INZ(' ')                                         AR992022
+      ** CRE020 Parameters for QCMDEXC                                                     AR992022A
+     D SBMAdvice       S            150A   INZ('SBMJOB JOB(REC000881) +                    AR992022A
+     D                                       JOBD(MBATCH) USER(*JOBD) +                    AR992022A
+     D                                       RTGDTA(*JOBD) RQSDTA(+                        AR992022A
+     D                                       ''CALL REC000881 +                            AR992022A
+     D                                       (GLBITHUPD GL)'') INLLIBL+                    AR992022A
+     D                                       (*JOBD) MSGQ(MOPERQ)')                        AR992022A
+     D SBMAdvLngth     S             15  5 INZ(150)                                        AR992022A
+      *                                                                                     AR992022
+      ** Working Variables                                                                  AR992022
+      *                                                                                     AR992022
+     D WRefNo          S              6A                                                    AR992022
       *
       ** Hook for non-core D-specs (all types)                                                GOC001
       /COPY WNCPYSRC,GLBITHDD01                                                               GOC001
@@ -697,7 +742,7 @@
                                                                                              BUG7426
      C/COPY WNCPYSRC,GLH00766
      C                   ELSE                                                                 CAP084
- 
+
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C**********         MOVE      B1BTSF        BRBTSF                                CAP084 239155
      C     CGL016        IFEQ      'Y'                                                     AR792734A
@@ -738,6 +783,21 @@
      C                   ELSE                                                                 CAP084
      C                   UPDATE    @BRREMA
      C                   ENDIF                                                                CAP084
+      *                                                                                    AR992022A
+      ** If Online Printing of Advice is on and is set in the system,                      AR992022A
+      ** update READVCPD once batch is accepted                                            AR992022A
+      *                                                                                    AR992022A
+     C                   IF        CRE020 = 'Y'                                            AR992022A
+     C                             AND PSysVal = 'Y'                                       AR992022A
+     C                             AND B1BTSF = 'A'                                        AR992022A
+     C                   EXSR      SrUpdAdvice                                             AR992022A
+     C                   IF        CRE023 = 'Y'                                            AR992022A
+     C                             AND CGL016 = 'Y'                                        AR992022A
+     C                   CALL      'QCMDEXC'                                               AR992022A
+     C                   PARM                    SBMAdvice                                 AR992022A
+     C                   PARM                    SBMAdvLngth                               AR992022A
+     C                   ENDIF                                                             AR992022A
+     C                   ENDIF                                                             AR992022A
       *
      C/COPY OFCPYSRCZ,CGL135_016                                                             CGL135A
       *                                                                                       CAP084
@@ -1165,6 +1225,66 @@
      C                   Eval      CGL037 = 'N'                                              BUG9009
      C                   EndIf                                                               BUG9009
                                                                                              BUG9009
+      ** Check if On Line Printing of Advice is on                                          AR992022
+                                                                                            AR992022
+     C                   CALLB     'AOSARDR0'                                               AR992022
+     C                   PARM      *BLANKS       PRtnCode                                   AR992022
+     C                   PARM      '*VERIFY'     POption                                    AR992022
+     C                   PARM      'CRE020'      PSard                                      AR992022
+     C     SCSARD        PARM      SCSARD        DSFDY                                      AR992022
+                                                                                            AR992022
+     C                   IF        PRtnCode = *BLANKS                                       AR992022
+     C                   EVAL      CRE020 = 'Y'                                             AR992022
+     C                   ENDIF                                                              AR992022
+                                                                                            AR992022
+      ** Database Error for SAR File                                                        AR992022
+                                                                                            AR992022
+     C                   IF        PRtnCode <> *BLANKS AND                                  AR992022
+     C                             PRtnCode <> '*NRF'                                       AR992022
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      AR992022
+     C                   EVAL      DBASE = 036                                              AR992022
+     C                   EVAL      DBKEY = 'CRE020'                                         AR992022
+     C                   EXSR      *PSSR                                                    AR992022
+     C                   ENDIF                                                              AR992022
+                                                                                            AR992022
+      ** Check if system value for the maintenance is on                                    AR992022
+                                                                                            AR992022
+     C                   IF        CRE020 = 'Y'                                             AR992022
+                                                                                            AR992022
+     C                   CALL      'AOSVALR0'                                               AR992022
+     C                   PARM                    PRtnCode                                   AR992022
+     C                   PARM                    PSValOpt                                   AR992022
+     C                   PARM                    PSysVal                                    AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+     C                   PARM                    PSValOptB                                  AR992022
+     C                   PARM                    PSysValB                                   AR992022
+                                                                                            AR992022
+      ** Database Error for System Values File                                              AR992022
+                                                                                            AR992022
+     C                   IF        PRtnCode <> *Blanks                                      AR992022
+     C                   EVAL      DBFILE = 'SDSVALPD'                                      AR992022
+     C                   EVAL      DBASE = 037                                              AR992022
+     C                   EVAL      DBKEY = PsValOpt                                         AR992022
+     C                   EXSR      *PSSR                                                    AR992022
+     C                   ENDIF                                                              AR992022
+                                                                                            AR992022
+     C                   ENDIF                                                              AR992022
+                                                                                            AR992022
      C/COPY WNCPYSRC,GLBITHDC02                                                               GOC001
       ** Check if enhancement CSC024 (Open Month End) is on                                   CAP086
                                                                                               CAP086
@@ -1461,6 +1581,52 @@
       *
      C                   ENDSR
       *
+      ****************************************************************                      AR992022
+      /EJECT                                                                                AR992022
+      *****************************************************************                     AR992022
+      *                                                               *                     AR992022
+      *  SrUpdAdvice - Handles the advice index of the current        *                     AR992022
+      *                transaction.                                   *                     AR992022
+      *                                                               *                     AR992022
+      *****************************************************************                     AR992022
+     C     SrUpdAdvice   BEGSR                                                              AR992022
+      *                                                                                     AR992022
+      ** Process all available batches.                                                     AR992022
+      *                                                                                     AR992022
+     C                   MOVE      BRBTNB        KBTNB             3                        AR992022
+      *                                                                                     AR992022
+     C                   OPEN      GLJENPL1                                                 AR992022
+      *                                                                                     AR992022
+     C     KBTNB         SETLL     GLJENPL1                                                 AR992022
+     C     KBTNB         READE     GLJENPL1                               38                AR992022
+      *                                                                                     AR992022
+     C     *IN38         DOWNE     *ON                                                      AR992022
+      *                                                                                     AR992022
+     C                   MOVE      *BLANKS       WRefNo                                     AR992022
+     C**********         MOVEL     BTBTNB        WRefNo                           AR992022 AR992022A
+     C**********         MOVE      BTBINB        WRefNo                           AR992022 AR992022A
+     C                   MOVEL     MBTBTNB       WRefNo                                    AR992022A
+     C                   MOVE      MBTBINB       WRefNo                                    AR992022A
+     C                   EVAL      RREFNO = *BLANKS                                         AR992022
+     C                   EVAL      RREFNO = WRefNo                                          AR992022
+     C                   EVAL      RPRGMN = *BLANKS                                         AR992022
+     C                   EVAL      RPRGMN = 'GLBITHUPD '                                    AR992022
+     C                   EVAL      RSEQNO = *BLANKS                                         AR992022
+     C                   EVAL      RTRTYP = 'ME'                                            AR992022
+     C                   EVAL      RCHTYP = 'I'                                             AR992022
+     C                   EVAL      RAUTHI = 'Y'                                             AR992022
+     C                   EVAL      RSAPIN = 'N'                                             AR992022
+     C                   EVAL      RENARR = *BLANKS                                         AR992022
+     C                   OPEN      READVCL1                                                 AR992022
+     C                   WRITE     READVCD0                                                 AR992022
+     C                   CLOSE     READVCL1                                                 AR992022
+      *                                                                                     AR992022
+     C     KBTNB         READE     GLJENPL1                               38                AR992022
+     C                   ENDDO                                                              AR992022
+      *                                                                                     AR992022
+     C                   CLOSE     GLJENPL1                                                 AR992022
+      *                                                                                     AR992022
+     C                   ENDSR                                                              AR992022
       *****************************************************************
       /EJECT
       *****************************************************************

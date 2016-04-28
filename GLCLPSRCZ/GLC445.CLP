@@ -9,9 +9,10 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. CAP207             Date 10Feb11              */
+/*       Last Amend No. AR992022           Date 26Apr16              */
+/*       Prev Amend No. CAP207             Date 10Feb11              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No. 260259             Date 14May09              */
+/*                      260259             Date 14May09              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /*                      245635             Date 13Feb07              */
 /*                      241672A            Date 09Jan07              */
@@ -43,6 +44,10 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       AR992022 - On line Retail Advices are not being printed for */
+/*                  journal entries (CRE020). Pattern retail advice  */
+/*                  process after GLC1400 and in other modules.      */
+/*                - Applied for MD033905                             */
 /*       CAP207 - Account Balance Check extended to other APIs       */
 /*       260259 - Batch acceptance delay problem. Fix is to:         */
 /*              - sbmjob REC0880 to MIDASJOBQ; and                   */
@@ -86,11 +91,11 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&BNUM &WRKSTN)
- 
+
              DCL        VAR(&CPYFLD) TYPE(*CHAR) LEN(64) VALUE('(c) +
                           Misys International Banking Systems Ltd. +
                           2001')
- 
+
 /************DCL VAR(&MSG)   TYPE(*CHAR) LEN(50)                   */ /*S01117*/
 /************DCL VAR(&BNUM)  TYPE(*DEC)  LEN(3 0)                     /*E17597*/
              DCL VAR(&BNUM)  TYPE(*CHAR) LEN(3)                       /*E17597*/
@@ -127,11 +132,12 @@
              DCL        VAR(&PSARD) TYPE(*CHAR) LEN(6)                                    /*245635*/
              DCL        VAR(&SCSARD) TYPE(*CHAR) LEN(200)                                 /*245635*/
              DCL        VAR(&CRE020) TYPE(*CHAR) LEN(1)                                   /*245635*/
+             DCL        VAR(&PCMD) TYPE(*CHAR) LEN(50)                                  /*AR992022*/
 /* */                                                                 /*S01408*/
 /*/COPY WNCPYSRC,GLC445INT                                           */
 /* */                                                                 /*S01408*/
 /* END OF FIX E30087 */
- 
+
 /* Global message monitor :                                     */    /*078325*/
                                                                       /*078325*/
              MONMSG     MSGID(CPF0000 RPG0000 MCH0000) EXEC(GOTO +
@@ -193,21 +199,21 @@
 /**********  ENDDO */                                                             /*CSC022 BUG2714*/
 /**********  ELSE       CMD(IF COND(&PRTN *NE '*NRF') THEN(GOTO +
                           CMDLBL(ABNOR))) */                                      /*CSC022 BUG2714*/
- 
+
 /**********  STRCMTCTL  LCKLVL(*CHG)                           /*E17597 CPK009*/
 /**********  IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
                           'Y') *AND (&WCMTSK *EQ 'N'))) THEN(DO) */               /*CSC022 BUG2714*/
              STRCMTCTL  LCKLVL(*CHG) CMTSCOPE(*JOB)                   /*CPK009*/
 /**********  ENDDO */                                                             /*CSC022 BUG2714*/
- 
+
 /* START OF FIX E30087 */
              CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
                           &ERRORC &MULT)
- 
+
              IF         COND(&MULT *EQ '  ') THEN(DO)
                 CHGVAR     VAR(&MULT) VALUE('GB')
              ENDDO
- 
+
              CHGVAR     VAR(&MIDAS) VALUE(&MULT *CAT 'MIDAS')
              OVRMSGF    MSGF(MIDAS) TOMSGF(&MIDAS)
 /* END OF FIX E30087 */
@@ -267,7 +273,7 @@
              CHGDTAARA  DTAARA(QTEMP/GPRESERVID) VALUE(*BLANK)                            /*CAP207*/
                                                                                           /*CAP207*/
              CALL PGM(GL4445) PARM(&BNUM)
- 
+
              MONMSG     MSGID(RPG0000 CPF0000 MCH0000) EXEC(DO)
 /**********     IF         COND((&CSC022 *EQ 'N') *OR ((&CSC022 *EQ +
                           'Y') *AND (&WCMTSK *EQ 'N'))) THEN(DO) */               /*CSC022 BUG2714*/
@@ -280,7 +286,7 @@
                 GOTO ENDPGM
              ENDDO
 /*/COPY WNCPYSRC,GLC445001                                           */
- 
+
              IF COND(%SWITCH(XXXXXX11)) THEN(DO)
                RTVDTAARA  DTAARA(LDA) RTNVAR(&LDA)                    /*E17597*/
 /***CHGVAR*****VAR(&MEM) VALUE(%SUBSTRING(&LDA 134 44))    /*E17594*/ /*S01194*/
@@ -303,7 +309,7 @@
 /************             MSGTYPE(*INFO)                              /*E17597*/
              GOTO       CMDLBL(ABNOR)                                                    /*241672A*/
              ENDDO
- 
+
 /* */                                                                 /*S01408*/
 /*/COPY WNCPYSRC,GLC445END                                           */
 /* */                                                                 /*S01408*/
@@ -329,6 +335,16 @@
                           INLLIBL(*JOBD) MSGQ(MOPERQ)                                     /*260259*/
                                                                                           /*245635*/
              ENDDO                                                                        /*245635*/
+                                                                                        /*AR992022*/
+/* Print On line Retail Advices if CRE020 is enabled. */                                /*AR992022*/
+                                                                                        /*AR992022*/
+             IF         COND(&CRE020 *EQ 'Y') THEN(DO)                                  /*AR992022*/
+             CHGVAR     VAR(&PCMD) VALUE('CALL PGM(REC000881) PARM(' +
+                        *CAT '''GLBITHUPD'' ''GL''' *CAT ')')                           /*AR992022*/
+             SBMJOB     JOB(REC000881) JOBD(MBATCH) USER(*JOBD) +
+                        RTGDTA(*JOBD) RQSDTA(&PCMD) +
+                        INLLIBL(*JOBD) MSGQ(MOPERQ)                                     /*AR992022*/
+             ENDDO                                                                      /*AR992022*/
                                                                       /*078325*/
              SNDPGMMSG  MSG('GLC445 - Ended normally for batch' +
                           *BCAT &BNUM *BCAT 'from device' +

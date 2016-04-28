@@ -10,14 +10,19 @@
      F*                                                               *
      F*  (c) Misys Banking Systems Ltd. 2006                          *
      F*                                                               *
+      *  Last Amend No. MD037920           Date 26Apr16               *
+      *  Prev Amend No. MD037802           Date 26Apr16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
-     F*  Last Amend No. BUG27090           Date 18Feb10               *
-     F*  Prev Amend No. 242911             Date 10Oct06               *
+      *                 BUG27090           Date 18Feb10               *
+      *                 242911             Date 10Oct06               *
      F*                 242178             Date 12Sep06               *
      F*                 CGL047 *Create     Date 30Jun06               *
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  MD037920 - 1. program fail when GLPSUMPD is empty.           *
+      *             2. correct #DBER processing                       *
+      *  MD037802 - All GPI postings have blank narrative.            *
      F*  BUG27090 - GLC1723 00001 DB error                            *
      F*  242911 - Update GEGPIZZ when writing to summary file.        *
      F*  242178 - Summary posting not generated because of rec count  *
@@ -338,6 +343,7 @@
      C* If the facility is switched off or unavailable,
      C*  or UDC is not installed, exit this subroutine:
      C           REPNAR    IFNE 'Y'
+     C           *INLR     OREQ '1'                                                         MD037920
      C                     GOTO EXPNAR
      C                     ENDIF
      C*
@@ -352,6 +358,7 @@
      C           SDCUST    PARM SDCUST    DSSDY
      C*
      C           ##RTN     IFNE *BLANKS
+     C           *LOCK     IN   LDA                                                         MD037920
      C                     MOVEL'SDCUSTPD'DBFILE             *************
      C                     MOVEL'101'     DBASE              * DBERR 101 *
      C                     MOVEL##KEY     DBKEY              *************
@@ -559,13 +566,15 @@
      C                     EXSR #DBER                       1
      C                     ENDIF                           X1
       *
-      **  Check if feature EEPNAR is on
+      ****Check*if*feature*EEPNAR*is*on                                                     MD037802
+      **  Check if feature GLPNAR is on                                                     MD037802
      C                     MOVE 'N'       REPNAR  1
      C           BGN1ST    IFEQ 'Y'
      C                     CALL 'AOSARDR0'
      C                     PARM '       ' @RTCD
      C                     PARM '*VERIFY' @OPTN
-     C                     PARM 'EEPNAR'  @SARD   6
+     C**********           PARM 'EEPNAR'  @SARD   6                                         MD037802
+     C                     PARM 'GLPNAR'  @SARD   6                                         MD037802
      C           SCSARD    PARM SCSARD    DSFDY
      C           @RTCD     IFEQ *BLANK
      C                     MOVE 'Y'       REPNAR

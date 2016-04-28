@@ -13,11 +13,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD031057           Date 24Feb15               *
-      *  Prev Amend No. CGL142  *CREATE    Date 06Aug12               *
+      *  Last Amend No. MD036707           Date 26Apr16               *
+      *  Prev Amend No. MD031057           Date 24Feb15               *
+      *                 CGL142  *CREATE    Date 06Aug12               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036707 - GLC0600T4 fail. Correct the retrieval of CRE023   *
+      *             Applied for MD037302.                             *
       *  MD031057 - REC002008 00001 failed due to FOOB                *
       *  CGL142 - Tactical COB changes GL                             *
       *                                                               *
@@ -31,44 +34,44 @@
       *  U7+U8 - Database error                                       *
       *                                                               *
       *****************************************************************
- 
+
       ** Midas GL Accounts Master Trailer
      FACCNTAC   UF   E             DISK    INFSR(*PSSR) COMMIT
      F                                     PREFIX(AC_)
- 
+
       ** Midas GL Accounts Master Trailer Work file
      FGLACCTAC  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Midas GL A/C Opened by the System Trailer
      FSYSOPZX   UF   E             DISK    INFSR(*PSSR) COMMIT
      F                                     PREFIX(SY_)
- 
+
       ** Midas GL Ac Opened by the System Trailer Work file
      FGLSYSOZX  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Midas GL Items in Clearing Trailer
      FCLEARZZ   UF   E             DISK    INFSR(*PSSR) COMMIT
      F                                     PREFIX(CL_)
- 
+
       ** Midas GL Items in Clearing Trailer Work file
      FGLCLEAZZ  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Midas RE Outward Clearing File - Trailer
      FREOUTLPT  UF   E             DISK    INFSR(*PSSR) COMMIT
      F                                     PREFIX(RE_)
- 
+
       ** Midas RE Outward Clearing File - Trailer Work file
      FGLOUTLPT  IF   E             DISK    INFSR(*PSSR)
- 
+
       ** Local data area for database error details
      D LDA           E DS           256    EXTNAME(LDA)
- 
+
       ** Program Status Data Structure
      D PSDS           SDS
      D  PGM              *PROC
      D  WSID                 244    253
      D  USER                 254    263
- 
+
       ** Program Variables
      D PostNum         S              1
      D TotHwnd         S             18  0
@@ -91,7 +94,7 @@
      D TotHwnt         S             18  0
      D TotHwnp2        S             18  0
      D TotHwnt2        S             18  0
- 
+
       ** AOSARDR0 parameters                                                                MD031057
                                                                                             MD031057
      D PRtcd           S              7A                                                    MD031057
@@ -105,12 +108,12 @@
      D CRE023          S              1A                                                    MD031057
                                                                                             MD031057
       ** Main Processing
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    PostNum
- 
+
       ** Process GLACCTAC and update ACCNTAC
- 
+
      C                   Z-ADD     0             TotHwnd
      C                   Z-ADD     0             TotHwnc
      C                   Z-ADD     0             TotHwnd2
@@ -125,11 +128,11 @@
      C                   Z-ADD     0             TotNamp
      C                   Z-ADD     0             TotNaup
      C                   Z-ADD     0             TotNret
- 
+
      C                   READ      GLACCTAC                               99
- 
+
      C                   DOW       *IN99 = *OFF
- 
+
      C     NOCL          ADD       TOTNOCL       TOTNOCL
      C     NINP          ADD       TOTNINP       TOTNINP
      C     NORD          ADD       TOTNORD       TOTNORD
@@ -138,51 +141,51 @@
      C     NAUP          ADD       TOTNAUP       TOTNAUP
      C                   EVAL      TotHwnd = TotHwnd + (HWND * 1000) + HDCD
      C                   EVAL      TotHwnc = TotHwnc + (HWNC * 1000) + HDCC
- 
+
      C                   READ      GLACCTAC                               99
      C                   ENDDO
- 
+
      C     1             CHAIN     ACCNTAC                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'ACCNTAC'     DBFILE
      C                   Z-ADD     001           DBASE
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C     TOTNOCL       ADD       AC_NOCL       AC_NOCL
      C     TOTNINP       ADD       AC_NINP       AC_NINP
      C     TOTNORD       ADD       AC_NORD       AC_NORD
      C     TOTNOCF       ADD       AC_NOCF       AC_NOCF
      C     TOTNAMP       ADD       AC_NAMP       AC_NAMP
- 
+
      C     PostNum       IFEQ      '1'
      C     AC_NOOA       ADD       AC_NINU       AC_NAUP
      C                   ENDIF
      C     TOTNAUP       ADD       AC_NAUP       AC_NAUP
- 
+
      C                   EVAL      TotHwnd2 = (AC_HWND * 1000) + AC_HDCD
      C     TOTHWND       ADD       TOTHWND2      TOTHWND2
      C                   EVAL      AC_HWND = (TotHwnd2 / 1000)
      C                   EVAL      AC_HDCD = TotHwnd2 - (AC_HWND * 1000)
- 
+
      C                   EVAL      TotHwnc2 = (AC_HWNC * 1000) + AC_HDCC
      C     TOTHWNC       ADD       TOTHWNC2      TOTHWNC2
      C                   EVAL      AC_HWNC = (TotHwnc2 / 1000)
      C                   EVAL      AC_HDCC = TotHwnc2 - (AC_HWNC * 1000)
- 
+
      C                   UPDATE    ACCNTACF
- 
+
      C                   ENDIF
- 
+
       ** Process GLSYSOZX AND Update SYSOPZX
- 
+
      C                   Z-ADD     0             TotNore
      C                   READ      GLSYSOZX                               99
      C                   DOW       *IN99 = *OFF
      C     NORE1         ADD       TOTNORE       TOTNORE
      C                   READ      GLSYSOZX                               99
      C                   ENDDO
- 
+
      C     1             CHAIN     SYSOPZX                            99
      C                   IF        *IN99 = *ON
      C                   MOVE      'SYSOPZX'     DBFILE
@@ -192,42 +195,42 @@
      C     TOTNORE       ADD       SY_NORE1      SY_NORE1
      C                   UPDATE    SYSOPZXF
      C                   ENDIF
- 
+
       ** Process GLCLEAZZ AND Update CLEARZZ
- 
+
      C                   IF        *INU5 = *ON
      C                   Z-ADD     0             TotHrwn
      C                   Z-ADD     0             TotHrwn2
      C                   Z-ADD     0             TotNore
- 
+
      C                   READ      GLCLEAZZ                               99
      C                   DOW       *IN99 = *OFF
      C     NORE1         ADD       TOTNORE       TOTNORE
      C                   EVAL      TotHrwn  = TotHrwn + (HRWN * 1000) + HRDC
      C                   READ      GLCLEAZZ                               99
      C                   ENDDO
- 
+
      C     1             CHAIN     CLEARZZ                            99
      C     *IN99         IFEQ      *ON
      C                   MOVE      'CLEARZZ'     DBFILE
      C                   Z-ADD     003           DBASE
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C     TOTNORE       ADD       CL_NORE1      CL_NORE1
- 
+
      C                   EVAL      TotHrwn2 = (CL_HRWN * 1000) + CL_HRDC
      C     TOTHRWN       ADD       TOTHRWN2      TOTHRWN2
      C                   EVAL      CL_HRWN = (TotHrwn2 / 1000)
      C                   EVAL      CL_HRDC = TotHrwn2 - (CL_HRWN * 1000)
- 
+
      C                   UPDATE    APOSTZZF
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Process GLOUTLPT and update REOUTLPT
- 
+
      C******INU4*        IFEQ      *ON                                                      MD031057
      C                   IF        PostNum = '1' and CRE023 = 'Y'                           MD031057
      C                   Z-ADD     0             TotHwnp
@@ -235,42 +238,42 @@
      C                   Z-ADD     0             TotHwnp2
      C                   Z-ADD     0             TotHwnt2
      C                   Z-ADD     0             TotNore
- 
+
      C                   READ      GLOUTLPT                               99
- 
+
      C                   DOW       *IN99 = *OFF
      C     GNREC         ADD       TOTNORE       TOTNORE
      C                   EVAL      TotHwnp  = TotHwnp + (GHWNP * 1000) + GHDCP
      C                   EVAL      TotHwnt  = TotHwnt + (GHWNT * 1000) + GHDCT
      C                   READ      GLOUTLPT                               99
      C                   ENDDO
- 
+
      C     1             CHAIN     REOUTLPT                           99
      C                   IF        *IN99 = *ON
      C                   MOVE      'REOUTLPT'    DBFILE
      C                   Z-ADD     004           DBASE
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
      C     TOTNORE       ADD       RE_GNREC      RE_GNREC
- 
+
      C                   EVAL      TotHwnp2 = (RE_GHWNP * 1000) + RE_GHDCP
      C     TOTHWNP       ADD       TOTHWNP2      TOTHWNP2
      C                   EVAL      RE_GHWNP = (TotHwnp2 / 1000)
      C                   EVAL      RE_GHDCP = TotHwnp2 - (RE_GHWNP * 1000)
- 
+
      C                   EVAL      TotHwnt2 = (RE_GHWNT * 1000) + RE_GHDCT
      C     TOTHWNT       ADD       TOTHWNT2      TOTHWNT2
      C                   EVAL      RE_GHWNT = (TotHwnt2 / 1000)
      C                   EVAL      RE_GHDCT = TotHwnt2 - (RE_GHWNT * 1000)
- 
+
      C                   UPDATE    REOUTLT0
- 
+
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   COMMIT
- 
+
      C                   SETON                                        LR
      C                   RETURN
       *****************************************************************
@@ -294,7 +297,10 @@
      C                   EVAL      DBASE = 5                                                MD031057
      C                   EVAL      DBKEY = 'CRE023'                                         MD031057
      C                   EXSR      *PSSR                                                    MD031057
-     C                   ELSE                                                               MD031057
+     C**********         ELSE                                                      MD031057 MD036707
+     C                   ENDIF                                                              MD036707
+      *                                                                                     MD036707
+     C                   IF        PRtCd = *BLANKS                                          MD036707
      C                   EVAL      CRE023 = 'Y'                                             MD031057
      C                   ENDIF                                                              MD031057
                                                                                             MD031057
@@ -310,13 +316,13 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   DUMP
      C                   RETURN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

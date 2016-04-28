@@ -21,8 +21,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD036189           Date 08Oct15               *
-      *  Prev Amend No. MD033105           Date 07Aug15               *
+      *  Last Amend No. MD036567           Date 26Apr16               *
+      *  Prev Amend No. MD036189           Date 08Oct15               *
+      *                 MD033105           Date 07Aug15               *
       *                 AR924684           Date 10Nov14               *
       *                 MD023389           Date 13Nov13               *
       *                 MD000091           Date 06May13               *
@@ -85,6 +86,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036567 - Error in incoming payment authorisation (PAUT).   *
+      *             Ordering Customer type was left without a value   *
+      *             when saving Ordering Customer details.            *
       *  MD036189 - STP Inward Messages Database error when amending  *
       *             a payment                                         *
       *  MD033105 - Error in incoming payment authorisation. Always   *
@@ -770,12 +774,12 @@
      C**********         MOVEL     'N'           OKORC1                                     MD036189
      C**********         ADD       1             IDX                                        MD036189
      C                   MOVEL     'W'           OKORC1                                     MD036189
-     C                   ADD       1             WIx                                        MD036189 
+     C                   ADD       1             WIx                                        MD036189
      C***********        MOVEL     'DDORC1'      FldNamXAR(IDX)                               223728
      C***********        MOVEL     CLSWTK        MsgDtaXAr(IDX)                               223728
      C***********        MOVEL     'FTM2068'     MsgIdXAr(IDX)                                223728
      C**********         MOVEL     'DDORC1'      WFldNmXAr(IDX)                      223728 MD036189
-     C                   MOVEL     'DDORC1'      WFldNmXAr(WIx)                             MD036189  
+     C                   MOVEL     'DDORC1'      WFldNmXAr(WIx)                             MD036189
      C**********         MOVEL     CLSWTK        WMsgDtXAr(IDX)                      223728 MD000091
      C                   EVAL      BLen = %Len(%Trim(CLSWTK))                               MD000091
      C**********         EVAL      WMsgDtXAr(IDX) = LenStr +%TRIM(CLSWTK)          MD000091 MD036189
@@ -962,6 +966,17 @@
      C                   MOVEL     'A'           WPORCT
      C/COPY OFCPYSRCZ,CFT148_021                                                             259953A
      C                   ENDIF
+      *                                                                                     MD036567
+      ** If any of lines 1 to 5 of Ordering Customer has a value, Ordering                  MD036567
+      ** Customer type will always be Address                                               MD036567
+      *                                                                                     MD036567
+     C                   IF        AD#1 = 'Y' Or                                            MD036567
+     C                             AD#2 = 'Y' Or                                            MD036567
+     C                             AD#3 = 'Y' Or                                            MD036567
+     C                             AD#4 = 'Y' Or                                            MD036567
+     C                             AD#5 = 'Y'                                               MD036567
+     C                   MOVEL     'A'           WPORCT                                     MD036567
+     C                   ENDIF                                                              MD036567
       *                                                                                       250600
      C     EXORC         TAG                                                                  250600
      C                   IF        CSW207 = 'Y'                                               250600

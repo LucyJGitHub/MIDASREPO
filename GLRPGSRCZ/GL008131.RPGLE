@@ -20,8 +20,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. CRE095             Date 25Apr14               *
-      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *  Last Amend No. MD037319           Date 26Apr16               *
+      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *                 CGL165             Date 17Feb15               *
       *                 CRE090             Date 14Feb14               *
       *                 CLE148             Date 23Jul12               *
       *                 AR888911           Date 26Jan12               *
@@ -38,6 +39,9 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD037319 - GLC008110 failed, DB error 001 on SDCURRPD.       *
+      *             Missing event currency and customer code on input *
+      *             file GLVCLSPD.                                    *
       *  CRE095 - Rate Fixing for RE Accounts (Recompile)             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CRE090 - Delay Capitalisation of Interest (Recompile)        *
@@ -154,7 +158,7 @@
      D SR@             S              6    DIM(3) CTDATA PERRCD(3)
      D DC@             S             20    DIM(3) CTDATA PERRCD(3)
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
- 
+
      D TotalCHG        S             13P 0 INZ(*ZEROS)
       *
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
@@ -2221,10 +2225,12 @@
       *
      C     T#KEY         IFEQ      'ACCOUNT   '
      C                   MOVE      F1BRCA        BRCA
-     C                   MOVE      F1CNUM        CNUM
+     C**********         MOVE      F1CNUM        CNUM                                       MD037319
+     C                   MOVE      F1CNUM        CNUMA                                      MD037319
      C                   ELSE
      C                   MOVE      T#DBRC        BRCA
-     C                   MOVE      T#DCST        CNUM
+     C**********         MOVE      T#DCST        CNUM                                       MD037319
+     C                   MOVE      T#DCST        CNUMA                                      MD037319
      C                   END
       *
      C     T#KEY         IFEQ      'LOAN      '

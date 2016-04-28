@@ -15,14 +15,22 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
+      *  Last Amend No. AR1066492            Date 26Apr16             *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. BUG14615             Date 21Aug07             *
-      *  Prev Amend No. BUG14467             Date 30Jul07             *
+      *  Prev Amend No. BUG14615             Date 21Aug07             *
+      *                 BUG14467             Date 30Jul07             *
       *                 BUG12080  *CREATE    Date 18Jan07             *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1066492 - Customer type should not be set to W as it causes*
+      *              all records from T_GZCUSTEX are dropped in COB by*
+      *              by SCC0404 (SC002501). Customer type in extension*
+      *              files should be set to customer type from        *
+      *              SDCUSTPD. Also, set DDSTAT field.                *
+      *              (Child: AR1066744)                               *
+      *            - Applied for MD-38014.                            *                             
       *  BUG14615 - Data take-on is falling over due to null values   *
       *  BUG14467 - Wholesale customers created in Day 1 have         *
       *             disappeared                                       *
@@ -135,11 +143,20 @@
      C                   EVAL      TEX_DDCSSN = BBCSSN
      C                   EVAL      TEX_DDCRTN = BBCRTN
      C                   EVAL      TEX_DDCRNM = BBCRNM
-     C                   EVAL      TEX_DDCSTY = 'W'
+     C**********         EVAL      TEX_DDCSTY = 'W'                                        AR1066492
+     C                   EVAL      TEX_DDCSTY = BBCSTY                                     AR1066492
      C                   EVAL      TEX_DDLCCD = BBLCCD
+      *                                                                                    AR1066492
+     C                   SELECT                                                            AR1066492
+     C                   When      BBCLST = 'Y'                                            AR1066492
+     C                   Eval      TEX_DDSTAT = 'C'                                        AR1066492
+     C                   Other                                                             AR1066492
+     C                   Eval      TEX_DDSTAT = BBTYLC                                     AR1066492
+     C                   ENDSL                                                             AR1066492
+      *                                                                                    AR1066492
      C                   WRITE     T_GZCUSTEX
      C                   ENDIF
- 
+
      C                   EVAL      DEX_KDDCUSN = BBCUST
      C                   EVAL      DEX_KZONE   = O#ZONE
      C     KEYDEX        CHAIN     TGZCUSDEX1                         51
@@ -149,15 +166,15 @@
      C                   EVAL      DEX_ZONE   = O#ZONE
      C                   WRITE     T_GZCUSDEX
      C                   ENDIF
- 
+
      C                   READ      SDCUSTPD
      C                   ENDDO
- 
+
       ** End Program and Return to Caller
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -172,26 +189,26 @@
       *  Calls: None                                                  *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
       ** Initialise Program and Module names
- 
+
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = PSProcPgm
      C                   EVAL      DBMOD = PSProcMod
      C                   OUT       LDA
- 
+
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -203,19 +220,19 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     KEYTEX        KLIST
      C                   KFLD                    TEX_KDDCUSN       6
      C                   KFLD                    TEX_KZONE        10
- 
+
      C     KEYDEX        KLIST
      C                   KFLD                    DEX_KDDCUSN       6
      C                   KFLD                    DEX_KZONE        10
- 
+
       ** Get Zone
- 
+
      C                   CALL      'GOGETZONE'
      C                   PARM      *BLANKS       I#RTCD            7            * RETURN CODE
      C                   PARM      *BLANKS       I#ERMS           50            * ERROR MESSAGE
@@ -228,11 +245,11 @@
      C                   PARM                    O#DNWD            5 0
      C                   PARM                    O#BCCY            3
      C                   PARM                    O#NJOB            1 0
- 
+
       ** Defining Data Area
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

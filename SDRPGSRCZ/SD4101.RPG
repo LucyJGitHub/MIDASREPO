@@ -12,12 +12,14 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+      *  Last Amend No. MD037438           Date 11May16               *
+      *  Prev Amend No. AR679658           Date 11May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Last Amend No. CSD031             Date 10Apr06               *
-      *  Prev Amend No. CSD027             Date 09Dec05               *
+      *                 CSD031             Date 10Apr06               *
+      *                 CSD027             Date 09Dec05               *
       *                 CGL029             Date 01Sep03               *
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
@@ -26,6 +28,13 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD037438 - SDC4100 DB error 002 in SD4101 due to closed      *
+      *             account. Added validation if branch exist in file *
+      *             PF/SDBRCHPD before writing into file PF/SDBTGLPD  *
+      *  AR679658 - Component SDC4100 failed due to database error    *
+      *             002 in SD4101. Need to select only live accounts  *
+      *             records. Also, use @DSNB to show the correct      *
+      *             DBKEY. (Child: AR679659). Applied for MD037438    *
       *  CSD031 - Enhanced Centralised Static Data (Recompile)        *
       *  CSD027 - Conversion Of Customer Number to Alpha              *
       *  CGL029 - Increase Account Code to 10 digits                  *
@@ -53,7 +62,8 @@
       * Transaction file to be processed
       *
      F***********ACCNTL0 IF  E           K        DISK                    CSD004
-     FACCNTL5 IF  E           K        DISK                               CSD004
+     F***ACCNTL5 IF  E           K        DISK                                       CSD004 AR679658
+     FACCNTSG IF  E           K        DISK                                                 AR679658
       *
       * Business Transaction Statistics temporary file
       * for todays data
@@ -154,11 +164,13 @@
       *
       ** Read Transaction File until EOF
       ***ACCNTL0*contains*live*records*only****************************   CSD004
-      ** ACCNTL5 contains live records only                               CSD004
+      ***ACCNTL5*contains*live*records*only****************************              CSD004 AR679658
+      ** ACCNTSG contains live records only                                                 AR679658
       *
      C           *IN01     DOUEQ'1'
      C***********          READ ACCNTL0                0101               CSD004
-     C                     READ ACCNTL5                0101               CSD004
+     C**********           READ ACCNTL5                0101                          CSD004 AR679658
+     C                     READ ACCNTSG                0101                                 AR679658
       *                                                                   CSD004
       ** Process if record found                                          CSD004
       *                                                                   CSD004
@@ -173,10 +185,21 @@
       ** SDBTGLPD                                                         CSD004
      C           BRCA      IFNE UCBRCA                                    CSD004
      C                     MOVE UCBRCA    @DSNB                           CSD004
+      *                                                                                     MD037438
+      ** Validate branch code                                                               MD037438
+      *                                                                                     MD037438
+     C                     CALL 'AOBRCHR0'                                                  MD037438
+     C                     PARM           @RTCD   7                                         MD037438
+     C                     PARM '*KEY   ' @OPTN   7                                         MD037438
+     C                     PARM           @DSNB   3                                         MD037438
+     C           SDBRCH    PARM SDBRCH    @FMT                                              MD037438
+      *                                                                                     MD037438
+     C           @RTCD     IFEQ *BLANKS                                                     MD037438
      C                     EXSR RVBRCA                                    CSD004
      C                     EXSR OUTPUT                                    CSD004
      C                     MOVELBRCA      UCBRCA                          CSD004
      C                     Z-ADD0         RTTLV                           CSD004
+     C                     ENDIF                                                            MD037438
      C                     ENDIF                                          CSD004
       *
       ** If record found - include it in today's count
@@ -189,7 +212,8 @@
       *                                                                   CSD004
      C                     ELSE                                           CSD004
       *
-      ** End of the file / ACCNTL5                                        CSD004
+      ***End*of*the*file*/*ACCNTL5*************************************              CSD004 AR679658
+      ** End of the file / ACCNTSG                                                          AR679658
       ** At least one record found                                        CSD004
      C           UCBRCA    IFNE *HIVAL                                    CSD004
      C                     MOVE BRCA      @DSNB                           CSD004
@@ -291,7 +315,8 @@
      C                     Z-ADD002       DBASE                           CSD004
      C                     MOVEL'SD4101'  DBPGM            ************** CSD004
      C                     MOVEL'SDBRCHPD'DBFILE           *DB ERROR 002* CSD004
-     C                     MOVELBRCA      DBKEY            ************** CSD004
+     C**********           MOVELBRCA      DBKEY            **************            CSD004 AR679658
+     C                     MOVEL@DSNB     DBKEY                                             AR679658
      C                     OUT  LDA                                       CSD004
      C                     EXSR *PSSR                                     CSD004
      C                     END                                            CSD004

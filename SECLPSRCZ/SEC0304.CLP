@@ -17,12 +17,13 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. CCB023             Date 06Aug12             */
+/*       Last Amend No. 261402             Date 11May16              */
+/*       Prev Amend No. CCB023             Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Prev Amend No. BUG8853            Date 10Oct05              */
+/*                      BUG8853            Date 10Oct05              */
 /*                      CGP001             Date 23May03              */
 /*                      CSW203             Date 26May03              */
 /* Midas Release 4.01 -----------------------------------------------*/
@@ -57,6 +58,9 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*       261402 - Duplicate records in MGF51NPD after restart of     */
+/*                SEC05.                                             */
+/*              - Applied for MD-37893.                              */
 /*  CCB023 - COB Restructure - Input Cycle Termination              */
 /*           Restructuring                                          */
 /*  BUG8853- Ensure error processing is performed after calling     */
@@ -222,8 +226,8 @@
 /**/
 /*           CHGVAR     VAR(&PARM1) VALUE(%SST(&SESTAT 62 1))*S01169*  *E16903*/
              CHGVAR     VAR(&PARM1) VALUE(%SST(&SESTAT 61 1))         /*E16903*/
- 
- 
+
+
 /*  CONFIRMATIONS CANNOT BE RUN IF THEY ARE ALREADY BEING      */     /*S01271*/
 /*  PRINTED.                                                   */     /*S01271*/
 /***                                                           */     /*S01271*/
@@ -495,7 +499,7 @@ TAGB:        CHGDTAARA (SESTAT (76 1)) VALUE('B')                     /*S01401*/
                           Correspondence Extract failure')            /*S01522*/
              GOTO       CMDLBL(ERROR)                                 /*S01522*/
              ENDDO                                                    /*S01522*/
- 
+
 /* 088442 - Ensure only items suppressed by UDC are processed by   */ /*088442*/
 /* SE0550 if UDC switched on.                                      */ /*088442*/
 /*           OVRDBF     FILE(TRDCONF) TOFILE(TRDCONFS)    /*088442*/  /*CSE006*/
@@ -533,7 +537,7 @@ TAGC:        CHGDTAARA (SESTAT (76 1)) VALUE('C')                     /*S01401*/
                           Correspondence Extract failure')            /*S01522*/
              GOTO       CMDLBL(ERROR)                                 /*S01522*/
              ENDDO                                                    /*S01522*/
- 
+
 /* 088442 - Ensure only items suppressed by UDC are processed by   */ /*088442*/
 /* SE0560 if UDC switched on.                                      */ /*088442*/
              OVRDBF     FILE(DPTCONF) TOFILE(DPTCONFS)                /*088442*/
@@ -641,6 +645,11 @@ ERROR:                                                                /*S01401*/
              ENDDO                                                                        /*205448*/
              ROLLBACK                                                 /*S01401*/
              MONMSG     MSGID(CPF0000 MCH0000)                        /*S01522*/
+             RTVDTAARA DTAARA(SESTAT) RTNVAR(&SESTAT)                                     /*261402*/
+             MONMSG     MSGID(CPF0000 MCH0000)                                            /*261402*/
+             IF (%SST(&SESTAT 76 1) *EQ 'A') THEN(DO)                                     /*261402*/
+             CLRPFM     FILE(MGF51NPD)                                                    /*261402*/
+             ENDDO                                                                        /*261402*/
                                                                                          /*BUG8853*/
 /* Set on switches 7 and 8 to ensure error processing is performed.                   */ /*BUG8853*/
                                                                                          /*BUG8853*/

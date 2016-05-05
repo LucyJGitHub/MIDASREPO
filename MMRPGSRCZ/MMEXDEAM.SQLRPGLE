@@ -2,6 +2,7 @@
      H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2006')
       *****************************************************************
 /*STD *  RPGSQLMOD                                                    *
+/*EXI *  DATFMT(*ISO)                                                 *                     MD037445
 /*EXI *  TEXT('Midas MM Drop records from T_GZDEAMEX per zone')
       *****************************************************************
       *                                                               *
@@ -11,14 +12,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2006            *
       *                                                               *
-      *  Last Amend No. CSF011             Date 12Sep11               *
-      *  Prev Amend No. AR828639           Date 13Sep11               *
+      *  Last Amend No. MD037445           Date 11May16               *
+      *  Prev Amend No. CSF011             Date 12Sep11               *
+      *                 AR828639           Date 13Sep11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 237113             Date 06Apr06               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037445 - Failed component SCC041119 00001 during COB run   *
       *  CSF011 - Customer Name on Inputs (Recompile)                 *
       *  AR828639 - MMEXDEAM compare (Recompile)                      *
       *  237113 - Drop records from extension file T_GZDEAMEX if not  *

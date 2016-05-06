@@ -21,8 +21,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. CDL096             Date 22Sep14               *
+      *  Last Amend No. MD036289A          Date 11May16               *
+      *  Prev Amend No. MD036289           Date 11May16               *
+      *                 CGL165             Date 17Feb15               *
+      *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
       *                 AR720506           Date 19Aug14               *
       *                 258435             Date 20Jan09               *
@@ -106,6 +108,13 @@
       *             switched on.  Any changes made to this program    *
       *             should be duplicated in DL0410.                   *
       *                                                               *
+      *  MD036289A - UseForwardRateReval is not checked correctly.    *
+      *              Remove also unnecessary codes in setting up      *
+      *              rates and dates.                                 *
+      *            - Applied for MD038095.                            *
+      *  MD036289 - Forward rate is wrong. Rate interpolation should  *
+      *             be done for dates in between.                     *
+      *           - Applied for MD038095.                             *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  CDL096 - Business Day Conventions on MM Deals                *
       *           (Recompile)                                         *
@@ -1494,30 +1503,37 @@
       *                                                                                     AR720506
      C           WUFWR     IFEQ 'Y'                                                         AR720506
       *                                                                                     AR720506
-     C                     SELEC                                                            AR720506
-      *                                                                                     AR720506
-     C           DFW,1     WHEQ 1                                                           AR720506
-     C           DFW,2     ANDEQ2                                                           AR720506
-     C           *IN40     ANDEQ*OFF                                                        AR720506
-     C                     MOVEARFW       RAT                                               AR720506
-      *                                                                                     AR720506
-     C           DFW,1     WHEQ 1                                                           AR720506
-     C           DFW,2     ANDGT2                                                           AR720506
-     C           *IN40     ANDEQ*OFF                                                        AR720506
-     C           DFW,1     OREQ 2                                                           AR720506
-     C           DFW,2     ANDGT2                                                           AR720506
-     C           *IN40     ANDEQ*OFF                                                        AR720506
-     C                     Z-ADDRFW,1     RAT,1                                             AR720506
-     C                     Z-ADDRFW,1     RAT,2                                             AR720506
-     C                     MOVEARFW,2     RAT,3                                             AR720506
-      *                                                                                     AR720506
-     C                     OTHER                                                            AR720506
+     C**********           SELEC                                                  AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C********** DFW,1     WHEQ 1                                                 AR720506 MD036289A
+     C********** DFW,2     ANDEQ2                                                 AR720506 MD036289A
+     C********** *IN40     ANDEQ*OFF                                              AR720506 MD036289A
+     C**********           MOVEARFW       RAT                                     AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C********** DFW,1     WHEQ 1                                                 AR720506 MD036289A
+     C********** DFW,2     ANDGT2                                                 AR720506 MD036289A
+     C********** *IN40     ANDEQ*OFF                                              AR720506 MD036289A
+     C********** DFW,1     OREQ 2                                                 AR720506 MD036289A
+     C********** DFW,2     ANDGT2                                                 AR720506 MD036289A
+     C********** *IN40     ANDEQ*OFF                                              AR720506 MD036289A
+     C**********           Z-ADDRFW,1     RAT,1                                   AR720506 MD036289A
+     C**********           Z-ADDRFW,1     RAT,2                                   AR720506 MD036289A
+     C**********           MOVEARFW,2     RAT,3                                   AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C**********           OTHER                                                  AR720506 MD036289A
+     C           RS        IFEQ 'S'                                                        MD036289A
      C                     Z-ADDA6SPRT    RAT,1                                             AR720506
-     C                     Z-ADDA6SPRT    RAT,2                                             AR720506
-     C                     MOVEARFW       RAT,3                                             AR720506
+     C**********           Z-ADDA6SPRT    RAT,2                                    AR720506 MD036289
+     C**********           MOVEARFW       RAT,3                                    AR720506 MD036289
+     C                     Z-ADDA6SPRT    RAT,2                                            MD036289A
+     C                     MOVEARFW       RAT,3                                            MD036289A
+     C                     ELSE                                                            MD036289A
+     C                     Z-ADDA6SPRT    RAT,1                                            MD036289A
+     C                     MOVEARFW       RAT,2                                             MD036289
+     C                     ENDIF                                                           MD036289A
       *                                                                                     AR720506
-     C                     ENDSL                                                            AR720506
-      *                                                                                     AR720506
+     C**********           ENDSL                                                  AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
      C                     ELSE                                                             AR720506
       *
       **  Element 1 of rate array contains spot rate.
@@ -3187,6 +3203,7 @@
       **  are calculated from spot date.                                  136239
       *                                                                   136239
      C           RS        IFEQ 'S'                                                           258435
+     C           WUFWR     ANDEQ'Y'                                                        MD036289A
      C                     Z-ADDBJRDNB    ZDAYNO                          136239
      C                     MOVE ECCY      ZCCY                            136239
      C                     MOVE *BLANKS   ZLOC                            136239
@@ -3194,46 +3211,52 @@
      C                     EXSR ZFWDTA                                    136239
      C/COPY WNCPYSRC,DL0411C101
      C                     Z-ADDZDYNBR    @BASE   50                      136239
+     C                     Z-ADD@BASE     DAT,2                                            MD036289A
+     C                     Z-ADD3         N                                                MD036289A
      C                     ELSE                                                               258435
      C                     Z-ADDBJRDNB    @BASE                                               258435
+     C                     Z-ADD2         N                                                MD036289A
      C                     END                                                                258435
-      *                                                                   136239
-      **  Increment Spot date by number of Forward Days                   136239
-      *                                                                   136239
-     C                     Z-ADD2         N                               136239
+      ****************************************************************              136239 MD036289A
+      ****Increment*Spot*date*by*number*of*Forward*Days***************              136239 MD036289A
+      ****************************************************************              136239 MD036289A
+     C**********           Z-ADD2         N                                         136239 MD036289A
      C***********          Z-ADD2         Y       20               136239 170442
      C/COPY WNCPYSRC,DL0411C094
-     C                     Z-ADD1         Y       20                      170442
+     C**********           Z-ADD1         Y       20                                170442 MD036289A
      C/COPY WNCPYSRC,DL0411C095
       *                                                                   136239
      C**********           Z-ADD@BASE     DAT,N                                        136239 262151
      C**********           ADD  1         N                                            136239 262151
-      *                                                                                     AR720506
-     C           WUFWR     IFEQ 'Y'                                                         AR720506
-      *                                                                                     AR720506
-     C                     SELEC                                                            AR720506
-      *                                                                                     AR720506
-     C           DFW,1     WHEQ 1                                                           AR720506
-     C           DFW,2     ANDEQ2                                                           AR720506
-     C                     Z-ADD2         N                                                 AR720506
-     C                     Z-ADD2         Y                                                 AR720506
-      *                                                                                     AR720506
-     C           DFW,1     WHEQ 1                                                           AR720506
-     C           DFW,2     ANDGT2                                                           AR720506
-     C           DFW,1     OREQ 2                                                           AR720506
-     C           DFW,2     ANDGT2                                                           AR720506
-     C                     Z-ADD2         N                                                 AR720506
-     C                     Z-ADD1         Y                                                 AR720506
-      *                                                                                     AR720506
-     C                     ENDSL                                                            AR720506
-      *                                                                                     AR720506
-     C                     ENDIF                                                            AR720506
+      **********                                                                  AR720506 MD036289A
+     C********** WUFWR     IFEQ 'Y'                                               AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C**********           SELEC                                                  AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C********** DFW,1     WHEQ 1                                                 AR720506 MD036289A
+     C********** DFW,2     ANDEQ2                                                 AR720506 MD036289A
+     C**********           Z-ADD2         N                                       AR720506 MD036289A
+     C**********           Z-ADD2         Y                                       AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C********** DFW,1     WHEQ 1                                                 AR720506 MD036289A
+     C********** DFW,2     ANDGT2                                                 AR720506 MD036289A
+     C********** DFW,1     OREQ 2                                                 AR720506 MD036289A
+     C********** DFW,2     ANDGT2                                                 AR720506 MD036289A
+     C**********           Z-ADD2         N                                       AR720506 MD036289A
+     C**********           Z-ADD1         Y                                       AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C**********           ENDSL                                                  AR720506 MD036289A
+      **********                                                                  AR720506 MD036289A
+     C**********           ENDIF                                                  AR720506 MD036289A
       *                                                                   136239
+     C                     Z-ADD1         Y       20                                       MD036289A
      C           N         DOWLE25                                        136239
      C           DFW,Y     ANDNE0                                         136239
      C           WC        IFEQ 'C'                                                           258435
+     C           WUFWR     ORNE 'Y'                                                        MD036289A
      C********** @BASE     ADD  DFW,Y     DAT,N                                        136239 262151
-     C           BJRDNB    ADD  DFW,Y     DAT,N                                               262151
+     C********** BJRDNB    ADD  DFW,Y     DAT,N                                     262151 MD036289A
+     C           @BASE     ADD  DFW,Y     DAT,N                                            MD036289A
      C                     ELSE                                                               258435
      C                     Z-ADD@BASE     ZDAYNO                                              258435
      C                     MOVE ECCY      ZCCY                                                258435

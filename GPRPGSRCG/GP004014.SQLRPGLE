@@ -15,8 +15,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. AR1097353          Date 26Mar13               *
-      *  Prev Amend No. AR1036892          Date 27Sep12               *
+      *  Last Amend No. MD035824A          Date 29Oct15               *
+      *  Prev Amend No. MD035824           Date 11Sep15               *
+      *                 AR1097353          Date 26Mar13               *
+      *                 AR1036892          Date 27Sep12               *
       *                 AR1028208          Date 05Sep12               *
       *                 AR1027797          Date 03Sep12               *
       *                 AR1025965          Date 31Aug12               *
@@ -25,6 +27,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035824A - Host and Host Module in Permission Audit Report  *
+      *              is not descriptive/readable (Reopen)             *
+      *  MD035824 - Host and Host Module in Permission Audit Report   *
+      *             is not descriptive/readable                       *
       *  AR1097353 - No Event code Audit Report was generated.        *
       *              Additional fix for AR1096060.                    *
       *  AR1036892 - Transaction not approved during CoB run and      *
@@ -118,7 +124,9 @@
      D  BFSHONAM                    258A
      D  BFLONGNM                    258A
      D  BFHOSTID                    102A
+     D  BFHIDDSC                    102A                                                   MD035824
      D  BFHMODID                    102A
+     D  BFMIDDSC                    102A                                                   MD035824
      D  BFZONEID                      2A
      D  BFALLCOB                      2A
      D  BFMODDBY                     32A
@@ -128,7 +136,8 @@
      D  BFRAPRBY                     32A
      D  BFAPRDAT                     26A
  
-     D NullIndDs       S              5I 0 DIM(13)
+     D*NullIndDs       S              5I 0 DIM(13)                                         MD035824A
+     D NullIndDs       S              5I 0 DIM(15)                                         MD035824A
  
       ** Input Parameter for ZDATEO
      D                 DS
@@ -207,7 +216,9 @@
      C+  A.BFSHORTDESCRIPTION,
      C+  A.BFLONGDESCRIPTION,
      C+  C.BFHOSTIDPK,
+     C+  B.BFHOSTMODULESHORTNAME,                                                          MD035824
      C+  A.BFHOSTMODULEID,
+     C+  C.BFHOSTSHORTNAME,                                                                MD035824
      C+  D.BFZONE,
      C+  D.BFALLOWINCOB,
      C+  A.BFRECLASTMODIFIEDBY,
@@ -327,11 +338,13 @@
       ** Change Date
  
      C                   IF        BFLSTMOD <> *BLANKS
-     C                   IF        NullIndDs(10) = 0
+     C**********         IF        NullIndDs(10) = 0                                       MD035824A
+     C                   IF        NullIndDs(12) = 0                                       MD035824A
      C                   EVAL      RCDAT = BFLSTMOD
      C                   ENDIF
      C                   ELSE
-     C                   IF        NullIndDs(11) = 0
+     C**********         IF        NullIndDs(11) = 0                                       MD035824A
+     C                   IF        NullIndDs(13) = 0                                       MD035824A
      C                   EVAL      RCDAT = BFRCRTON
      C                   ENDIF
      C                   ENDIF
@@ -340,11 +353,13 @@
  
      C                   IF        BFLSTMOD <> *BLANKS
      C**********         IF        NullIndDs(11) = 0                                       AR1026014
-     C                   IF        NullIndDs(10) = 0                                       AR1026014
+     C**********         IF        NullIndDs(10) = 0                             AR1026014 MD035824A
+     C                   IF        NullIndDs(12) = 0                                       MD035824A
      C                   EVAL      RTIME = BFLSTMOD
      C                   ENDIF
      C                   ELSE
-     C                   IF        NullIndDs(11) = 0
+     C**********         IF        NullIndDs(11) = 0                                       MD035824A
+     C                   IF        NullIndDs(13) = 0                                       MD035824A
      C                   EVAL      RTIME = BFRCRTON
      C                   ENDIF
      C                   ENDIF
@@ -363,13 +378,15 @@
  
       ** Authorisation Date
  
-     C                   IF        NullIndDs(13) = 0
+     C**********         IF        NullIndDs(13) = 0                                       MD035824A
+     C                   IF        NullIndDs(15) = 0                                       MD035824A
      C                   EVAL      RAUDT = BFAPRDAT
      C                   ENDIF
  
       ** Authorisation Timestamp
  
-     C                   IF        NullIndDs(13) = 0                                       AR1028208
+     C**********         IF        NullIndDs(13) = 0                             AR1028208 MD035824A
+     C                   IF        NullIndDs(15) = 0                                       MD035824A
      C                   EVAL      RATIM = BFAPRDAT
      C                   ENDIF                                                             AR1028208
  
@@ -393,13 +410,17 @@
  
       ** Host
  
-     C                   EVAL      RHOS1 = %SUBST(BFHOSTID:1:51)
-     C                   EVAL      RHOS2 = %SUBST(BFHOSTID:52:51)
+     C**********         EVAL      RHOS1 = %SUBST(BFHOSTID:1:51)                           MD035824
+     C**********         EVAL      RHOS2 = %SUBST(BFHOSTID:52:51)                          MD035824
+     C                   EVAL      RHOS1 = %SUBST(BFHIDDSC:1:51)                           MD035824
+     C                   EVAL      RHOS2 = %SUBST(BFHIDDSC:52:51)                          MD035824
  
       ** Host Module
  
-     C                   EVAL      RHMO1 = %SUBST(BFHMODID:1:51)
-     C                   EVAL      RHMO2 = %SUBST(BFHMODID:52:51)
+     C**********         EVAL      RHMO1 = %SUBST(BFHMODID:1:51)                           MD035824
+     C**********         EVAL      RHMO2 = %SUBST(BFHMODID:52:51)                          MD035824
+     C                   EVAL      RHMO1 = %SUBST(BFMIDDSC:1:51)                           MD035824
+     C                   EVAL      RHMO2 = %SUBST(BFMIDDSC:52:51)                          MD035824
  
      C                   EVAL      wPerNam = BFPERNAM
                                                                                            AR1027797
@@ -444,7 +465,8 @@
      C/END-EXEC
  
       ** Allow in COB
-     C                   IF        NullIndDs(7) <> -1
+     C**********         IF        NullIndDs(7) <> -1                                      MD035824A
+     C                   IF        NullIndDs(9) <> -1                                      MD035824A
      C                   EVAL      RALOW = BFALLCOB
      C                   ELSE
      C                   EVAL      RALOW = ' '
@@ -559,7 +581,8 @@
      C                   EVAL      ZDayNo4 = 0
  
      C**********         IF        NullIndDs(11) = 0                                       AR1026014
-     C                   IF        NullIndDs(10) = 0                                       AR1026014
+     C**********         IF        NullIndDs(10) = 0                             AR1026014 MD035824A
+     C                   IF        NullIndDs(12) = 0                                       MD035824A
      C                   EVAL      TmpDat03 = %DATE(%SUBST(BFLSTMOD:1:10):*ISO)
      C                   EVAL      DatNum03 = %DEC(TmpDat03)
      C                   EVAL      PDateIN  = DatNum03
@@ -570,7 +593,8 @@
      C**********         IF        NullIndDs(11) = 0                                       AR1036892
      C**********         EVAL      TmpDat04 = %DATE(%SUBST(BFRCRTON:1:10):*ISO)            AR1036892
      C**********         EVAL      DatNum04 = %DEC(TmpDat03)                               AR1025965
-     C                   IF        NullIndDs(13) = 0                                       AR1036892
+     C**********         IF        NullIndDs(13) = 0                             AR1036892 MD035824A
+     C                   IF        NullIndDs(15) = 0                                       MD035824A
      C                   EVAL      TmpDat04 = %DATE(%SUBST(BFAPRDAT:1:10):*ISO)            AR1036892
      C                   EVAL      DatNum04 = %DEC(TmpDat04)                               AR1025965
      C                   EVAL      PDateIN  = DatNum04

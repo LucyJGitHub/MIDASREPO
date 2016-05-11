@@ -13,8 +13,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. MD024006A *REWRITE Date 08Jan14              */
-/*       Prev Amend No. MD024006           Date 12Dec13              */
+/*       Last Amend No. MD036885           Date 11May16              */
+/*       Prev Amend No. MD024006A *REWRITE Date 08Jan14              */
+/*                      MD024006           Date 12Dec13              */
 /*                      MD023005A          Date 31Oct13              */
 /*                      MD023005           Date 23Oct13              */
 /*                      MD022941           Date 18Oct13              */
@@ -27,6 +28,7 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD036885 - Close of business component CBC022001            */
 /*       MD024006A - Rewrite to simplify generic component again     */
 /*       MD024006 - Inefficiency in COB File Manager                 */
 /*       MD023005A - Duplicate key values not ignored                */
@@ -60,6 +62,7 @@
              DCL        VAR(&PFADDRTN) TYPE(*INT)
              DCL        VAR(&ADDMBRRTN) TYPE(*INT)
              DCL        VAR(&RMVRTN) TYPE(*INT)
+             DCL        VAR(&ERRFOUND) TYPE(*CHAR) LEN(1)                               /*MD036885*/
  
              DCLF       FILE(CHG022001T) OPNID(CHG)
              DCLF       FILE(RGZ022001T) OPNID(RGZ)
@@ -549,6 +552,8 @@ ADDLOOP:
 /** Execute the ADDLFM. */
  
              CHGVAR     VAR(&LOOPCOUNT) VALUE(1)
+             CHGVAR     VAR(&ERRFOUND) VALUE(' ')                                       /*MD036885*/
+                                                                                        /*MD036885*/
  ADDMBR:
              IF         COND(&LOOPCOUNT *LT 4) THEN(DO)
                 CALL       PGM(QCMDEXC) PARM(&ADDLFM &CMDLEN)
@@ -567,6 +572,19 @@ ADDLOOP:
                       CHGVAR     VAR(&LOOPCOUNT) VALUE(&LOOPCOUNT + 1)
                       GOTO       CMDLBL(ADDMBR)
                    ENDDO
+
+                                                                                        /*MD036885*/
+/** Error in adding memeber */                                                          /*MD036885*/
+                                                                                        /*MD036885*/
+                   ELSE       CMD(DO)                                                   /*MD036885*/
+                      CHGVAR     VAR(&ERRFOUND) VALUE('Y')                              /*MD036885*/
+                      CHGJOB     SWS(XXXXXX11)                                          /*MD036885*/
+                      SNDPGMMSG  MSG('Program CBC022001 failed to add member +
+                                     ' *CAT &MEMBER *TCAT ' to file ' *CAT +
+                                     &FILE *TCAT '.') TOMSGQ(MOPERQ)                    /*MD036885*/
+                   ENDDO                                                                /*MD036885*/
+                                                                                        /*MD036885*/
+
                 ENDDO
              ENDDO
              ELSE       CMD(DO)
@@ -577,11 +595,15 @@ ADDLOOP:
 /** If the member was added successfully then remove record(s) */
 /** from SCFMBRTD. */
  
+             IF         COND(&ERRFOUND *EQ ' ') THEN(DO)                                /*MD036885*/
+                                                                                        /*MD036885*/
              CALL       PGM(CB022001) PARM('*DEL' &FILE &MEMBER 0 ' ')
              IF         COND(&MBRCOUNT *LT &NOOFMBRS) THEN(DO)
                 CHGVAR     VAR(&MBRCOUNT) VALUE(&MBRCOUNT + 1)
                 GOTO       CMDLBL(ADDLOOP)
              ENDDO
+                                                                                        /*MD036885*/
+             ENDDO                                                                      /*MD036885*/
  
  ADDMBREND:
              ENDSUBR    RTNVAL(&ADDMBRRTN)

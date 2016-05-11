@@ -14,8 +14,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. LLN022             Date 03Jun15               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. AR1003366          Date 11May16               *
+      *  Prev Amend No. AR981842           Date 11May16               *
+      *                 LLN022             Date 03Jun15               *
+      *                 CER070             Date 19Aug14               *
       *                 CFT050             Date 03Jun13               *
       *                 AR787620           Date 10Jun11               *
       *                 CER059             Date 19Jul10               *
@@ -49,6 +51,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1003366- Decimal-data error occurred in ILE/SDCUSDCVT.     *
+      *             Change parameter lists of called program SDCUSDCVT*
+      *             in SR/CVTCUS. (Child: AR1003367)                  *
+      *           - Applied for MD034103.                             *
+      *  AR981842 - Database error due to parameter mismatch. Match   *
+      *             parameters with SDCUSDBRW, SDCUSDRTV and SDCUSDCVT*
+      *             (Child: AR981843)                                 *
+      *           - Applied for MD034103.                             *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  LLN022 - BOE Upgrade to MidasPlus.                           *
@@ -287,6 +297,145 @@
  
       ** 24X7 status data area
      D SC24X7        E DS                  EXTNAME(SC24X7) DTAARA(SC24X7)
+                                                                                            AR981842
+      ** (Current) Marketing Info Details in file Format                                    AR981842
+     D CumiFilFmt    E DS                  EXTNAME(SDCMRKPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Additional Customer Details in file Format                               AR981842
+     D CuadFilFmt    E DS                  EXTNAME(SDACUSPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Service Fees Details in file Format                                      AR981842
+     D SfeeFilFmt    E DS                  EXTNAME(SDCFCDPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Cheques and Cards Details in file Format                                 AR981842
+     D ChecFilFmt    E DS                  EXTNAME(SDCHEQPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Safe Details in file Format                                              AR981842
+     D CusfFilFmt    E DS                  EXTNAME(SDSAFEPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Risk weighted assets in file Format                                      AR981842
+     D RwanFilFmt    E DS                  EXTNAME(SDCRWAPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Future and Option in file Format                                         AR981842
+     D CufoFilFmt    E DS                  EXTNAME(SDFOCSPD)                                AR981842
+     D Q1SMAC        E                     EXTFLD(QQSMAC)                                   AR981842
+                                                                                            AR981842
+      ** (Current) Portfolio Management in file Format                                      AR981842
+     D CupmFilFmt    E DS                  EXTNAME(SDPLCSPD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Fn in file Format                                                        AR981842
+     D CufnFilFmt    E DS                  EXTNAME(SDFOX1PD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Lux(European Reporting) in file format                                   AR981842
+     D CueuFilFmt    E DS                  EXTNAME(SDCUX2PD)                                AR981842
+                                                                                            AR981842
+      ** (Current) Lux(IBLC - Extended Information) in file format                          AR981842
+     D CuibfFilFmt   E DS                  EXTNAME(SDCUX1PD)                                AR981842
+                                                                                            AR981842
+      ** Valid Marketing Info Details layout                                                AR981842
+     D ValidCumi     E DS                  EXTNAME (SDVCUMIPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Additional Customer Details layout                                           AR981842
+     D ValidCuad     E DS                  EXTNAME (SDVCUADPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Service Fees Details layout                                                  AR981842
+     D ValidSfee     E DS                  EXTNAME (SDVSFEEPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Cheques and Cards Details layout                                             AR981842
+     D ValidChec     E DS                  EXTNAME (SDVCHECPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Safe Details layout                                                          AR981842
+     D ValidCusf     E DS                  EXTNAME (SDVCUSFPD)                              AR981842
+     D                                     PREFIX (V_CF)                                    AR981842
+                                                                                            AR981842
+      ** Valid Risk weighted assets layout                                                  AR981842
+     D ValidRwan     E DS                  EXTNAME (SDVRWANPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Future and Option layout                                                     AR981842
+     D ValidCufo     E DS                  EXTNAME (SDVCUFOPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Portfolio Management Details layout                                          AR981842
+     D ValidCupm     E DS                  EXTNAME (SDVCUPMPD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Fn Details layout                                                            AR981842
+     D ValidCufn     E DS                  EXTNAME (SDVFOX1PD)                              AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Lux(European Reporting) Details file                                         AR981842
+     D ValidCulx2    E DS                  EXTNAME (SDVCULX2PD)                             AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** Valid Lux(IBLC - Extended Information) Details file                                AR981842
+     D ValidCulx1    E DS                  EXTNAME (SDVCULX1PD)                             AR981842
+     D                                     PREFIX (V_)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Service Fees                                 AR981842
+     D CurCuSfee     E DS                  EXTNAME (SDSFEEPD)                               AR981842
+     D                                     PREFIX (K@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Cheques and Cards                            AR981842
+     D CurCuChec     E DS                  EXTNAME (SDCHECPD)                               AR981842
+     D                                     PREFIX (L@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Safe Details                                 AR981842
+     D CurCuCusf     E DS                  EXTNAME (SDCUSFPD)                               AR981842
+     D                                     PREFIX (M@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Fx Netting                                   AR981842
+     D CurCuCufx     E DS                  EXTNAME (SDCUFXPD)                               AR981842
+     D                                     PREFIX (N@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Fiduciary Details                            AR981842
+     D CurCuCufd     E DS                  EXTNAME (SDCUFDPD)                               AR981842
+     D                                     PREFIX (O@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Risk weighted assets                         AR981842
+     D CurCuRwan     E DS                  EXTNAME (SDRWANPD)                               AR981842
+     D                                     PREFIX (P@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Future and Option                            AR981842
+     D CurCuCufo     E DS                  EXTNAME (SDCUFOPD)                               AR981842
+     D                                     PREFIX (Q@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Portfolio Management                         AR981842
+     D CurCuCupm     E DS                  EXTNAME (SDCUPMPD)                               AR981842
+     D                                     PREFIX (R@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - TI Details                                   AR981842
+     D CurCuTicd     E DS                  EXTNAME (SDTICDPD)                               AR981842
+     D                                     PREFIX (S@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) European Reporting & IBLC  Extended Information                          AR981842
+      ** Screen Format - Details                                                            AR981842
+     D CurCuCurx     E DS                  EXTNAME (SDCURXPD)                               AR981842
+     D                                     PREFIX (X@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Message Routing Details                      AR981842
+     D CurCuMsrt     E DS                  EXTNAME(SDCUMRPD)                                AR981842
+     D                                     PREFIX(E@)                                       AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Base Rate Tax Details                        AR981842
+     D CurCuBrTx     E DS                  EXTNAME(SDCUBRPD)                                AR981842
+     D                                     PREFIX(F@)                                       AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Marketing Info Details                       AR981842
+     D CurCuCumi     E DS                  EXTNAME (SDCUMIPD)                               AR981842
+     D                                     PREFIX (I@)                                      AR981842
+                                                                                            AR981842
+      ** (Current) Customer in Screen Format - Additional Customer                          AR981842
+     D CurCuCuad     E DS                  EXTNAME (SDCUADPD)                               AR981842
+     D                                     PREFIX (J@)                                      AR981842
+                                                                                            AR981842
+      ** Valid TI details layout                                                            AR981842
+     D ValidTIcd     E DS                  EXTNAME(SDVTICDPD)                               AR981842
+     D                                     PREFIX(V_)                                       AR981842
  
       ** Changed Party Names Array
      D ChgNamArr       S              1    DIM(5)
@@ -1514,6 +1663,7 @@ e3   C                   ENDIF                                                  
       ** Customer Reference Selected
  
      C                   PARM      *BLANK        @ERRMS
+     C                   PARM                    @data                                      AR981842
      C/COPY WNCPYSRC,SDH00081
      C                   PARM      *BLANK        @OPSEL
      C                   PARM      *BLANK        WCustSel
@@ -1715,6 +1865,17 @@ e3   C                   ENDIF                                                  
      C                   PARM                    GCrCuFilFmt
      C                   PARM                    CrSwFilFmt                                   CSW207
      C                   PARM                    CuSW13                                       CFT050
+     C                   PARM                    CumiFilFmt                                 AR981842
+     C                   PARM                    CuadFilFmt                                 AR981842
+     C                   PARM                    SfeeFilFmt                                 AR981842
+     C                   PARM                    ChecFilFmt                                 AR981842
+     C                   PARM                    CusfFilFmt                                 AR981842
+     C                   PARM                    RwanFilFmt                                 AR981842
+     C                   PARM                    CufoFilFmt                                 AR981842
+     C                   PARM                    CufnFilFmt                                 AR981842
+     C                   PARM                    CupmFilFmt                                 AR981842
+     C                   PARM                    CueuFilFmt                                 AR981842
+     C                   PARM                    CuibfFilFmt                                AR981842
      C/COPY WNCPYSRC,SDH00082
      C                   PARM                    TranInCUAH                                   CER059
      C                   PARM                    TranInCCTX                                   CER059
@@ -1830,6 +1991,27 @@ e3   C                   ENDIF                                                  
      C                   PARM                    CrCuFilFmt
      C                   PARM                    CrBrFilFmt
      C                   PARM                    CrPBFilFmt
+     C**********         PARM                    ValidCumi                       AR981842  AR1003366
+     C**********         PARM                    ValidCuad                       AR981842  AR1003366
+     C**********         PARM                    ValidSfee                       AR981842  AR1003366
+     C**********         PARM                    ValidChec                       AR981842  AR1003366
+     C**********         PARM                    ValidCusf                       AR981842  AR1003366
+     C**********         PARM                    ValidRwan                       AR981842  AR1003366
+     C**********         PARM                    ValidCufo                       AR981842  AR1003366
+     C**********         PARM                    ValidCufn                       AR981842  AR1003366
+     C**********         PARM                    ValidCupm                       AR981842  AR1003366
+     C                   PARM                    CumiFilFmt                                AR1003366
+     C                   PARM                    CuadFilFmt                                AR1003366
+     C                   PARM                    SfeeFilFmt                                AR1003366
+     C                   PARM                    ChecFilFmt                                AR1003366
+     C                   PARM                    CusfFilFmt                                AR1003366
+     C                   PARM                    RwanFilFmt                                AR1003366
+     C                   PARM                    CufoFilFmt                                AR1003366
+     C                   PARM                    CufnFilFmt                                AR1003366
+     C                   PARM                    CupmFilFmt                                AR1003366
+     C                   PARM                    ValidTicd                                  AR981842
+     C                   PARM                    ValidCulx2                                 AR981842
+     C                   PARM                    ValidCulx1                                 AR981842
      C/COPY WNCPYSRC,SDH00083
      C                   PARM                    GCrCuFilFmt
      C                   PARM                    CrSwFilFmt                                   CSW207
@@ -1848,9 +2030,21 @@ e3   C                   ENDIF                                                  
      C                   PARM                    NewCuMsg
      C                   PARM                    NewCuBrt
      C                   PARM                    NewCuPriv
+     C                   PARM                    CurCuCumi                                  AR981842
+     C                   PARM                    CurCuCuad                                  AR981842
      C/COPY WNCPYSRC,SDH00084
      C                   PARM                    TranInACU3                                   CER059
      C                   PARM                    TranInACU4                                   CER059
+     C                   PARM                    CurCuSfee                                  AR981842
+     C                   PARM                    CurCuCufx                                  AR981842
+     C                   PARM                    CurCuCufd                                  AR981842
+     C                   PARM                    CurCuChec                                  AR981842
+     C                   PARM                    CurCuCusf                                  AR981842
+     C                   PARM                    CurCuRwan                                  AR981842
+     C                   PARM                    CurCuCufo                                  AR981842
+     C                   PARM                    CurCuCupm                                  AR981842
+     C                   PARM                    CurCuTicd                                  AR981842
+     C                   PARM                    CurCuCurx                                  AR981842
      C                   PARM                    NewCuSwft                                    CSW207
  
       ** Update 'Current' Customer with Customer in Screen Format

@@ -9,8 +9,9 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
-/*       Last Amend No. AR1059293          Date 21Nov12              */
-/*       Prev Amend No. CRE083AC           Date 06Aug12              */
+/*       Last Amend No. MD035212           Date 25May16              */
+/*       Prev Amend No. AR1059293          Date 21Nov12              */
+/*                      CRE083AC           Date 06Aug12              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -22,6 +23,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD035212 - Retail ICD TABTBRE is empty. MXC0491 component   */
+/*                  failed.                                          */
 /*       AR1059293 - Geneva Drop 01 Build Issues - Cannot compile    */
 /*                   using RUNQSQL command.                          */
 /*       CRE083AC - COB Restructure - RE COB Optimisation Phase 1    */
@@ -29,9 +32,9 @@
 /*                                                                   */
 /*********************************************************************/
              PGM        PARM(&PGM &MODE &ACSM)
- 
+
 /*/COPY WNCPYSRC,MXC0491INT                                          */
- 
+
              DCL        VAR(&PGM )  TYPE(*CHAR) LEN(10)
              DCL        VAR(&MODE)  TYPE(*CHAR) LEN( 3)
              DCL        VAR(&ACSM)  TYPE(*CHAR) LEN( 1)
@@ -54,17 +57,24 @@
              DCL        VAR(&FINISH) TYPE(*DEC) LEN(10 0)                               /*CRE083AC*/
              DCL        VAR(&SJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083AC*/
              DCL        VAR(&FJRNRCVR) TYPE(*CHAR) LEN(10)                              /*CRE083AC*/
- 
+             DCL        VAR(&RETMOD) TYPE(*CHAR) LEN(1)                                 /*MD035212*/
+
              DCLF       FILE(TABTBRE)                                                   /*CRE083AC*/
-             RCVF       RCDFMT(TABTBREF)                                                /*CRE083AC*/
+/**********  RCVF       RCDFMT(TABTBREF)                                       /*CRE083AC MD035212*/
 /* Global monitor message */
- 
+
              MONMSG     MSGID(CPF0000 MCH0000 RPG0000) EXEC(GOTO +
                           CMDLBL(ABNOR))
- 
+
+/* Check if Retail module is switched ON */                                             /*MD035212*/
+             RTVDTAARA  DTAARA(MMOD (3 1)) RTNVAR(&RETMOD)                              /*MD035212*/
+             IF         COND(&RETMOD *EQ 'Y') THEN(DO)                                  /*MD035212*/
+             RCVF       RCDFMT(TABTBREF)                                                /*MD035212*/
+             ENDDO       /*MD035212*/
+                                                                                        /*MD035212*/
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB SWS(00000000)
- 
+
 /* Start Journalling */                                                                 /*CRE083AC*/
              IF         COND(&MODE *EQ 'ONE') +
                   THEN(CHGVAR VAR(&CSEQ) VALUE(00001))                                  /*CRE083AC*/
@@ -77,39 +87,39 @@
              CHGVAR     VAR(&SEVENT) VALUE(&CNAM *TCAT &CSEQA)                          /*CRE083AC*/
              SCWRTJREG  EVENT(&SEVENT) COMP(&CNAM) CMPSEQ(&CSEQ) +
                            FLAG('S') TEXT(&STEXT)                                       /*CRE083AC*/
- 
+
 /*/COPY WNCPYSRC,MXC0491MPS                                          */
- 
- 
+
+
 /* END IF MAINTAIN RETAIL ACCRUALS IS NO */
- 
+
              RTVDTAARA  DTAARA(MXEXPCTL (37 1)) RTNVAR(&MNTRAC)
              IF         COND(&MNTRAC *EQ 'N') THEN(GOTO CMDLBL(END))
- 
- 
+
+
 /* INCOME & EXPENSE entries */
- 
+
              IF         COND(&PGM *EQ 'REC3666') THEN(DO)
- 
+
 /* ANWD */
- 
+
              IF         COND(&MODE *EQ 'TWO') THEN(DO)
- 
+
 /* ANWD */
 /* NOT Accrual summary */
- 
+
 /** Override member for SQL to simulate CPYF functionality */                           /*CRE083AC*/
              CLRPFM     FILE(MXACREPD) MBR(POST5IE)                                     /*CRE083AC*/
              OVRDBF     FILE(MXACREPD) MBR(POST5IE)                                     /*CRE083AC*/
                                                                                         /*CRE083AC*/
              IF         COND(&ACSM *NE 'Y') THEN(DO)
- 
+
 /**********  CPYF       FROMFILE(GEIER2PD) TOFILE(MXACREPD) +
 /**********               TOMBR(POST5IE) MBROPT(*REPLACE) +
 /**********               INCREL((*IF ACSC *EQ IN) (*OR ACSC *EQ EX)) */                /*CRE083AC*/
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST5IE)) */                               /*CRE083AC*/
- 
+
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
                           GEIER2PD WHERE ACSC=''IN'' OR +
                           ACSC=''EX''') COMMIT(*NONE) */                      /*CRE083AC AR1059293*/
@@ -118,18 +128,18 @@
                MONMSG     MSGID(SQL0000) EXEC(CLRPFM FILE(MXACREPD) +
                           MBR(POST5IE))                                                 /*CRE083AC*/
              ENDDO
- 
+
 /* ANWD */
 /* Accrual summary */
- 
+
              IF         COND(&ACSM *EQ 'Y') THEN(DO)
- 
+
 /**********  CPYF       FROMFILE(GEIER2PD0) TOFILE(MXACREPD) +
 /**********               TOMBR(POST5IE) MBROPT(*REPLACE) +
 /**********               INCREL((*IF ACSC *EQ IN) (*OR ACSC *EQ EX)) */                /*CRE083AC*/
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST5IE)) */                               /*CRE083AC*/
- 
+
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
                           GEIER2PD0 WHERE ACSC=''IN'' OR +
                           ACSC=''EX''') COMMIT(*NONE) */                      /*CRE083AC AR1059293*/
@@ -139,26 +149,26 @@
                           MBR(POST5IE))                                                 /*CRE083AC*/
              ENDDO
              ENDDO
- 
+
 /* NOT ANWD */
- 
+
              IF         COND(&MODE *NE 'TWO') THEN(DO)
- 
+
 /* NOT ANWD */
 /* NOT Accrual summary */
- 
+
 /** Override member for SQL to simulate CPYF functionality */                           /*CRE083AC*/
              CLRPFM     FILE(MXACREPD) MBR(POST1IE)                                     /*CRE083AC*/
              OVRDBF     FILE(MXACREPD) MBR(POST1IE)                                     /*CRE083AC*/
                                                                                         /*CRE083AC*/
              IF         COND(&ACSM *NE 'Y') THEN(DO)
- 
+
 /**********  CPYF       FROMFILE(GEIERPD) TOFILE(MXACREPD) +
 /**********               TOMBR(POST1IE) MBROPT(*REPLACE) +
 /**********               INCREL((*IF ACSC *EQ IN) (*OR ACSC *EQ EX)) */                /*CRE083AC*/
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST1IE)) */                               /*CRE083AC*/
- 
+
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
                           GEIERPD WHERE ACSC=''IN'' OR +
                           ACSC=''EX''') COMMIT(*NONE) */                      /*CRE083AC AR1059293*/
@@ -167,18 +177,18 @@
                MONMSG     MSGID(SQL0000) EXEC(CLRPFM FILE(MXACREPD) +
                           MBR(POST1IE))                                                 /*CRE083AC*/
              ENDDO
- 
+
 /* NOT ANWD */
 /* Accrual summary */
- 
+
              IF         COND(&ACSM *EQ 'Y') THEN(DO)
- 
+
 /**********  CPYF       FROMFILE(GEIERPD0) TOFILE(MXACREPD) +
 /**********               TOMBR(POST1IE) MBROPT(*REPLACE) +
 /**********               INCREL((*IF ACSC *EQ IN) (*OR ACSC *EQ EX)) */                /*CRE083AC*/
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST1IE)) */                               /*CRE083AC*/
- 
+
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
                           GEIERPD0 WHERE ACSC=''IN'' OR +
                           ACSC=''EX''') COMMIT(*NONE) */                      /*CRE083AC AR1059293*/
@@ -189,13 +199,13 @@
              ENDDO
              ENDDO
              ENDDO
- 
- 
+
+
 /* INTEREST CAPITALIZATION entries */
- 
+
              IF         COND(&PGM *NE 'REC3666')  THEN(DO)
- 
- 
+
+
 /**********  CPYF       FROMFILE(GEICPD) TOFILE(MXACREPD) +
 /**********               TOMBR(POST1IC) MBROPT(*REPLACE) +
 /**********               INCREL((*IF ACSC *EQ IN) (*AND OTST *NE +
@@ -203,7 +213,7 @@
 /**********               '    ')) */                                                   /*CRE083AC*/
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST1IC)) */                               /*CRE083AC*/
- 
+
              CLRPFM     FILE(MXACREPD) MBR(POST1IC)                                     /*CRE083AC*/
              OVRDBF     FILE(MXACREPD) MBR(POST1IC)                                     /*CRE083AC*/
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
@@ -222,7 +232,7 @@
 /**********               '    ')) */
 /**********    MONMSG     MSGID(CPF2817) CMPDTA(CPF2869) EXEC(CLRPFM +
 /**********               FILE(MXACREPD) MBR(POST5IC)) */
- 
+
              CLRPFM     FILE(MXACREPD) MBR(POST5IC)                                     /*CRE083AC*/
              OVRDBF     FILE(MXACREPD) MBR(POST5IC)                                     /*CRE083AC*/
 /**********  RUNSQL     SQL('INSERT INTO MXACREPD SELECT * FROM +
@@ -235,17 +245,17 @@
                MONMSG     MSGID(SQL0000) EXEC(CLRPFM FILE(MXACREPD) +
                           MBR(POST1IC))                                                 /*CRE083AC*/
              ENDDO
- 
- 
+
+
 /*/COPY WNCPYSRC,MXC0491MPE                                          */
- 
+
              GOTO       CMDLBL(END)
- 
+
  ABNOR:
 /*/COPY WNCPYSRC,MXC0491ERR                                          */
- 
+
              CHGJOB     SWS(XXXXXX11)
- 
+
 /* Retrieve attributes of current job */                                                /*CRE083AC*/
                                                                                         /*CRE083AC*/
              RTVJOBA    JOB(&JOB) USER(&USR) NBR(&NBR)                                  /*CRE083AC*/
@@ -277,25 +287,25 @@
              ENDDO                                                                      /*CRE083AC*/
                                                                                         /*CRE083AC*/
 /* Abnormal termination */
- 
+
                SNDPGMMSG MSGID(CPF9898) MSGF(QCPFMSG) MSGDTA('Program +
                             MXC0491 ended abnormally - see job log') +
                             TOMSGQ(MOPERQ MRUNQ)
                MONMSG     MSGID(CPF0000 MCH0000)
- 
- 
+
+
 END:         CHGVAR     VAR(&CPYFLD) VALUE('(c) +
                           Misys International Banking Systems Ltd.')
- 
+
 /*/COPY WNCPYSRC,MXC0491END                                          */
- 
+
              RCLRSC
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLRSC     LVL(*CALLER)
              MONMSG     MSGID(CPF0000 MCH0000)
              RCLACTGRP  ACTGRP(*ELIGIBLE)
              MONMSG     MSGID(CPF0000 MCH0000)
- 
+
 /* Write current journal sequence number to file SCJSEQPD */                            /*CRE083AC*/
                                                                                         /*CRE083AC*/
              CHGVAR     VAR(&STEXT) VALUE(' ')                                          /*CRE083AC*/

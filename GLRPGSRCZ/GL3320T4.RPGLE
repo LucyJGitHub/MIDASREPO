@@ -79,7 +79,7 @@
      C                   Z-ADD     0             TotChrf
      C                   Z-ADD     0             TotNore
      C     *Dtaara       Define                  MMOD                                       MD035213
-     C                   In        MMOD                                                     MD035213
+     C                   IN        MMOD                                                     MD035213
 
       ** Process GLABEXZY and update ABEXZY
 
@@ -179,7 +179,7 @@
      C                   READ      GLREACRZ                               99
      C                   ENDDO
 
-     C                   If        RT = 'Y'                                                 MD035213
+     C                   IF        RT = 'Y'                                                 MD035213
      C     1             CHAIN     REACRZ                             99
      C                   IF        *IN99 = *ON
      C                   MOVE      'REACRZ '     DBFILE
@@ -189,7 +189,7 @@
      C     RE_NORE       SUB       TOTNORE       RE_NORE
      C                   UPDATE    REACRZF
      C                   ENDIF
-     C                   Endif                                                              MD035213
+     C                   ENDIF                                                              MD035213
 
      C                   COMMIT
 

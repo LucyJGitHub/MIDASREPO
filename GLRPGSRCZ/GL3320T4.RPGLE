@@ -78,7 +78,7 @@
      C                   Z-ADD     0             TotChrf2
      C                   Z-ADD     0             TotChrf
      C                   Z-ADD     0             TotNore
-     C     *Dtaara       Define                  MMOD                                       MD035213
+     C     *Dtaara       DEFINE                  MMOD                                       MD035213
      C                   IN        MMOD                                                     MD035213
 
       ** Process GLABEXZY and update ABEXZY

@@ -70,7 +70,7 @@
              RTVDTAARA  DTAARA(MMOD (3 1)) RTNVAR(&RETMOD)                              /*MD035212*/
              IF         COND(&RETMOD *EQ 'Y') THEN(DO)                                  /*MD035212*/
              RCVF       RCDFMT(TABTBREF)                                                /*MD035212*/
-             ENDDO       /*MD035212*/
+             ENDDO                                                                      /*MD035212*/
                                                                                         /*MD035212*/
              CHGDTAARA  DTAARA(LDA) VALUE(' ')
              CHGJOB SWS(00000000)

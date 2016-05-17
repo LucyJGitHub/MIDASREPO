@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL049             Date 17Feb15               *
-      *  Prev Amend No. CGL160             Date 11Nov14               *
+      *  Last Amend No. MD037383           Date 25May16               *
+      *  Prev Amend No. CGL049             Date 17Feb15               *
+      *                 CGL160             Date 11Nov14               *
       *                 MD024553           Date 30Jan14               *
       *                 CGL120             Date 06Aug12               *
       *                 AR1004821          Date 30Jul12               *
@@ -74,6 +75,10 @@
      F*                                                                  *
       ********************************************************************
       *                                                               *
+      *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
+      *             Stamp Tax (CER049) processing.                    *
+      *             Rework that component to make it 'Task Split'     *
+      *             compliant.                                        *
       *  CGL049   - Separate Out Processing of Spot Reval and FX Tfr  *
       *  CGL160 - Cheque Details Upload via Generic Posting Interface *
       *             (Recompile)                                       *
@@ -420,7 +425,8 @@
      D**********          ARLT    1  25 29                                             CGL047 CAP204
      D ARLT            S             29    DIM(26) CTDATA PERRCD(1)                           CAP204
      D*POST*****       S             16    DIM(5) CTDATA PERRCD(1)                    BUG9203 CGL049
-     D POST            S             16    DIM(6) CTDATA PERRCD(1)                            CGL049
+     D*POST*****       S             16    DIM(6) CTDATA PERRCD(1)                   CGL049 MD037383
+     D POST            S             16    DIM(7) CTDATA PERRCD(1)                          MD037383
      D**********          ARNP       25  6 0                                           CRE004 CGL047
      D**********          BRNP       25  6 0                                           CRE004 CGL047
      D**********          ARTI       25 15 0                                           CRE004 CGL047
@@ -3377,3 +3383,4 @@ B/CCY TRANSFER                                                                  
 F/CCY TRANSFER                                                                               BUG9203
 FINAL POST                                                                                   BUG9203
 F/CCY TRANSFER                                                                               CGL049
+STAMP TAX                                                                                   MD037383

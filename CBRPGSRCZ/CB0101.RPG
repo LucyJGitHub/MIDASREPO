@@ -14,7 +14,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL120             Date 06Aug12               *
+      *  Last Amend No. MD037383           Date 25May16               *
+      *  Prev Amend No. CGL120             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -27,6 +28,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037383 - ACCNTAB blank after COB component GLC008140 00001 *
+      *             Stamp Tax (CER049) processing.                    *
+      *             Rework that component to make it 'Task Split'     *
+      *             compliant.                                        *
       *  CGL120 - GL COB Components Task Split                        *
       *  120895 - Correct the program name in DBPGM                   *
       *  CCB003 - COB Performance Enhancements - Task Split           *
@@ -55,9 +60,11 @@
       *
      IUUDS1       DS
      I                                        1   5 UA15A
+     I                                        1   10UA11N                                   MD037383
      I                                        2   20UA22N
      I                                        3   50UA35N
      I                                        4   50UA45N
+     I                                        4   40UA44N                                   MD037383
      I                                        5   50UA55N                                     CGL120
       *
      IUUERR       DS
@@ -196,13 +203,21 @@
       *
       ** Increment Component Sequence number
      C                     MOVE DHCSEQ    UA15A
-     C           UA22N     IFEQ 0
+     C********** UA22N     IFEQ 0                                                           MD037383
+     C           I         IFEQ 1                                                           MD037383
      C/COPY WNCPYSRC,CB0101C001
      C********** UA45N     IFEQ 1                                                             CGL120
      C           UA55N     IFLE 9                                                             CGL120
      C**********           Z-ADD1         UA22N                                               CGL120
+     C           UA44N     IFEQ 0                                                           MD037383
      C                     Z-ADDUA55N     UA22N                                               CGL120
      C                     Z-ADD1         UA55N                                               CGL120
+     C                     ELSE                                                             MD037383
+     C                     Z-ADDUA44N     UA11N                                             MD037383
+     C                     Z-ADDUA55N     UA22N                                             MD037383
+     C                     Z-ADD0         UA44N                                             MD037383
+     C                     Z-ADD1         UA55N                                             MD037383
+     C                     ENDIF                                                            MD037383
      C                     ELSE
      C                     Z-ADD2         UA22N
      C                     ENDIF

@@ -9,12 +9,17 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL049             Date 17Feb15              */
-/*       Prev Amend No. CGL142             Date 06Aug12              */
+/*       Last Amend No. MD037383           Date 25May16              */
+/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*                      CGL142             Date 06Aug12              */
 /*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       CGL142 - Tactical COB changes GL                            */
 /*       CGL120 - GL COB Components Task Split                       */
@@ -79,6 +84,11 @@
                 IF         COND(&POSTNUM *EQ '6') THEN(DO) /*CGL049*/
                    CALLSUBR   SUBR(GLC600A06) /* CGL049 */
                 ENDDO      /* CGL049 */
+                                                                                        /*MD037383*/
+                IF         COND(&POSTNUM *EQ '7') THEN(DO)                              /*MD037383*/
+                   CALLSUBR   SUBR(GLC600A07)                                           /*MD037383*/
+                ENDDO                                                                   /*MD037383*/
+                                                                                        /*MD037383*/
              ENDDO
              ENDDO
              ENDDO
@@ -341,6 +351,32 @@ ABNOR:
 
              ENDSUBR    /* CGL049 */
 
+/* GLC600A07 Subroutine                                            */                   /*MD037383*/
+                                                                                        /*MD037383*/
+             SUBR       SUBR(GLC600A07)                                                 /*MD037383*/
+                                                                                        /*MD037383*/
+/* Reset job switches                                              */                   /*MD037383*/
+                                                                                        /*MD037383*/
+             CHGJOB     SWS(000000XX)                                                   /*MD037383*/
+                                                                                        /*MD037383*/
+/* Check if Retail is on OR Interest on Accounts is on:            */                   /*MD037383*/
+/* IF on Set Main post or post after end of period switch          */                   /*MD037383*/
+                                                                                        /*MD037383*/
+             IF         COND((&BGNXST *EQ 'Y') *OR (&BGNYST *EQ +
+                          'Y')) THEN(CHGJOB SWS(XXXX1XXX))                              /*MD037383*/
+                                                                                        /*MD037383*/
+             OVRDBF     FILE(CLEARHH) TOFILE(GLCLERHH)                                  /*MD037383*/
+             OVRDBF     FILE(CLEARPD) TOFILE(GLCLERPD)                                  /*MD037383*/
+             OVRDBF     FILE(CLEARZZ) TOFILE(GLCLERZZ)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPHH) TOFILE(GLSYHDPD)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPAJ) TOFILE(GLSYDTPD)                                  /*MD037383*/
+             OVRDBF     FILE(SYSOPZX) TOFILE(GLSYTRPD)                                  /*MD037383*/
+             OVRDBF     FILE(SACPO) TOFILE(GLGESTL3)                                    /*MD037383*/
+             OVRDBF     FILE(SACPOZ) TOFILE(GLSTTRL3)                                   /*MD037383*/
+             CALLSUBR   SUBR(OVERRIDES)                                                 /*MD037383*/
+                                                                                        /*MD037383*/
+             ENDSUBR                                                                    /*MD037383*/
+                                                                                        /*MD037383*/
 /* OVERRIDES Subroutine                                            */
 
              SUBR       SUBR(OVERRIDES)

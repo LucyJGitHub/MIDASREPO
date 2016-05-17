@@ -9,12 +9,17 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL049             Date 17Feb15              */
-/*       Prev Amend No. MD024120           Date 19Aug14              */
+/*       Last Amend No. MD037383           Date 25May16              */
+/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*                      MD024120           Date 19Aug14              */
 /*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       MD024120 - GLC33320 Performance Issues                      */
 /*       CGL120 - GL COB Components Task Split                       */
@@ -85,13 +90,15 @@
 /* Check if post is blank: GLC3320 COB Seq 00001,01000x,02000x     */
 /* Daily or Acrurals                                               */
 
-             IF         COND(&POSTNUM *EQ ' ') THEN(DO)
+/**********  IF         COND(&POSTNUM *EQ ' ') THEN(DO) */                              /*MD037383*/
+             IF         COND((&POSTNUM *EQ ' ') *OR (&POSTNUM *EQ '0')) THEN(DO)        /*MD037383*/
 
 /* GLC3320 COB 00001,01000x,02000x: Daily or Acrurals:             */
 /* Check if Sequence is 01 (daily)                                 */
 
              IF         COND((%SST(&WKSEQ 1 2) *EQ '01') *OR (&CSEQ +
-                          = 001)) THEN(DO)
+                             = 00001) *OR (&POSTNUM *EQ '0')) THEN(DO)                  /*MD037383*/
+/**********               = 001)) THEN(DO) */                                           /*MD037383*/
 
 /* Sequence is 00001 (daily): Call Acc bal GL daily normal day     */
 

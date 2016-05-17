@@ -9,11 +9,16 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL049             Date 17Feb15              */
-/*       Prev Amend No. CGL120  *CREATE    Date 06Aug12              */
+/*       Last Amend No. MD037383           Date 25May16              */
+/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*                      CGL120  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       CGL120 - GL COB Components Task Split                       */
 /*                                                                   */
@@ -100,6 +105,14 @@
                              SEQONLY(*YES 2000) /* CGL049 */
              ENDDO      /* CGL049 */
 
+             IF         COND(&POSTNUM *EQ '7') THEN(DO)                                 /*MD037383*/
+             CHGVAR     VAR(&RTYP) VALUE(&RTYP0)
+             OVRDBF     FILE(ACJND) TOFILE(GLSTDTL0) FRCRATIO(500) NBRRCDS(1000) +
+                             SEQONLY(*YES 2000)                                         /*MD037383*/
+             OVRDBF     FILE(ACJNT) TOFILE(GLSTTRL1) FRCRATIO(500) NBRRCDS(1000) +
+                             SEQONLY(*YES 2000)                                         /*MD037383*/
+             ENDDO                                                                      /*MD037383*/
+                                                                                        /*MD037383*/
              CALL       PGM(GL0340) PARM(&RTYP &POSTNUM)
              DLTOVR     FILE(GLDLYPPD ACJND ACJNT)
 

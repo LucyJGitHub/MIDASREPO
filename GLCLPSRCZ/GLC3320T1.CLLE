@@ -9,13 +9,18 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. CGL049             Date 17Feb15              */
-/*       Prev Amend No. MD024120           Date 19Aug14              */
+/*       Last Amend No. MD037383           Date 25May16              */
+/*       Prev Amend No. CGL049             Date 17Feb15              */
+/*                      MD024120           Date 19Aug14              */
 /*                      CGL142             Date 06Aug12              */
 /*                      CGL120   *CREATE   Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD037383 - ACCNTAB blank after COB component GLC008140 00001*/
+/*                  Stamp Tax (CER049) processing.                   */
+/*                  Rework that component to make it 'Task Split'    */
+/*                  compliant.                                       */
 /*       CGL049 - Separate Out Processing of Spot Reval and FX Tfr   */
 /*       MD024120 - GLC3320 Performance Issues                       */
 /*       CGL142 - Tactical COB changes GL                            */
@@ -90,6 +95,10 @@
              CLRPFM     FILE(GLSTMTZX)                                                  /*MD024120*/
              CLRPFM     FILE(GLABEXZY)                                                  /*MD024120*/
 
+              IF         COND(&CSEQ *EQ 10) THEN(DO)                                    /*MD037383*/
+             CLRPFM     FILE(GLGESTPD)                                                  /*MD037383*/
+             ENDDO                                                                      /*MD037383*/
+                                                                                        /*MD037383*/
 /* Remove all members from driving file. */
 
              RMVM       FILE(&DRIVER) MBR(*ALL)
@@ -176,8 +185,10 @@
                           *AND &POSTNUM *NE '4') THEN(DO)   */ /* CGL049 */
              IF         COND(&POSTNUM *NE '2' *AND &POSTNUM *NE '3' *AND &POSTNUM +
                           *NE '4' *AND &POSTNUM *NE '6') THEN(DO) /* CGL049 */
+              IF         COND(&CSEQ *NE 10) THEN(DO)                                    /*MD037383*/
                 CLRPFM     FILE(RECAPM)
                 MONMSG     MSGID(CPF0000)
+             ENDDO                                                                      /*MD037383*/
              ENDDO
              CLRPFM     FILE(ABEXHH)
              CLRPFM     FILE(ABEXAG)

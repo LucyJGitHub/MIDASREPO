@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR922022A          Date 26Apr16               *
-      *  Prev Amend No. AR922022           Date 26Apr16               *
+      *  Last Amend No. MD036967           Date 11May16               *
+      *  Prev Amend No. MD035554           Date 11May16               *
+      *                 AR922022A          Date 26Apr16               *
+      *                 AR922022           Date 26Apr16               *
       *                 MD033630           Date 23Jun15               *
       *                 MD031298           Date 20Feb15               *
       *                 MD023889           Date 10Dec13               *
@@ -69,6 +71,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036967 - Conflict betwen CAP207 and CRE023. Update files   *
+      *             for Credit after accept when both feat are ON.    *
+      *  MD035554 - 2o'clock/ABC compatibility                        *
       *  AR922022A - Added Submission of REC000881 when CRE023 and    *
       *              CRE016 is both on.                               *
       *            - Applied for MD033905                             *
@@ -367,6 +372,8 @@
       *                                                                                    AR792734A
      D CRE023          S              1A                                                   AR792734A
       ** Singapore 2 o'clock enhancement flag                                              AR792734A
+     D CAP207          S              1                                                     MD036967
+      ** Account balance Check                                                              MD036967
       *                                                                                    AR792734A
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                               AR792734A
                                                                                               CAP086
@@ -669,15 +676,18 @@
      C     BRBTNB        READE     @BTREAK                                98                 BUG3500
      C     *IN98         DOWEQ     *OFF                                                      BUG3500
                                                                                            AR792734A
-     C                   Move      'N'           OUTWRD            1                        MD033630
-     C     CRE023        IFEQ      'Y'                                                     AR792734A
+     C**********         Move      'N'           OUTWRD            1               MD033630 MD033630
+     C*****CRE023        IFEQ      'Y'                                            AR792734A MD036967
+     C                   IF        CRE023 = 'Y' AND CAP207='N'                              MD036967
+     C                             OR CRE023='Y' AND CAP207='Y'                             MD036967
+     C                             AND BTDCIN = 'D'                                         MD036967
      C                   EXSR      UPDPOST                                                 AR792734A
      C                   ENDIF                                                             AR792734A
                                                                                            AR792734A
      C                   DELETE    @BTREAK                                                   BUG3500
      C     CGL016        IFEQ      'Y'                                                     AR792734A
-     C     CRE023        OREQ      'Y'                                                     AR792734A
-     C     OUTWRD        AndEq     'Y'                                                      MD033630
+     C*****CRE023        OREQ      'Y'                                            AR792734A MD033630
+     C*****OUTWRD        AndEq     'Y'                                             MD033630 MD033630
      C                   EXSR      REVPOST                                                 AR792734A
      C                   ENDIF                                                             AR792734A
      C     BRBTNB        READE     @BTREAK                                98                 BUG3500
@@ -808,9 +818,9 @@
      C     B1BTSF        IFEQ      'A'                                                        239155
      C     BRSHPI        ANDNE     'Y'                                                        CAP084
      C     CGL016        ANDNE     'Y'                                                     AR792734A
-     C     B1BTSF        OREQ      'A'                                                     AR792734A
-     C     BRSHPI        ANDNE     'Y'                                                     AR792734A
-     C     CRE023        ANDNE     'Y'                                                     AR792734A
+     C*****B1BTSF        OREQ      'A'                                            AR792734A MD033630
+     C*****BRSHPI        ANDNE     'Y'                                            AR792734A MD033630
+     C*****CRE023        ANDNE     'Y'                                            AR792734A MD033630
      C/COPY WNCPYSRC,GLH00303
      C                   CALL      'GLSBMBCH'                                                 CAP084
      C                   PARM      *BLANK        PRTCD             7                          CAP084
@@ -1526,6 +1536,29 @@
      C                   OPEN      REMEMLL0                                                AR792734A
      C                   OPEN      RETTYPL0                                                AR792734A
      C                   ENDIF                                                             AR792734A
+      ** Check for Account Balance Check Flag                                               MD036967
+      *                                                                                     MD036967
+     C                   EVAL      CAP207 = 'N'                                             MD036967
+     C                   CALLB     'AOSARDR0'                                               MD036967
+     C                   PARM      *BLANKS       @RTCD                                      MD036967
+     C                   PARM      '*VERIFY'     @OPTN                                      MD036967
+     C                   PARM      'CAP207'      @SARD                                      MD036967
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD036967
+      *                                                                                     MD036967
+      ** An NRF (No Record Found) return code is valid.  Issue database error               MD036967
+      ** only for error return codes.                                                       MD036967
+      *                                                                                     MD036967
+     C                   IF        (@RTCD <> *BLANKS) AND                                   MD036967
+     C                             (@RTCD <> '*NRF   ')                                     MD036967
+     C                   EVAL      DBKEY = 'CAP207'                                         MD036967
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD036967
+     C                   EVAL      DBASE = 11                                               MD036967
+     C                   EXSR      *PSSR                                                    MD036967
+     C                   ENDIF                                                              MD036967
+      *                                                                                     MD036967
+     C                   IF        @RTCD = *BLANK                                           MD036967
+     C                   EVAL      CAP207 = 'Y'                                             MD036967
+     C                   ENDIF                                                              MD036967
       *                                                                                    AR792734A
       ** Access Bank Details                                                               AR792734A
       *                                                                                    AR792734A
@@ -1672,6 +1705,38 @@
       *****************************************************************                    AR792734A
       *                                                                                    AR792734A
      C     UPDPOST       BEGSR                                                             AR792734A
+      *                                                                                     MD033630
+     C     BTRACN        CHAIN     MEMOSL2                                                  MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND RECI <> 'D')                                 MD033630
+     C                   UNLOCK    MEMOSL2                                                  MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update ledger balance of MEMOSL2                                                   MD033630
+      *                                                                                     MD033630
+     C                   IF        BTDCIN = 'D'                                             MD033630
+     C                   EVAL      LDBLN = LDBLN + BTPTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      LDBLN = LDBLN - BTPTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update the cleared balance                                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        BTVLDT <= BJRDNB                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        BTDCIN = 'D'                                             MD033630
+     C                   EVAL      CLBLN = CLBLN + BTPTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      CLBLN = CLBLN - BTPTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update MEMOS file                                                                  MD033630
+      *                                                                                     MD033630
+     C                   UPDATE    MEMOSMDF                                                 MD033630
       *                                                                                    AR792734A
       ** Setup posting amount fields of REMEMLL0                                           AR792734A
       *                                                                                    AR792734A
@@ -1683,9 +1748,14 @@
       *                                                                                    AR792734A
      C                   IF        (NOT(%FOUND)) OR                                        AR792734A
      C                             (%FOUND AND GRECI <> 'D')                               AR792734A
+      *                                                                                     MD035554
+      ** Exclude Outward Clearing Checks with Value Date equal to Run Date                  MD035554
+      *                                                                                     MD035554
+     C                             Or (%FOUND And GRECI = 'D'                               MD035554
+     C                                And GOCLR = 'Y' and BTVLDT = BJRDNB)                  MD035554
      C                   LEAVESR                                                           AR792734A
-     C                   Else                                                               MD033630
-     C                   Move      'Y'           OUTWRD                                     MD033630
+     C**********         Else                                                      MD033630 MD033630
+     C**********         Move      'Y'           OUTWRD                            MD033630 MD033630
      C                   ENDIF                                                             AR792734A
       *                                                                                    AR792734A
      C     BTRACN        CHAIN     REMEMLL0                                                AR792734A

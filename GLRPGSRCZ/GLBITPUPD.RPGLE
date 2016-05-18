@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037061           Date 19Jan16               *
-      *  Prev Amend No. MD033630           Date 23Jun15               *
+      *  Last Amend No. MD036967           Date 11May16               *
+      *  Prev Amend No. MD035554           Date 11May16               *
+      *                 MD037061           Date 19Jan16               *
+      *                 MD033630           Date 23Jun15               *
       *                 MD034050           Date 23Jun15               *
       *                 MD032083           Date 08Jun15               *
       *                 257489             Date 08Jun15               *
@@ -76,6 +78,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036967 - Conflict between CRE023 and CAP207. Update Credit *
+      *            only after Accept when both features are ON.       *
+      *  MD035554 - 2o'clock/ABC Compatibility                        *
       *  MD037061 - Serious Midas Error appears after clicking        *
       *             Confirm write. I/O operation was applied          *
       *             to closed file RETTYPL0.                          *
@@ -435,6 +440,8 @@
      D CRE023          S              1                                                       CRE023
       ** Singapore 2 o'clock enhancement flag                                                 CRE023
       *                                                                                       CRE023
+     D CAP207          S              1                                                     MD036967
+      ** Account balance Check                                                              MD036967
      D SDBANK        E DS                  EXTNAME(SDBANKPD)                                  CRE023
       ** Externally described DS for Bank Details                                             CRE023
       *                                                                                       CRE023
@@ -896,7 +903,7 @@
      C                   ENDIF                                                                246418
       *                                                                                       246418
      C/COPY WNCPYSRC,GLBITPDC11
-     C                   ENDIF                                                             AR792734A
+     C**********         ENDIF                                                    AR792734A MD033630
       *                                                                                     BUG23742
      C                   IF        CER030 = 'Y'                                             BUG23742
       *                                                                                     BUG23742
@@ -943,139 +950,139 @@
       *                                                                                     BUG23742
      C                   ENDIF                                                              BUG23742
       *                                                                                     BUG23742
-      *                                                                                    AR792734A
-     C                   MOVE      'N'           T_REV                                     AR792734A
-     C     CRE023        Ifeq      'Y'                                                      MD037061
-     C     BTTRTY        CHAIN     RETTYPL0                                                 MD033630
-     C                   If        %FOUND(RETTYPL0)                                         MD033630
-     C                   Move      'Y'           OUTWRD            1                        MD033630
-     C                   Else                                                               MD033630
-     C                   Move      'N'           OUTWRD                                     MD033630
-     C                   EndIf                                                              MD033630
-     C                   EndIf                                                              MD037061
-      *                                                                                    AR792734A
-     C     PActnCde      IFNE      'I'                                                     AR792734A
-     C     PActnCde      ANDNE     ' '                                                     AR792734A
-     C     WPlayBack     ANDEQ     'N'                                                     AR792734A
-     C     CGL016        IFEQ      'Y'                                                     AR792734A
-     C     *IN91         ANDEQ     *OFF                                                    AR792734A
-     C     CRE023        OREQ      'Y'                                                     AR792734A
-     C     *IN91         ANDEQ     *OFF                                                    AR792734A
-     C     OUTWRD        AndEQ     'Y'                                                      MD033630
-      *                                                                                    AR792734A
-     C     Cr_BTCUST     IFNE      BTCUST                                                  AR792734A
-     C     Cr_BTCYCD     ORNE      BTCYCD                                                  AR792734A
-     C     Cr_BTACCD     ORNE      BTACCD                                                  AR792734A
-     C     Cr_BTACSN     ORNE      BTACSN                                                  AR792734A
-     C     Cr_BTRACN     ORNE      BTRACN                                                  AR792734A
-     C     Cr_BTIBCA     ORNE      BTIBCA                                                  AR792734A
-     C     Cr_BTPTAM     ORNE      BTPTAM                                                  AR792734A
-     C     Cr_BTDCIN     ORNE      BTDCIN                                                  AR792734A
-     C     Cr_BTNRDC     ORNE      BTNRDC                                                  AR792734A
-     C     Cr_BTTRTY     ORNE      BTTRTY                                                  AR792734A
-     C     Cr_BTVLDT     ORNE      BTVLDT                                                  AR792734A
-     C     Cr_BTCQNB     ORNE      BTCQNB                                                  AR792734A
-     C     Cr_BTPTDT     ORNE      BTPTDT                                                  AR792734A
+      *                                                                           AR792734A MD033630
+     C**********         MOVE      'N'           T_REV                            AR792734A MD033630
+     C*****CRE023        Ifeq      'Y'                                             MD037061 MD033630
+     C*****BTTRTY        CHAIN     RETTYPL0                                        MD033630 MD033630
+     C**********         If        %FOUND(RETTYPL0)                                MD033630 MD033630
+     C**********         Move      'Y'           OUTWRD            1               MD033630 MD033630
+     C**********         Else                                                      MD033630 MD033630
+     C**********         Move      'N'           OUTWRD                            MD033630 MD033630
+     C**********         EndIf                                                     MD033630 MD033630
+     C**********         EndIf                                                     MD037061 MD033630
+      *                                                                           AR792734A MD033630
+     C*****PActnCde      IFNE      'I'                                            AR792734A MD033630
+     C*****PActnCde      ANDNE     ' '                                            AR792734A MD033630
+     C*****WPlayBack     ANDEQ     'N'                                            AR792734A MD033630
+     C*****CGL016        IFEQ      'Y'                                            AR792734A MD033630
+     C******IN91         ANDEQ     *OFF                                           AR792734A MD033630
+     C*****CRE023        OREQ      'Y'                                            AR792734A MD033630
+     C******IN91         ANDEQ     *OFF                                           AR792734A MD033630
+     C******OUTWRD        AndEQ     'Y'                                            MD033630 MD033630
+      *                                                                           AR792734A MD033630
+     C*****Cr_BTCUST     IFNE      BTCUST                                         AR792734A MD033630
+     C*****Cr_BTCYCD     ORNE      BTCYCD                                         AR792734A MD033630
+     C*****Cr_BTACCD     ORNE      BTACCD                                         AR792734A MD033630
+     C*****Cr_BTACSN     ORNE      BTACSN                                         AR792734A MD033630
+     C*****Cr_BTRACN     ORNE      BTRACN                                         AR792734A MD033630
+     C*****Cr_BTIBCA     ORNE      BTIBCA                                         AR792734A MD033630
+     C*****Cr_BTPTAM     ORNE      BTPTAM                                         AR792734A MD033630
+     C*****Cr_BTDCIN     ORNE      BTDCIN                                         AR792734A MD033630
+     C*****Cr_BTNRDC     ORNE      BTNRDC                                         AR792734A MD033630
+     C*****Cr_BTTRTY     ORNE      BTTRTY                                         AR792734A MD033630
+     C*****Cr_BTVLDT     ORNE      BTVLDT                                         AR792734A MD033630
+     C*****Cr_BTCQNB     ORNE      BTCQNB                                         AR792734A MD033630
+     C*****Cr_BTPTDT     ORNE      BTPTDT                                         AR792734A MD033630
      C*****PActnCde      OREQ      'R'                                            AR792734A MD033630
-     C     PActnCde      OREQ      'D'                                                      MD033630
+     C*****PActnCde      OREQ      'D'                                             MD033630 MD033630
+      *                                                                           AR792734A MD033630
+     C*****SCKEY2        KLIST                                                    AR792734A MD033630
+     C**********         KFLD                    B2BTNB                           AR792734A MD033630
+     C**********         KFLD                    B2BINB                           AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C*****SCKEY2        CHAIN     @BTREAK                            99          AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C**********         CALL      'AOACCTR0'                                     AR792734A MD033630
+     C**********         PARM      *BLANKS       UUAPRC                           AR792734A MD033630
+     C**********         PARM      '*KEY'        UUAPOP                           AR792734A MD033630
+     C**********         PARM      *BLANKS       UUACID                           AR792734A MD033630
+     C**********         PARM                    BTCUST                           AR792734A MD033630
+     C**********         PARM                    BTCYCD                           AR792734A MD033630
+     C**********         PARM                    BTACCD                           AR792734A MD033630
+     C**********         PARM                    BTACSN                           AR792734A MD033630
+     C**********         PARM                    BTIBCA                           AR792734A MD033630
+     C*****D@ACCT        PARM      *BLANK        DSSDY                            AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C*****ATYP          IFEQ      'R'                                            AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C**********         MOVE      Cr_BTBTNB     LBTBTNB                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTBINB     LBTBINB                          AR792734A MD033630
+     C**********         MOVE      Cr_BTIBCA     LBTIBCA                          AR792734A MD033630
+     C**********         MOVE      Cr_BTCUST     LBTCUST                          AR792734A MD033630
+     C**********         MOVE      Cr_BTCYCD     LBTCYCD                          AR792734A MD033630
+     C**********         MOVE      Cr_BTACCD     LBTACCD                          AR792734A MD033630
+     C**********         MOVE      Cr_BTACSN     LBTACSN                          AR792734A MD033630
+     C**********         MOVE      Cr_BTNNBI     LBTNNBI                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTRACN     LBTRACN                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRINO     LBTRINO                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRINE     LBTRINE                          AR792734A MD033630
+     C**********         MOVE      Cr_BTTRTY     LBTTRTY                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTPTAM     LBTPTAM                          AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C*****Cr_BTDCIN     IFEQ      'C'                                            AR792734A MD033630
+     C**********         MOVE      'D'           LBTDCIN                          AR792734A MD033630
+     C**********         ELSE                                                     AR792734A MD033630
+     C**********         MOVE      'C'           LBTDCIN                          AR792734A MD033630
+     C**********         ENDIF                                                    AR792734A MD033630
+      *                                                                           AR792734A MD033630
+     C**********         Z-ADD     Cr_BTPTDT     LBTPTDT                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTVLDT     LBTVLDT                          AR792734A MD033630
+     C**********         MOVE      Cr_BTNVCD     LBTNVCD                          AR792734A MD033630
+     C**********         MOVE      Cr_BTNRDC     LBTNRDC                          AR792734A MD033630
+     C**********         MOVE      'RE'          LBTNRDC                          AR792734A MD033630
+     C**********         MOVE      Cr_BTACTY     LBTACTY                          AR792734A MD033630
+     C**********         MOVE      Cr_BTACNB     LBTACNB                          AR792734A MD033630
+     C**********         MOVE      Cr_BTCQNB     LBTCQNB                          AR792734A MD033630
+     C**********         MOVE      Cr_BTCOIN     LBTCOIN                          AR792734A MD033630
+     C**********         MOVE      Cr_BTSWCR     LBTSWCR                          AR792734A MD033630
+     C**********         MOVE      Cr_BTPRCN     LBTPRCN                          AR792734A MD033630
+     C**********         MOVE      Cr_BTBCBH     LBTBCBH                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRADP     LBTRADP                          AR792734A MD033630
+     C**********         MOVE      Cr_BTSHPI     LBTSHPI                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTRRNM     LBTRRNM                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRNBE     LBTRNBE                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRARC     LBTRARC                          AR792734A MD033630
+     C**********         MOVE      Cr_BTTSTY     LBTTSTY                          AR792734A MD033630
+     C**********         MOVE      Cr_BTBKCD     LBTBKCD                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTSPFC     LBTSPFC                          AR792734A MD033630
+     C**********         MOVE      Cr_BTRVDI     LBTRVDI                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTNITM     LBTNITM                          AR792734A MD033630
+     C**********         MOVE      Cr_BTOCCY     LBTOCCY                          AR792734A MD033630
+     C**********         Z-ADD     Cr_BTOAMT     LBTOAMT                          AR792734A MD033630
+     C**********         MOVE      Cr_BTFRNT     LBTFRNT                          AR792734A MD033630
+     C**********         MOVE      Cr_BTAFRT     LBTAFRT                          AR792734A MD033630
+     C**********         MOVE      Cr_BTTMST     LBTTMST                          AR792734A MD033630
+     C**********         MOVE      Cr_BTVALI     LBTVALI                          AR792734A MD033630
+     C**********         MOVE      Cr_BTDUPC     LBTDUPC                          AR792734A MD033630
+     C**********         MOVE      Cr_BTOUTR     LBTOUTR                          AR792734A MD033630
       *                                                                                    AR792734A
-     C     SCKEY2        KLIST                                                             AR792734A
-     C                   KFLD                    B2BTNB                                    AR792734A
-     C                   KFLD                    B2BINB                                    AR792734A
+     C**********         CALL      'GL004446'                                     AR792734A MD033630
+     C**********         PARM      *Blanks       UUAPRC                           AR792734A MD033630
+     C**********         PARM                    LJENP                            AR792734A MD033630
       *                                                                                    AR792734A
-     C     SCKEY2        CHAIN     @BTREAK                            99                   AR792734A
+     C*****UUAPRC        IFNE      *BLANKS                                        AR792734A MD033630
+     C**********         EXSR      *PSSR                                          AR792734A MD033630
+     C**********         ELSE                                                     AR792734A MD033630
+     C**********         MOVE      'Y'           T_REV                            AR792734A MD033630
+     C**********         ENDIF                                                    AR792734A MD033630
       *                                                                                    AR792734A
-     C                   CALL      'AOACCTR0'                                              AR792734A
-     C                   PARM      *BLANKS       UUAPRC                                    AR792734A
-     C                   PARM      '*KEY'        UUAPOP                                    AR792734A
-     C                   PARM      *BLANKS       UUACID                                    AR792734A
-     C                   PARM                    BTCUST                                    AR792734A
-     C                   PARM                    BTCYCD                                    AR792734A
-     C                   PARM                    BTACCD                                    AR792734A
-     C                   PARM                    BTACSN                                    AR792734A
-     C                   PARM                    BTIBCA                                    AR792734A
-     C     D@ACCT        PARM      *BLANK        DSSDY                                     AR792734A
+     C**********         ENDIF                                                    AR792734A MD033630
+     C**********         ENDIF                                                    AR792734A MD033630
+     C**********         ENDIF                                                    AR792734A MD033630
+     C**********         ENDIF                                                    AR792734A MD033630
       *                                                                                    AR792734A
-     C     ATYP          IFEQ      'R'                                                     AR792734A
-      *                                                                                    AR792734A
-     C                   MOVE      Cr_BTBTNB     LBTBTNB                                   AR792734A
-     C                   Z-ADD     Cr_BTBINB     LBTBINB                                   AR792734A
-     C                   MOVE      Cr_BTIBCA     LBTIBCA                                   AR792734A
-     C                   MOVE      Cr_BTCUST     LBTCUST                                   AR792734A
-     C                   MOVE      Cr_BTCYCD     LBTCYCD                                   AR792734A
-     C                   MOVE      Cr_BTACCD     LBTACCD                                   AR792734A
-     C                   MOVE      Cr_BTACSN     LBTACSN                                   AR792734A
-     C                   MOVE      Cr_BTNNBI     LBTNNBI                                   AR792734A
-     C                   Z-ADD     Cr_BTRACN     LBTRACN                                   AR792734A
-     C                   MOVE      Cr_BTRINO     LBTRINO                                   AR792734A
-     C                   MOVE      Cr_BTRINE     LBTRINE                                   AR792734A
-     C                   MOVE      Cr_BTTRTY     LBTTRTY                                   AR792734A
-     C                   Z-ADD     Cr_BTPTAM     LBTPTAM                                   AR792734A
-      *                                                                                    AR792734A
-     C     Cr_BTDCIN     IFEQ      'C'                                                     AR792734A
-     C                   MOVE      'D'           LBTDCIN                                   AR792734A
-     C                   ELSE                                                              AR792734A
-     C                   MOVE      'C'           LBTDCIN                                   AR792734A
-     C                   ENDIF                                                             AR792734A
-      *                                                                                    AR792734A
-     C                   Z-ADD     Cr_BTPTDT     LBTPTDT                                   AR792734A
-     C                   Z-ADD     Cr_BTVLDT     LBTVLDT                                   AR792734A
-     C                   MOVE      Cr_BTNVCD     LBTNVCD                                   AR792734A
-     C                   MOVE      Cr_BTNRDC     LBTNRDC                                   AR792734A
-     C                   MOVE      'RE'          LBTNRDC                                   AR792734A
-     C                   MOVE      Cr_BTACTY     LBTACTY                                   AR792734A
-     C                   MOVE      Cr_BTACNB     LBTACNB                                   AR792734A
-     C                   MOVE      Cr_BTCQNB     LBTCQNB                                   AR792734A
-     C                   MOVE      Cr_BTCOIN     LBTCOIN                                   AR792734A
-     C                   MOVE      Cr_BTSWCR     LBTSWCR                                   AR792734A
-     C                   MOVE      Cr_BTPRCN     LBTPRCN                                   AR792734A
-     C                   MOVE      Cr_BTBCBH     LBTBCBH                                   AR792734A
-     C                   MOVE      Cr_BTRADP     LBTRADP                                   AR792734A
-     C                   MOVE      Cr_BTSHPI     LBTSHPI                                   AR792734A
-     C                   Z-ADD     Cr_BTRRNM     LBTRRNM                                   AR792734A
-     C                   MOVE      Cr_BTRNBE     LBTRNBE                                   AR792734A
-     C                   MOVE      Cr_BTRARC     LBTRARC                                   AR792734A
-     C                   MOVE      Cr_BTTSTY     LBTTSTY                                   AR792734A
-     C                   MOVE      Cr_BTBKCD     LBTBKCD                                   AR792734A
-     C                   Z-ADD     Cr_BTSPFC     LBTSPFC                                   AR792734A
-     C                   MOVE      Cr_BTRVDI     LBTRVDI                                   AR792734A
-     C                   Z-ADD     Cr_BTNITM     LBTNITM                                   AR792734A
-     C                   MOVE      Cr_BTOCCY     LBTOCCY                                   AR792734A
-     C                   Z-ADD     Cr_BTOAMT     LBTOAMT                                   AR792734A
-     C                   MOVE      Cr_BTFRNT     LBTFRNT                                   AR792734A
-     C                   MOVE      Cr_BTAFRT     LBTAFRT                                   AR792734A
-     C                   MOVE      Cr_BTTMST     LBTTMST                                   AR792734A
-     C                   MOVE      Cr_BTVALI     LBTVALI                                   AR792734A
-     C                   MOVE      Cr_BTDUPC     LBTDUPC                                   AR792734A
-     C                   MOVE      Cr_BTOUTR     LBTOUTR                                   AR792734A
-      *                                                                                    AR792734A
-     C                   CALL      'GL004446'                                              AR792734A
-     C                   PARM      *Blanks       UUAPRC                                    AR792734A
-     C                   PARM                    LJENP                                     AR792734A
-      *                                                                                    AR792734A
-     C     UUAPRC        IFNE      *BLANKS                                                 AR792734A
-     C                   EXSR      *PSSR                                                   AR792734A
-     C                   ELSE                                                              AR792734A
-     C                   MOVE      'Y'           T_REV                                     AR792734A
-     C                   ENDIF                                                             AR792734A
-      *                                                                                    AR792734A
-     C                   ENDIF                                                             AR792734A
-     C                   ENDIF                                                             AR792734A
-     C                   ENDIF                                                             AR792734A
-     C                   ENDIF                                                             AR792734A
-      *                                                                                    AR792734A
-     C     B2BINB        IFEQ      *ZERO                                                   AR792734A
-     C     JAVAUSER      ORNE      'Y'                                                     AR792734A
-     C     WPlayBack     ORNE      'N'                                                     AR792734A
-     C     T_REV         OREQ      'Y'                                                     AR792734A
-     C     PActnCde      ANDEQ     'A'                                                     AR792734A
-     C     PActnCde      OREQ      'I'                                                     AR792734A
+     C*****B2BINB        IFEQ      *ZERO                                          AR792734A MD033630
+     C*****JAVAUSER      ORNE      'Y'                                            AR792734A MD033630
+     C*****WPlayBack     ORNE      'N'                                            AR792734A MD033630
+     C*****T_REV         OREQ      'Y'                                            AR792734A MD033630
+     C*****PActnCde      ANDEQ     'A'                                            AR792734A MD033630
+     C*****PActnCde      OREQ      'I'                                            AR792734A MD033630
       *                                                                         CGL016
 B1   C     CGL016        IFEQ      'Y'                                          CGL016
      C     *IN91         ANDEQ     *OFF                                         CGL016
-     C     CRE023        OREQ      'Y'                                                     AR792734A
-     C     *IN91         ANDEQ     *OFF                                                    AR792734A
-     C     OUTWRD        AndEQ     'Y'                                                      MD033630
+     C*****CRE023        OREQ      'Y'                                            AR792734A MD033630
+     C******IN91         ANDEQ     *OFF                                           AR792734A MD033630
+     C*****OUTWRD        AndEQ     'Y'                                             MD033630 MD033630
       *                                                                         CGL016
      C     SCKEY         KLIST                                                  CGL016
      C                   KFLD                    B2BTNB                         CGL016
@@ -1168,10 +1175,11 @@ E1   C     *IN99         IFEQ      *OFF                                         
 E1   C                   ENDIF                                                  CGL016
       *                                                                         CGL016
 E1   C                   ENDIF                                                  CGL016
-     C                   ENDIF                                                             AR792734A
+     C**********         ENDIF                                                    AR792734A MD033630
       *                                                                         CGL016
      C/COPY WNCPYSRC,GLBITPDC12
      C**********         ENDIF                                                      CAP084 AR792734A
+     C                   ENDIF                                                              MD033630
       *
       ** Update Currency Totals file GLJENSPD.
       *
@@ -1196,7 +1204,10 @@ E1   C                   ENDIF                                                  
       *                                                                                       CRE023
       ** Execute SRUpdTwoClk if CRE023 is on                                                  CRE023
       *                                                                                       CRE023
-     C                   IF        CRE023 = 'Y'                                               CRE023
+     C**********         IF        CRE023 = 'Y'                                      CRE023 MD036967
+     C                   IF        CRE023 = 'Y' AND CAP207='N'                              MD036967
+     C                             OR CRE023='Y' AND CAP207='Y'                             MD036967
+     C                             AND BTDCIN = 'D'                                         MD036967
      C                   EXSR      SRUpdTwoClk                                                CRE023
      C                   ENDIF                                                                CRE023
       *
@@ -2265,6 +2276,30 @@ E1   C                   ENDIF                                                  
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,GLBITPDC03
       *                                                                                       CRE023
+      ** Check for Account Balance Check Flag                                               MD036967
+      *                                                                                     MD036967
+     C                   EVAL      CAP207 = 'N'                                             MD036967
+     C                   CALLB     'AOSARDR0'                                               MD036967
+     C                   PARM      *BLANKS       @RTCD                                      MD036967
+     C                   PARM      '*VERIFY'     @OPTN                                      MD036967
+     C                   PARM      'CAP207'      @SARD                                      MD036967
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD036967
+      *                                                                                     MD036967
+      ** An NRF (No Record Found) return code is valid.  Issue database error               MD036967
+      ** only for error return codes.                                                       MD036967
+      *                                                                                     MD036967
+     C                   IF        (@RTCD <> *BLANKS) AND                                   MD036967
+     C                             (@RTCD <> '*NRF   ')                                     MD036967
+     C                   EVAL      DBKEY = 'CAP207'                                         MD036967
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD036967
+     C                   EVAL      DBASE = 11                                               MD036967
+     C                   EXSR      *PSSR                                                    MD036967
+     C                   ENDIF                                                              MD036967
+      *                                                                                     MD036967
+     C                   IF        @RTCD = *BLANK                                           MD036967
+     C                   EVAL      CAP207 = 'Y'                                             MD036967
+     C                   ENDIF                                                              MD036967
+      *                                                                                       CRE023
       ** Check for 2 O'clock Flag SAR                                                         CRE023
       *                                                                                       CRE023
      C                   EVAL      CRE023 = 'N'                                               CRE023
@@ -2579,6 +2614,134 @@ E1   C                   ENDIF                                                  
       ** Update MEMOS file                                                                    CRE023
       *                                                                                       CRE023
      C**********         UPDATE    MEMOSMDF                                         CRE023 AR792734A
+      *                                                                                     MD033630
+      ** Additional reversal processing for an amendment or delete action                   MD033630
+      *                                                                                     MD033630
+     C                   IF        BITUPD = 'Y'                                             MD033630
+      *                                                                                     MD033630
+     C     Cr_BTTRTY     CHAIN     RETTYPL0                                                 MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND GRECI <> 'D')                                MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C     Cr_BTRACN     CHAIN     MEMOSL2                                                  MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND RECI <> 'D')                                 MD033630
+     C                   UNLOCK    MEMOSL2                                                  MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update ledger balance of MEMOSL2                                                   MD033630
+      *                                                                                     MD033630
+     C                   IF        Cr_BTDCIN = 'D'                                          MD033630
+     C                   EVAL      LDBLN = LDBLN - Cr_BTPTAM                                MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      LDBLN = LDBLN + Cr_BTPTAM                                MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update the cleared balance                                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        Cr_BTVLDT <= BJRDNB                                      MD033630
+      *                                                                                     MD033630
+     C                   IF        Cr_BTDCIN = 'D'                                          MD033630
+     C                   EVAL      CLBLN = CLBLN - Cr_BTPTAM                                MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      CLBLN = CLBLN + Cr_BTPTAM                                MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update MEMOS file                                                                  MD033630
+      *                                                                                     MD033630
+     C                   UPDATE    MEMOSMDF                                                 MD033630
+      *                                                                                     MD033630
+     C                   If        B2VALI <> '*'                                            MD033630
+      *                                                                                     MD033630
+     C     B2TRTY        CHAIN     RETTYPL0                                                 MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND GRECI <> 'D')                                MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C     B2RACN        CHAIN     MEMOSL2                                                  MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND RECI <> 'D')                                 MD033630
+     C                   UNLOCK    MEMOSL2                                                  MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update ledger balance of MEMOSL2                                                   MD033630
+      *                                                                                     MD033630
+     C                   IF        B2DCIN = 'D'                                             MD033630
+     C                   EVAL      LDBLN = LDBLN + B2PTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      LDBLN = LDBLN - B2PTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update the cleared balance                                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        B2VLDT <= BJRDNB                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        B2DCIN = 'D'                                             MD033630
+     C                   EVAL      CLBLN = CLBLN + B2PTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      CLBLN = CLBLN - B2PTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update MEMOS file                                                                  MD033630
+      *                                                                                     MD033630
+     C                   UPDATE    MEMOSMDF                                                 MD033630
+      *                                                                                     MD033630
+     C                   EndIf                                                              MD033630
+      *                                                                                     MD033630
+     C                   Else                                                               MD033630
+      *                                                                                     MD033630
+     C     B2TRTY        CHAIN     RETTYPL0                                                 MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND GRECI <> 'D')                                MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C     B2RACN        CHAIN     MEMOSL2                                                  MD033630
+      *                                                                                     MD033630
+     C                   IF        (NOT(%FOUND)) OR                                         MD033630
+     C                             (%FOUND AND RECI <> 'D')                                 MD033630
+     C                   UNLOCK    MEMOSL2                                                  MD033630
+     C                   LEAVESR                                                            MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update ledger balance of MEMOSL2                                                   MD033630
+      *                                                                                     MD033630
+     C                   IF        B2DCIN = 'D'                                             MD033630
+     C                   EVAL      LDBLN = LDBLN + B2PTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      LDBLN = LDBLN - B2PTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update the cleared balance                                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        B2VLDT <= BJRDNB                                         MD033630
+      *                                                                                     MD033630
+     C                   IF        B2DCIN = 'D'                                             MD033630
+     C                   EVAL      CLBLN = CLBLN + B2PTAM                                   MD033630
+     C                   ELSE                                                               MD033630
+     C                   EVAL      CLBLN = CLBLN - B2PTAM                                   MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+     C                   ENDIF                                                              MD033630
+      *                                                                                     MD033630
+      ** Update MEMOS file                                                                  MD033630
+      *                                                                                     MD033630
+     C                   UPDATE    MEMOSMDF                                                 MD033630
+     C                   ENDIF                                                              MD033630
       *                                                                                       CRE023
       ** ---------------------------- **                                                      CRE023
       ** Update REMEMLPD                                                                      CRE023
@@ -2591,7 +2754,8 @@ E1   C                   ENDIF                                                  
       ** Setup posting amount fields of REMEMLL0                                              CRE023
       *                                                                                       CRE023
      C**********         IF        Cr_BTVLDT > BJDNWD                               CRE023 AR792734A
-     C                   IF        Cr_BTVLDT >=BJDNWD                                      AR792734A
+     C**********         IF        Cr_BTVLDT >=BJDNWD                             AR792734A MD033630
+     C                   IF        Cr_BTVLDT > BJDNWD                                       MD033630
      C                   LEAVESR                                                              CRE023
      C                   ENDIF                                                                CRE023
       *                                                                                       CRE023
@@ -2599,6 +2763,11 @@ E1   C                   ENDIF                                                  
       *                                                                                       CRE023
      C                   IF        (NOT(%FOUND)) OR                                           CRE023
      C                             (%FOUND AND GRECI <> 'D')                                  CRE023
+      *                                                                                     MD035554
+      ** Exclude Outward Clearing Checks with Value Date equal to Run Date                  MD035554
+      *                                                                                     MD035554
+     C                             Or (%FOUND And GRECI = 'D'                               MD035554
+     C                                And GOCLR = 'Y' and Cr_BTVLDT = BJRDNB)               MD035554
      C                   LEAVESR                                                              CRE023
      C                   ENDIF                                                                CRE023
       *                                                                                       CRE023
@@ -2643,6 +2812,11 @@ E1   C                   ENDIF                                                  
       *                                                                                    AR792734A
      C                   IF        (NOT(%FOUND)) OR                                        AR792734A
      C                             (%FOUND AND GRECI <> 'D')                               AR792734A
+      *                                                                                     MD035554
+      ** Exclude Outward Clearing Checks with Value Date equal to Run Date                  MD035554
+      *                                                                                     MD035554
+     C                             Or (%FOUND And GRECI = 'D'                               MD035554
+     C                                And GOCLR = 'Y' and B2VLDT = BJRDNB)                  MD035554
      C                   LEAVESR                                                           AR792734A
      C                   ENDIF                                                             AR792734A
       *                                                                                    AR792734A
@@ -2683,7 +2857,8 @@ E1   C                   ENDIF                                                  
       ** Setup posting amount fields of REMEMLL0                                              CRE023
       *                                                                                       CRE023
      C**********         IF        B2VLDT > BJDNWD                                  CRE023 AR792734A
-     C                   IF        B2VLDT >= BJDNWD                                        AR792734A
+     C**********         IF        B2VLDT >= BJDNWD                               AR792734A MD033630
+     C                   IF        B2VLDT >  BJDNWD                                         MD033630
      C                   LEAVESR                                                              CRE023
      C                   ENDIF                                                                CRE023
       *                                                                                       CRE023
@@ -2691,6 +2866,11 @@ E1   C                   ENDIF                                                  
       *                                                                                       CRE023
      C                   IF        (NOT(%FOUND)) OR                                           CRE023
      C                             (%FOUND AND GRECI <> 'D')                                  CRE023
+      *                                                                                     MD035554
+      ** Exclude Outward Clearing Checks with Value Date equal to Run Date                  MD035554
+      *                                                                                     MD035554
+     C                             Or (%FOUND And GRECI = 'D'                               MD035554
+     C                                And GOCLR = 'Y' and B2VLDT = BJRDNB)                  MD035554
      C                   LEAVESR                                                              CRE023
      C                   ENDIF                                                                CRE023
       *                                                                                       CRE023

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. MD033630           Date 23Jun15               *
-      *  Prev Amend No. MD027587           Date 19Jun14               *
+      *  Last Amend No. MD035554           Date 11May16               *
+      *  Prev Amend No. MD033630           Date 11May16               *
+      *                 MD027587           Date 19Jun14               *
       *                 MD000091           Date 08May13               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -31,6 +32,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility                        *
       *  MD033630 - Credit Entries are not being validated on AMEND   *
       *             and DELETE. Debit Entries amount need not be      *
       *             validated on DELETE.                              *
@@ -433,6 +435,7 @@
      C                             And GOCLR <> 'Y'                                         MD033630
      C                             Or GB2PTAM > WCMPAMT And GOCLR = 'Y' And                 MD033630
      C                                DDACTN = 'D'                                          MD033630
+     C                                And GB2VLDT > P_BJRDNB                                MD035554
      C                             Or GB2PTAM < WCMPAMT And GOCLR = 'Y' And                 MD033630
      C                                DDACTN = 'A'                                          MD033630
      C                   EVAL      DDPTAMOK = 'N'

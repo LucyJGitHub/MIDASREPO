@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033630           Date 23Jun15               *
-      *  Prev Amend No. MD031382           Date 11Dec14               *
+      *  Last Amend No. MD036967           Date 11May16               *
+      *  Prev Amend No. MD035554           Date 11May16               *
+      *                 MD033630           Date 11May16               *
+      *                 MD031382           Date 11Dec14               *
       *                 MD031009           Date 16Oct14               *
       *                 MD028278           Date 08Jul14               *
       *                 MD027654           Date 02Jul14               *
@@ -90,6 +92,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD036967 - Conflict between CAP207 and CRE025. Update Credit *
+      *             entries after Accept.                             *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD033630 - Limit CRE023 functionality to those whose trans-  *
       *             action types are in RETTYPPD. Return update of    *
       *             Memos for Non Outward Clearing Transactions.      *
@@ -234,6 +239,14 @@
      F/COPY WNCPYSRC,GL4445F001
      FRSACMTPDO   E           K        DISK         KCOMIT       A
      F                                              KINFSR ERRSR                              239155
+     FREMEMLL0UF  E           K        DISK         KCOMIT                                  MD036967
+     F                                              KINFSR ERRSR                            MD036967
+      *                                                                                     MD033630
+     FRETTYPL0IF  E           K        DISK         KCOMIT                                  MD033630
+     F                                              KINFSR ERRSR                            MD033630
+      *                                                                                     MD033630
+      ** Outward Clearing Transaction Types                                                 MD033630
+      *                                                                                     MD033630
      F**ACCNT   IF  E           K        DISK                       100027CCB002
      F*FDTABJLLIF*E***********K        DISK                               S01194
      F*
@@ -577,6 +590,7 @@
      C********** CRE023    ANDEQ'N'                                                BUG27209 MD033630
      C/COPY OFCPYSRCZ,CGL135_093                                                             CGL135B
      C                     EXSR RETSR
+     C                     EXSR RMEMUP                                                      MD036967
      C                     END
      C*
      C*     Prono transaction
@@ -671,6 +685,28 @@
      C********************************************************************
      C*
      C           RETSR     BEGSR
+      *                                                                                     MD033630
+      ** If CRE023 is on, check if transaction is in RETTYPPD. If                           MD033630
+      ** Transaction type exists, skip sub routine as MEMOS was already                     MD033630
+      ** processed                                                                          MD033630
+      **********                                                                            MD033630
+     C                     MOVE 'N'       OCC     1                                         MD036967
+     C           CRE023    IFEQ 'Y'                                                         MD033630
+     C           BTTRTY    CHAINRETTYPL0             99                                     MD033630
+     C           *IN99     IFEQ *OFF                                                        MD033630
+     C           GRECI     ANDEQ'D'                                                         MD033630
+     C**********           GOTO RETSRE                                             MD033630 MD036967
+     C                     MOVE 'Y'       OCC                                               MD036967
+     C                     ENDIF                                                            MD033630
+     C                     ENDIF                                                   MD033630 MD036967
+      *                                                                                     MD036967
+     C           CRE023    IFEQ 'N'                                                         MD036967
+     C           CRE023    OREQ 'Y'                                                         MD036967
+     C           OCC       ANDEQ'N'                                                         MD036967
+     C           CRE023    OREQ 'Y'                                                         MD036967
+     C           OCC       ANDEQ'Y'                                                         MD036967
+     C           CAP207    ANDEQ'Y'                                                         MD036967
+     C           BTDCIN    ANDEQ'C'                                                         MD036967
       *                                                                   CEU013
       ** Move alpha fields to numeric for call.                           CEU013
      C                     MOVE BTCUST    W0CNUM                          CEU013
@@ -753,6 +789,7 @@
      C                     END                                            CCB002
      C/COPY WNCPYSRC,GL4445C008
      C                     ENDIF                                          CEU013
+     C                     ENDIF                                                            MD036967
       *                                                                   CCB002
       ** Redefine INDEX. This workfield was originally defined in         CCB002
       ** SR/ACCMSR but this subroutine has been replaced by the           CCB002
@@ -808,7 +845,8 @@
      C***********          MOVE 'Y'       UPDIND  1                       CCB002
      C***********          END                                            CCB002
      C***********                                                         CCB002
-     C                     ENDSR
+     C**********           ENDSR                                                            MD033630
+     C           RETSRE    ENDSR                                                            MD033630
      C*
      C********************************************************************
      C***********                                                        *CCB002
@@ -1325,7 +1363,11 @@
       ** Initialise usused zone fields in RSACMTPD that are causing decimal data errors       239830
       *                                                                                       239830
      C                     Z-ADD0         ACDEQQ           ZONE  4,0                          239830
+     C           BTTRTY    IFEQ *BLANKS                                                     MD036967
      C                     Z-ADD0         XRFN             ZONE 10,0                          239830
+     C                     ELSE                                                             MD036967
+     C                     MOVE BTTRTY    XRFN                                              MD036967
+     C                     ENDIF                                                            MD036967
       *                                                                                       CAP205
      C           CAP205    IFEQ 'Y'                                                           CAP205
      C                     MOVEL'GL'      CMOD                                                CAP205
@@ -1696,6 +1738,27 @@
      C           @RTCD     IFEQ *BLANK                                                        CRE023
      C                     MOVEL'Y'       CRE023                                              CRE023
      C                     ENDIF                                                              CRE023
+      *                                                                                     MD036967
+     C                     MOVEL'N'       CAP207  1                                         MD036967
+     C                     CALL 'AOSARDR0'                                                  MD036967
+     C                     PARM *BLANKS   @RTCD                                             MD036967
+     C                     PARM '*VERIFY' @OPTN                                             MD036967
+     C                     PARM 'CAP207'  @SARD                                             MD036967
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD036967
+      *                                                                                     MD036967
+     C           @RTCD     IFNE *BLANKS                                                     MD036967
+     C           @RTCD     ANDNE'*NRF   '                                                   MD036967
+     C           *LOCK     IN   LDA                                                         MD036967
+     C                     MOVEL'SCSARDPD'DBFILE                                            MD036967
+     C                     Z-ADD19        DBASE                                             MD036967
+     C                     MOVEL@SARD     DBKEY                                             MD036967
+     C                     OUT  LDA                                                         MD036967
+     C                     EXSR *PSSR                                                       MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+     C           @RTCD     IFEQ *BLANK                                                      MD036967
+     C                     MOVEL'Y'       CAP207                                            MD036967
+     C                     ENDIF                                                            MD036967
      C/COPY WNCPYSRC,GL4445C006
      C*                                                                   CEU013
      C*
@@ -1726,6 +1789,56 @@
      C*
      C********************************************************************
      C*                                                                  *
+     C*     RMEMUP   SUB-ROUTINE                                         *                  MD036967
+     C*                                                                  *                  MD036967
+     C*     Update REMEMLPD                                              *                  MD036967
+     C*                                                                  *                  MD036967
+     C********************************************************************                  MD036967
+     C           RMEMUP    BEGSR                                                            MD036967
+      *                                                                                     MD036967
+     C                     MOVE 'N'       OCC     1                                         MD036967
+     C           CRE023    IFEQ 'Y'                                                         MD036967
+     C           BTTRTY    CHAINRETTYPL0             99                                     MD036967
+      *                                                                                     MD036967
+     C           *IN99     IFEQ *OFF                                                        MD036967
+     C           GRECI     ANDEQ'D'                                                         MD036967
+      *                                                                                     MD036967
+     C           BTVLDT    IFEQ RDATE                                                       MD036967
+     C                     GOTO RMEMSR                                                      MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+     C                     ELSE                                                             MD036967
+     C                     GOTO RMEMSR                                                      MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+      *                                                                                     MD036967
+     C           BTRACN    CHAINREMEMLL0             98                                     MD036967
+     C           *IN98     IFEQ *OFF                                                        MD036967
+      ** If the transaction is an Outward clearing                                          MD036967
+      *                                                                                     MD036967
+     C           GOCLR     IFEQ 'Y'                                                         MD036967
+     C                     ADD  BTPTAM    GTAMT                                             MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+      ** If the transaction is a Reversal of Today's Outward Clearing                       MD036967
+      *                                                                                     MD036967
+     C           GRCLT     IFEQ 'Y'                                                         MD036967
+     C                     SUB  BTPTAM    GTAMT                                             MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+      ** If the transaction is a Reversal of Previous Outward Clearing                      MD036967
+      *                                                                                     MD036967
+     C           GRCLP     IFEQ 'Y'                                                         MD036967
+     C                     SUB  BTPTAM    GPAMT                                             MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+     C                     UPDATREMEMLD0                                                    MD036967
+     C                     ENDIF                                                            MD036967
+     C                     ENDIF                                                            MD036967
+      *                                                                                     MD036967
+     C           RMEMSR    ENDSR                                                            MD036967
+     C********************************************************************                  MD036967
+     C*                                                                  *                  MD036967
      C*     TERMSR SR     SUB-ROUTINE                                    *
      C*                                                                  *
      C*     Program termination                                          *

@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CGL052             Date 02Dec15               *
-      *  Prev Amend No. MD029739           Date 15Aug14               *
+      *  Last Amend No. MD035554           Date 11May16               *
+      *  Prev Amend No. CGL052             Date 02Dec15               *
+      *                 MD029739           Date 15Aug14               *
       *                 MD033486           Date 27Feb15               *
       *                 MD031974           Date 16Jan15               *
       *                 CAP212             Date 15Sep14               *
@@ -95,6 +96,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  CGL052 - Amend Washout Processing (Recompile)                *
       *  MD029739 - File renaming for integration layer. (Recompile)  *
       *  MD033486 - Add new Beneficiary Account field (Recompile)     *

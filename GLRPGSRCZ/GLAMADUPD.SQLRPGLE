@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033852           Date 20Aug15               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. MD035554           Date 27Nov15               *
+      *  Prev Amend No. MD033852           Date 20Aug15               *
+      *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
       *                 MD027195           Date 19Aug14               *
       *                 233901             Date 13May14               *
@@ -123,6 +124,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD033852 - Wrong balance when statement frequency is         *
       *             changed from non 'E' to 'E'.                      *
       *  CRE101 - Interim Interest Statements on a Frequency          *

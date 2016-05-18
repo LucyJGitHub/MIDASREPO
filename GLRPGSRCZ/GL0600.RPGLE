@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD037046           Date 12Feb16               *
-      *  Prev Amend No. CRE095             Date 25Apr14               *
+      *  Last Amend No. MD035554           Date 11May16               *
+      *  Prev Amend No. MD037046           Date 12Feb16               *
+      *                 CRE095             Date 25Apr14               *
       *                 MD031057           Date 24Feb15             *
       *                 240699             Date 19Aug14               *
       *                 MD028392           Date 14Jul14               *
@@ -175,6 +176,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD037046 - MEMOS missing balances from CLEARPD of future     *
       *             dated posting. Modified validation of MD028392    *
       *  CRE095 - Rate Fixing for RE Accounts                         *

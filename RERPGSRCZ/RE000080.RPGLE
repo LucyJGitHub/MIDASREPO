@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. MD031950           Date 17Jun15               *
-      *  Prev Amend No. CAP212             Date 15Sep14               *
+      *  Last Amend No. AR847010           Date 25May16               *
+      *  Prev Amend No. MD031950           Date 17Jun15               *
+      *                 CAP212             Date 15Sep14               *
       *                 CGL165             Date 15Feb17               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 01Sep14               *
@@ -44,6 +45,10 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  AR847010 - Audit report not found in FCREPTPD causing comp.  *
+      *             failure. RCF processing for audit file is removed *
+      *             as it is not necessary. (Child: AR847011)         *
+      *           - Applied for MD-38715                              *
       *  MD031950 - Recompiled due to changed PF/CUSEXZ1.             *
       *  CAP212 - FT Nostro Transfer API (Recompile)                  *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
@@ -172,7 +177,7 @@
       ** Midas SE Trades master file
 
      FRE000080AUO    E             PRINTER INFSR(*PSSR)
-     F                                     INFDS(SPOOLAU)
+     F**********                           INFDS(SPOOLAU)                                   AR847010
       ** Midas RE Debit/Credit Retail Transaction Advices Audit
 
       *****************************************************************
@@ -213,9 +218,9 @@
      D  KEvnt                 25     26A
 
       ** RE000080AU File Information
-     D SPOOLAU         DS
-     D  PZFileAU              83     92
-     D  PZFNumAU             123    124B 0
+     D*SPOOLAU**       DS                                                                   AR847010
+     D**PZFileAU              83     92                                                     AR847010
+     D**PZFNumAU             123    124B 0                                                  AR847010
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -225,10 +230,10 @@
       ** Entry parameter fields
 
       ** Standard Utility Parameters
-     D PZSeq           S              5A
-     D PZEnty          S              3A
-     D PZSNum          S              6P 0
-     D PZSErr          S              1A
+     D*PZSeq****       S              5A                                                    AR847010
+     D*PZEnty***       S              3A                                                    AR847010
+     D*PZSNum***       S              6P 0                                                  AR847010
+     D*PZSErr***       S              1A                                                    AR847010
 
       ** Parameter fields
      D PRtCd           S              7A
@@ -791,30 +796,30 @@
       *****************************************************************
       /EJECT
       *****************************************************************
-      *                                                               *
-      *  SrRCFAU - Registers the audit file via ZSFILE.               *
-      *                                                               *
+      *****************************************************************                     AR847010
+      ***SrRCFAU*-*Registers*the*audit*file*via*ZSFILE.****************                     AR847010
+      *****************************************************************                     AR847010
       *****************************************************************
-     C     SrRCFAU       BEGSR
+     C*****SrRCFAU       BEGSR                                                              AR847010
 
-     C                   EVAL      PZSNum = PZFNumAU
+     C**********         EVAL      PZSNum = PZFNumAU                                        AR847010
 
-     C                   CALL      'ZSFILE'
-     C                   PARM                    PZSeq
-     C                   PARM                    PZEnty
-     C                   PARM                    PZFileAU
-     C                   PARM                    PZSNum
-     C                   PARM      *BLANK        PZSErr
+     C**********         CALL      'ZSFILE'                                                 AR847010
+     C**********         PARM                    PZSeq                                      AR847010
+     C**********         PARM                    PZEnty                                     AR847010
+     C**********         PARM                    PZFileAU                                   AR847010
+     C**********         PARM                    PZSNum                                     AR847010
+     C**********         PARM      *BLANK        PZSErr                                     AR847010
 
-     C                   IF        PZSErr = 'Y'
-     C                   DUMP
-     C                   EVAL      *INU7 = *ON
-     C                   EVAL      *INU8 = *ON
-     C                   EVAL      *INLR = *ON
-     C                   RETURN
-     C                   ENDIF
+     C**********         IF        PZSErr = 'Y'                                             AR847010
+     C**********         DUMP                                                               AR847010
+     C**********         EVAL      *INU7 = *ON                                              AR847010
+     C**********         EVAL      *INU8 = *ON                                              AR847010
+     C**********         EVAL      *INLR = *ON                                              AR847010
+     C**********         RETURN                                                             AR847010
+     C**********         ENDIF                                                              AR847010
 
-     C                   ENDSR
+     C**********         ENDSR                                                              AR847010
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -827,7 +832,7 @@
      C     *INZSR        BEGSR
 
       ** Call RCF Processing for Audit File
-     C                   EXSR      SrRCFAU
+     C**********         EXSR      SrRCFAU                                                  AR847010
 
       ** Key list for RERSACL0
 

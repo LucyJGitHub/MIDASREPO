@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR924677           Date 03Nov14               *
-      *  Prev Amend No. MD030940           Date 08Oct14               *
+      *  Last Amend No. MD037804           Date 25May16               *
+      *  Prev Amend No. AR924677           Date 03Nov14               *
+      *                 MD030940           Date 08Oct14               *
       *                 CFT157             Date 29Aug14               *
       *                 MD029681           Date 12Aug14               *
       *                 CFT151             Date 21Mar14               *
@@ -89,6 +90,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037804 - Unnecessary DUMP produced by FTIPAYUPD module     *
       *  AR924677 - Amend of an authorized payment should return it   *
       *             to an unauthorized state. (Child: AR924679)       *
       *  MD030940 - (CFT157) Error when inserting new payment.        *
@@ -699,7 +701,7 @@
       ** CFT151 switchable field                                                              CFT151
       *                                                                                       CFT151
      D CFT151          S              1A                                                      CFT151
- 
+
      D/COPY WNCPYSRC,FTH00165
       *
       ** +--------------------------------------+
@@ -959,7 +961,7 @@
       *
       ** Interactive mode:
       *
-     C                   DUMP                                                               TEMPPL
+     C**********         DUMP                                                        TEMPPL MD037804
      C                   IF        PType = '1'
       *
      C                   IF        CHTMST <> IPTMST
@@ -3636,7 +3638,7 @@ e1   C                   ENDIF                                                  
      C                   KFLD                    KIDEN                                        CSD015
      C                   KFLD                    BRCA                                         CSD015
                                                                                               CSD015
- 
+
       *
       ** Program, module and procedure names for dbase error processing
       ** ==============================================================

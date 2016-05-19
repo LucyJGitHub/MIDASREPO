@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. AR808714           Date 04Jun15               *
-      *  Prev Amend No. 258321             Date 19Aug14               *
+      *  Last Amend No. AR703547           Date 25May16               *
+      *  Prev Amend No. AR808714           Date 04Jun15               *
+      *                 258321             Date 19Aug14               *
       *                 256537             Date 15Mar13               *
       *                 MD000091           Date 07May13               *
       *                 CDL091             Date 12Dec12               *
@@ -67,6 +68,12 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR703547 - Different validation when Buy/Sell=Deal ccy and if*
+      *             buy/sell<>deal ccy. @Round ind. is being checked  *
+      *             for buy/sell=deal ccy. 2 unit diff is allowed when*
+      *             @Round=Y for buy/sell=deal ccy unlike when buy/   *
+      *             sell <> deal ccy. (Child artifact: AR703548)      *
+      *             Applied for MD-36726.                             *
       *  AR808714 - Cannot insert OT deal, exchange rate validation.  *
       *             Do not issue error FXM4003 if rate is close to 1  *
       *             and amounts are correct. Applied fix AR599429.    *
@@ -146,7 +153,7 @@
       *           use as APIs.                                        *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -165,66 +172,66 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the FX standard declares
      D*/COPY*FXCPYSRC,STDDECLARE***                                                           209009
      D/COPY ZACPYSRC,STDDECLARE                                                               209009
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
      D/COPY WNCPYSRC,FXH00012
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
                                                                                               CER043
      D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CER043
       ** EXTERNAL DS FOR SAR DETAILS                                                          CER043
@@ -240,82 +247,82 @@
      D  RelDAM2               25     39  0                                                    CER043
      D  RelDXRT               88    100  8                                                 BUG23050A
      D  RelOSRT              101    113  8                                                 BUG23050A
- 
+
      D @@AY            S             10  0 DIM(10) CTDATA PERRCD(1)
      D @SF             S             10  0 DIM(10) CTDATA PERRCD(1)
      D @AD             S              9  0 DIM(8) CTDATA PERRCD(1)              Adjust Decimal
      D POW             S              7  3 DIM(7) CTDATA PERRCD(1)
- 
- 
+
+
      D                 DS
      D  @Y                     1     16
      D                                     DIM(16) ASCEND                       #ZICC  Amt.char.
      D  W@AMTP                 1     16
      D  W@AMTD                 1     17
- 
- 
+
+
      D                 DS
      D  @P                     1     15  0
      D                                     DIM(15)                              #ZICC  Amt.num.
      D  W@AMNT                 1     15  0
      D  W@AMTR                 3     15  8
- 
- 
+
+
      D                 DS
      D  W@1150                 1     15  0
      D  W@1151                 1     15  1
      D  W@1152                 1     15  2
      D  W@1153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@2150                 1     15  0
      D  W@2151                 1     15  1
      D  W@2152                 1     15  2
      D  W@2153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@3150                 1     15  0
      D  W@3151                 1     15  1
      D  W@3152                 1     15  2
      D  W@3153                 1     15  3
- 
- 
+
+
      D                 DS
      D  W@4150                 1     15  0
      D  W@4151                 1     15  1
      D  W@4152                 1     15  2
      D  W@4153                 1     15  3
- 
- 
+
+
      D M@MGDA          DS
      D  M@0145                 1     45
      D  M@0115                 1     15
      D  M@1630                16     30
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       **   First scaling exponent
      D     @@SXP1      S              1S 0
       **   Second scaling exponent
      D     @@SXP2      S                   LIKE(@@SXP1)
- 
- 
+
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
- 
+
       ** Index for arrays of warning message ids etc
      D WIx             S              3P 0
- 
+
      D UseRate2        S              1                                         186377
                                                                                 186377
                                                                                               CER043
@@ -383,11 +390,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MOVE      *BLANK        RetCodeIn
- 
+
      C                   MOVE      *BLANK        FldNamXAr
      C                   MOVE      *BLANK        MsgIDXAr
      C                   MOVE      *BLANK        MsgDtaXAr
@@ -396,7 +403,7 @@
      C                   MOVE      *BLANK        WMsgIDXAr
      C                   MOVE      *BLANK        WMsgDtXAr
      C                   Z-ADD     0             WIx
- 
+
      C                   MOVE      *BLANK        F3DMD1                         mult/div ind
      C                   Z-ADD     *ZERO         F3DXRT                         exch rate
      C                   Z-ADD     *ZERO         @SRATE                         Descaled exch rt
@@ -1344,6 +1351,7 @@
      C     W@DFBD        IFNE      0
      C     W@DFSD        ANDNE     0
      C     @ROUND        ANDNE     'Y'
+     C     @@PASD        ANDNE     'Y'                                                      AR703547
      C*
      C** b) @ROUND indicator on, @@K=1 and both differences > 2 units
      C** ..allow 2 units tolerance if round down of calculated amount
@@ -1541,6 +1549,7 @@
      C     W@DFBM        IFNE      0
      C     W@DFSM        ANDNE     0
      C     @ROUND        ANDNE     'Y'
+     C     @@PASM        ANDNE     'Y'                                                      AR703547
      C*
      C** b) @ROUND indicator on, @@K=1 and both differences > 2 units
      C** ..allow 2 units tolerance if round down of calculated amount
@@ -1659,6 +1668,9 @@
      C     @@PASD        OREQ      'Y'
      C     @ROUND        ANDEQ     'Y'
      C     @@K           ANDEQ     1
+     C     @@PASD        OREQ      'Y'                                                      AR703547
+     C     @ROUND        ANDNE     'Y'                                                      AR703547
+     C     @@K           ANDEQ     1                                                        AR703547
      C     @@BSIN        IFEQ      'B'
      C                   MOVE      'M'           W@MDIN
      C                   ELSE
@@ -1700,6 +1712,9 @@
      C     @@PASM        OREQ      'Y'
      C     @ROUND        ANDEQ     'Y'
      C     @@K           ANDEQ     1
+     C     @@PASM        OREQ      'Y'                                                      AR703547
+     C     @ROUND        ANDNE     'Y'                                                      AR703547
+     C     @@K           ANDEQ     1                                                        AR703547
      C     @@BSIN        IFEQ      'B'
      C                   MOVE      'D'           W@MDIN
      C                   ELSE
@@ -2786,7 +2801,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
       *
       * INPUTS
@@ -2917,9 +2932,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

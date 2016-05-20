@@ -73,7 +73,7 @@
       *             for buy/sell=deal ccy. 2 unit diff is allowed when*
       *             @Round=Y for buy/sell=deal ccy unlike when buy/   *
       *             sell <> deal ccy. (Child artifact: AR703548)      *
-      *             Applied for MD-36726.                             *
+      *             Applied for MD-37680.                             *
       *  AR808714 - Cannot insert OT deal, exchange rate validation.  *
       *             Do not issue error FXM4003 if rate is close to 1  *
       *             and amounts are correct. Applied fix AR599429.    *

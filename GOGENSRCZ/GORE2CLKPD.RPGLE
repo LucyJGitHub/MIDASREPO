@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2003')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
 /*EXI *  TEXT('Bulk Update of Global File GZRE2CLKPD')                *
@@ -9,9 +9,9 @@
       *                                                               *
       *  GORE2CLKPD - Bulk Update of Global File GZRE2CLKPD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD035554 *CREATE   Date 11May16               *
+      *  Last Amend No. MD035554 *CREATE   Date 25May16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

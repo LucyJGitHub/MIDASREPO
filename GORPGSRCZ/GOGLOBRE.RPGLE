@@ -11,7 +11,7 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD035554           Date 11May16               *
+      *  Last Amend No. MD035554           Date 25May16               *
       *  Prev Amend No. CGP017             Date 06Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *  Prev Amend No. BUG27288           Date 07Apr10               *

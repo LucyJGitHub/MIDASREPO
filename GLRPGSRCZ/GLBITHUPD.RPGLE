@@ -12,7 +12,7 @@
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
       *  Last Amend No. MD036967           Date 11May16               *
-      *  Prev Amend No. MD035554           Date 11May16               *
+      *  Prev Amend No. MD035554           Date 25May16               *
       *                 AR922022A          Date 26Apr16               *
       *                 AR922022           Date 26Apr16               *
       *                 MD033630           Date 23Jun15               *

@@ -1,5 +1,5 @@
      H DEBUG
-     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2015')
+     H COPYRIGHT('(c) Misys International Banking Systems Ltd. 2016')
       *****************************************************************
 /*STD *  RPGBASEMOD                                                   *
       *****************************************************************
@@ -8,9 +8,9 @@
       *                                                               *
       *  GORETTYPPD - Bulk Update of Global File GZRETTYPPD           *
       *                                                               *
-      *  (c) Misys International Banking Systems Ltd. 2015            *
+      *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. MD035554 *CREATE   Date 11May16               *
+      *  Last Amend No. MD035554 *CREATE   Date 25May16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *

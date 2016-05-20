@@ -21,8 +21,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2007            *
       *                                                               *
-      *  Last Amend No. MD036262           Date 28Oct15               *
-      *  Prev Amend No. MD034516           Date 26May15               *
+      *  Last Amend No. MD037941           Date 20May16               *
+      *  Prev Amend No. MD036262           Date 28Oct15               *
+      *                 MD034516           Date 26May15               *
       *                 CSW215             Date 06Apr15               *
       *                 AR874231           Date 25Nov11               *
       *                 AR845543           Date 25Nov14               *
@@ -116,6 +117,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037941 - Invalid ISO country code used in code 3           *
       *  MD036262 - MT103 field 50F has incomplete data               *
       *  MD034516 - Allow entry of ISO code without town/country on   *
       *             1st occurence of code 3 when previous code is 1   *
@@ -261,7 +263,7 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       * Midas SD Identification Types
      FSDIDTPL1  IF   E           K Disk    INFSR(*PSSR)
       * Midas SD Identification Types - index by IDSWCD
@@ -277,7 +279,7 @@
      FACCNTL6   IF   E           K Disk                                                      CSW207A
       * Midas GL Account details                                                             CSW207A
      FSDNAHOl1  IF   E           K Disk                                                      CSW207A
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -296,44 +298,44 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       * Constant to hold input parameter for AOSVALR0.                                        260033
      D PSysVal1        C                   Const('Network Telex')                             260033
                                                                                               260033
@@ -341,7 +343,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D IdCode          S              4    DIM(9) CTDATA PERRCD(9)                            250600
       ** Input Parameters
      D PMReturnCode    S              7A
@@ -422,7 +424,7 @@
      D WIBAN           S             34A
      D WIBEI           S             11A
      D WInpNCode       S              1A
- 
+
      D*WInpParm********S*            35A                                                    BUG25101
      D WInpParm        S             70A                                                    BUG25101
      D WParm1          S             35A
@@ -433,7 +435,7 @@
      D WParmSav        S             35A                                                    BUG25101
      D Line8           S             35A                                                    BUG25101
      D CtrSwf67        S              1S 0                                                  BUG25101
- 
+
      D WNostroFlag     S              1A
      D WSlash1         S              1A
      D WSlash2         S              1A
@@ -441,7 +443,7 @@
      D WSlashCtr       S              1S 0
      D WSlashFlag      S              1A
      D WTRANFlag       S              1A
- 
+
      D WNCode          S              1A
      D WNCodeN         S              1S 0                                                    CSW209
      D WNDesc          S              1A
@@ -454,9 +456,9 @@
      D W#Curr          S              3A                                                    BUG14593
      D W#Nostro        S              2A                                                    BUG14593
      D WMsgID          S              7A   INZ(*BLANKS)                                     BUG14856
- 
+
      D WOrgValType     S              4A
- 
+
      D WIDTP           S              2A
      D WISCD           S             35A
      D WISOC           S              2A
@@ -522,7 +524,7 @@
      D varInput4       S              2A                                                    BUG24614
      D varInput5       S              2A                                                    BUG24614
      D WISOChk         S              1A                                                    MD034516
- 
+
      D PSysVal01       S             20A                                                      260033
      D PCurSet01       S            200A                                                      260033
      D PSysVal02       S             20A                                                      260033
@@ -548,10 +550,10 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Temporary array
      D wSeqArr         S              1S 0 DIM(5)
- 
+
       ** Input parameter for ZDATE10                                                          CSW209
      D                 DS                                                                     CSW209
      D PDateIn                 1      8  0                                                    CSW209
@@ -612,7 +614,7 @@
      D DSLDY         E DS                  Extname(DSLDY)
      D DSSDY         E DS                  Extname(DSSDY)
       ** External DS for bank details
- 
+
      D OMF1            DS
      D  F1C1                         15A
      D  F1C2                         15A
@@ -649,7 +651,7 @@
      D  WFC3                         15A
      D  WFC4                         15A
      D  WFC5                         15A
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -670,30 +672,30 @@
       *
      C                   If        CSW207 = 'N'
      C                   Select
- 
+
      C                   When      PMValType = 'OMFM'
      C                   Eval      PMMsgID = 'FTS0016'
      C**********         Eval      PMErrType = 'E'                                           250804A
- 
+
      C                   When      PMValType = 'TRAN'
      C                             Or PMValType = 'FRMT'
      C                   Eval      PMMsgID = 'FTS0016'
      C**********         Eval      PMErrType = 'E'                                           250804A
- 
+
      C                   EndSL
- 
+
      C                   Else
- 
+
      C                   Eval      WSaveCode = ' '                                           CSW207A
      C                   Eval      WSaveInp = 'A'                                            CSW207A
                                                                                              CSW207A
      C                   Select
- 
+
      C                   When      PMValType = 'OMFM'
- 
+
      C                   Exsr      SRVOMFM
      C                   Return
- 
+
      C                   When      PMValType = 'TRAN'
       *                                                                                     BUG25000
       ** Exit 50F validation program if input is equal to MT202                             BUG25000
@@ -720,7 +722,7 @@
      C                   Eval      PMOutParm4 = PMInpParm4                                  BUG15045
      C                   Eval      PMOutParm5 = PMInpParm5                                  BUG15045
      C                   EndIf                                                              BUG15045
- 
+
      C                   When      PMValType = 'FRMT'
      C                   Eval      WOrgValType = 'FRMT'
      C                   Exsr      ValInputType
@@ -733,29 +735,29 @@
      C                   Eval      PMOutParm4 = PMInpParm4                                   CSW207A
      C                   Eval      PMOutParm5 = PMInpParm5                                   CSW207A
      C                   EndIf                                                               CSW207A
- 
+
      C                   EndSL
- 
+
      C                   If        WContinue = 'N'
      C**********                   OR PMMsgID <> *Blanks                           BUG25101 BUG26127
      C                             OR PMMsgID = 'FTS0079'                                   BUG26127
      C                             AND WOrgValType <> 'FRMT'                                BUG26053
      C                             OR PMMsgID = 'FTS0080'                                   BUG26127
      C                             AND WOrgValType <> 'FRMT'                                BUG26127
- 
+
      C**********         If        PMErrType = 'W'                                          BUG14856
      C**********                   And WOrgValType = 'FRMT'                                 BUG14856
      C**********         Eval      PMReturnCode = *Blanks                                   BUG14856
      C**********         Else                                                               BUG14856
      C                   Eval      PMReturnCode = '*ERROR'
      C**********         EndIf                                                              BUG14856
- 
+
      C                   Else
      C                   Eval      PMReturnCode = *Blanks
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   If        PMReturnCode = *Blanks                                    CSW207A
      C                             And WOrgValType = 'FRMT'                                  CSW207A
      C                             And PMOutParm1 = *Blanks                                  CSW207A
@@ -846,7 +848,7 @@
                                                                                             BUG15010
      C                   Eval      *INLR = *ON
      C                   Return
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -872,35 +874,35 @@
       *
      C                   If        PMReturnCode <> '*NRF'
      C                             And PMReturnCode <> '*ERROR'
- 
+
      C                   Eval      PMAction = '*FORMAT'
      C                   Eval      PMOption = '*KEY  '
      C                   Exsr      ValAOOUFMR0
- 
+
      C                   If        PMReturnCode <> '*NRF'
      C                             And PMReturnCode <> '*ERROR'
       *
       **  Check Outgoing Message input
       *
      C                   If        WContinue = 'Y'
- 
+
      C                   Exsr      ValFRMTParm
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * InitDefaults - Initiliase defaults                            *
       *****************************************************************
      C     InitDefaults  BegSR
- 
+
      C                   Eval      PMReturnCode = *Blanks
      C                   Eval      PMMsgID = *Blanks
      C                   Eval      PMErrType = *Blanks
@@ -909,7 +911,7 @@
      C                   Eval      PMOutParm3 = *Blanks
      C                   Eval      PMOutParm4 = *Blanks
      C                   Eval      PMOutParm5 = *Blanks
- 
+
      C                   Eval      WContinue = 'Y'
      C                   Eval      WNAHOFlag = 'N'
      C                   Eval      WRetailFlag = 'N'
@@ -935,7 +937,7 @@
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMBranch
      C     SDBRCH        Parm      SDBRCH        DSLDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   EVAL      PMMsgID = 'RFV0027'                                      BUG26795
      C                   EVAL      PMErrType = 'E'                                          BUG26795
@@ -945,7 +947,7 @@
      C**********         Eval      DbFile = 'SDBRCHPD'                                      BUG26795
      C**********         Eval      Dbase  = 09                                              BUG26795
      C**********         Exsr      *PSSR                                                    BUG26795
- 
+
      C                   Else
      C                   Movel(P)  A8BICN        @KEY1                                        250600
      C                   CALL      'AOCUSTR1'                                                 250600
@@ -961,17 +963,17 @@
      C                   Parm      '*KEY   '     PMOption
      C                   Parm                    A8LCCD
      C     SDLOCN        Parm      SDLOCN        DSLDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      DbFile = 'SDLOCNPD'
      C                   Eval      Dbase  = 09
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C**********         EndIf                                                              BUG14593
       *
      C                   Eval      PMBranch4A = PMBranch
@@ -995,7 +997,7 @@
      C**********         If        PMNetwork = 'PAPER'                               BUG15045 257361
      C**********         Eval      PMNetwork =  'TELEX'                              BUG15045 257361
      C**********         EndIf                                                       BUG15045 257361
- 
+
      C                   Call      'AONWRKR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
@@ -1026,7 +1028,7 @@
      C                   PARM                    PSysVal10                                    260033
      C                   PARM                    PCurSet10                                    260033
                                                                                               260033
- 
+
      C**********         If        PMReturnCode <> *Blanks                                    260033
      C                   If        PMReturnCode <> *Blanks and PCurSet01 = 'Y'                260033
      C**********         Eval      DbFile = 'SDNWRKPD'                                       250804A
@@ -1044,14 +1046,14 @@
      C                   If        PMMsgTag = *Blanks
      C                   Eval      PMMsgTag =  ':50F:'
      C                   EndIf
- 
+
      C                   Call      'AOMTAGR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMMsgTag
      C                   Parm                    PMMsgType
      C     SDMTAG        Parm      SDMTAG        DSLDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C**********         Eval      DbFile = 'SDMTAGPD'                                       250804A
      C**********         Eval      Dbase  = 09                                               250804A
@@ -1062,7 +1064,7 @@
      C                   Eval      *INLR = *ON                                               250804A
      C                   Return                                                              250804A
      C                   EndIf
- 
+
      C**********         If        PMCountry = *Blanks                                        250600
      C**********         If        PMNostro <> *Blanks                                        250600
      C**********                   And PMCurrCode <> *Blanks                                  250600
@@ -1082,7 +1084,7 @@
      C                   Eval      PMCountry = WISOC                                          250600
      C                   EndIf
      C                   EndIf                                                                250600
- 
+
      C                   Eval      PMCtry4A = PMCountry
       *                                                                                       250600
      C                   Eval      P@IBAN = *Blanks                                           250600
@@ -1125,16 +1127,16 @@
      C                   ENDIF                                                                250600
      C                   ENDIF                                                                250600
      C                   ENDIF                                                                250600
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * InitPgmVar - Initialise program variables                     *
       *****************************************************************
      C     InitPgmVar    BegSR
- 
+
      C                   Eval      WCode = *Blanks
      C                   Eval      WContinue = 'Y'
      C                   Eval      WCNA2Flag = 'N'
@@ -1148,16 +1150,16 @@
      C                   Eval      PMOutParm3 = *Blanks
      C                   Eval      PMOutParm4 = *Blanks
      C                   Eval      PMOUtParm5 = *Blanks
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValOutMsgFile - Validate input parameters on MEOUFMPD         *
       *****************************************************************
      C     ValAOOUFMR0   BegSR
- 
+
      C**********         Eval      W#Nostro = *Blanks                                BUG14593 250600
      C**********         Eval      W#Curr = *Blanks                                  BUG14593 250600
      C**********         If        PMOption = '*NEXT'                                BUG14593 250600
@@ -1198,10 +1200,10 @@
       ** If a record is found,                                            *BLANKS             250600
       ** IF error found                                                   *ERROR              250600
       *                                                                                       250600
- 
+
      C                   If        PMReturnCode = '*NRF'
      C                             Or PMReturnCode = '*ERROR'
- 
+
      C                   If        PMAction <> 'ACOUNTIBAN'                                   250600
      C**********         Eval      PMMsgID   = 'FTS0016'                                      250600
       *                                                                                       250600
@@ -1224,9 +1226,9 @@
      C                   Eval      PMReturnCode = *Blanks                                     250600
      C                   Eval      WOMFLAGA = 'O'                                             250600
      C                   EndIf                                                                250600
- 
+
      C                   Else
- 
+
      C                   If        PMReturnCode <> '*EOF'                                   BUG14856
      C                   If        PMAction = 'ACOUNTIBAN'
      C                   Eval      WOMFLAGA = OMFLAG
@@ -1259,9 +1261,9 @@
      C**********         Eval      PMReturnCode = '*ERROR'                         BUG15045 BUG15081
      C                   EndIf                                                                250600
      C                   EndIf                                                              BUG14856
- 
+
      C                   EndIf
- 
+
      C**********         If        W#Curr <> *Blanks                                 BUG14593 250600
      C**********                   Or W#Nostro <> *Blanks                            BUG14593 250600
       ***restore*parameters                                                          BUG14593 250600
@@ -1270,20 +1272,20 @@
      C**********         EndIf                                                       BUG14593 250600
       **********                                                                     BUG14593 250600
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValCustomer - Validate customer number                        *
       *****************************************************************
      C     ValCustomer   BegSR
- 
+
      C                   Call      'AOACUSR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMCustNo
      C     SDACUS        Parm      SDACUS        DSLDY
- 
+
      C**********         If        PMReturnCode <> *Blanks                                   255628A
      C**********         Eval      PMReturnCode = '*ERROR'                                   255628A
      C**********         Eval      PMMsgID = 'FTS0041'                               CSW207A 255628A
@@ -1293,7 +1295,7 @@
      C**********         Eval      DbFile = 'SDACUSPD'                                       CSW207A
      C**********         Eval      Dbase  = 02                                               CSW207A
      C**********         Exsr      *PSSR                                                     CSW207A
- 
+
      C**********         Else                                                                255628A
       *
      C                   If        PMReturnCode <> *Blanks                                   255628A
@@ -1314,7 +1316,7 @@
      C                   If        W_SDCUST =  *Blanks                                        252903
      C                   Exsr      GetCustDtls                                                252903
      C                   EndIf                                                                252903
- 
+
       *                                                                                    BUG21024A
       ** Customer with no Additional Customer details can output 50F                       BUG21024A
       *                                                                                    BUG21024A
@@ -1436,29 +1438,29 @@
      C                   Eval      W_CUST = 'CUST/' + C_CIsoCoLc + '/' +                      250600
      C                             %Trim(CustIssuer) + '/' + W_BBCUST                         250600
       *                                                                                       250600
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValNonAcctHldr - Validate Non Account Holder                  *
       *****************************************************************
      C     ValNonAcctHldrBegSR
- 
+
      C                   Call      'AONAHOR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMNonAcctHldr
      C     SDNAHO        Parm      SDNAHO        DSSDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      PMReturnCode = '*ERROR'
      C                   Eval      PMMsgID = 'FTS0035'
      C                   Eval      DbFile = 'SDNAHOPD'
      C                   Eval      Dbase  = 03
      C                   Exsr      *PSSR
- 
+
      C                   Else
      C                   Movel     PMNonAcctHldr W#Naho           10                         CSW207A
      C     W#Naho        Chain     SDNAHOl1                           65                     CSW207A
@@ -1497,16 +1499,16 @@
      C                   EndIf                                                                250600
       *                                                                                       250600
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValNostro - Validate Nostro                                   *
       *****************************************************************
      C     ValNostro     BegSR
- 
+
      C                   Eval      PMCurrCode = %Subst(PMInpParm1:2:3)
      C                   Eval      PMNostro = %Subst(PMInpParm1:5:2)
      C                   Call      'AONOSTR0'
@@ -1521,7 +1523,7 @@
      C                   Parm                    PMCustSName
      C                   Parm                    PMPNostro
      C     SDNOST        Parm      SDNOST        DSSDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      DbFile = 'SDNOSTPD'
      C                   Eval      Dbase = 04
@@ -1529,22 +1531,22 @@
      C                   Else
      C                   Eval      PMCustNo = A7CUST
      C                   Exsr      ValCustomer
- 
+
      C                   Eval      PMAcct = A7ACCD
      C                   Move      A7ACSN        PMAcctSeq
      C                   Eval      PMBranch = A7BRCD
      C                   Exsr      ValAccountNo
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValAccountNo - Validate account number                        *
       *****************************************************************
      C     ValAccountNo  BegSR
- 
+
      C**********         If        PMInpType <> 'N'                                           250600
      C**********                   And PMInpType <> 'R'                             CSW207A BUG14755
      C                   Eval      PMBranch = %Subst(PMAccount:1:3)
@@ -1553,7 +1555,7 @@
      C                   Eval      PMAcct = %Subst(PMAccount:13:10)
      C                   Eval      PMAcctSeq = %Subst(PMAccount:23:2)
      C**********         EndIf                                                                250600
- 
+
      C                   Call      'AOACCTR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
@@ -1564,7 +1566,7 @@
      C                   Parm                    PMAcctSeq
      C                   Parm                    PMBranch
      C     SDACCT        Parm      SDACCT        DSSDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                             And PMReturnCode <> '*KEY'                                CSW207A
      C                   Eval      PMReturnCode = '*ERROR'
@@ -1572,16 +1574,16 @@
      C                   Eval      Dbase  = 05
      C                   Exsr      *PSSR
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * GetCustDtls - Get Customer Details                            *
       *****************************************************************
      C     GetCustDtls   BegSR
- 
+
      C                   Move      PMCustNo      PMCustNo10A
      C                   Call      'AOCSSWR0'
      C                   Parm      *Blanks       PMReturnCode
@@ -1589,35 +1591,35 @@
      C                   Parm                    PMCustNo10A
      C                   Parm                    PMStatus
      C                   Parm                    DSLDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      PMReturnCode = '*ERROR'
      C                   Eval      DbFile = 'SDCSSWPD'
      C                   Eval      Dbase  = 06
      C                   Exsr      *PSSR
      C                   Else
- 
+
      C                   Eval      WStr = %Len(SDCUST) + 1
      C                   Eval      WLen = %Len(SDCSSW)
      C                   Eval      SDCUST = DSLDY
      C                   Eval      SDCSSW = %Subst(DSLDY:WStr:WLen)
      C                   Eval      W_SDCUST = SDCUST
- 
+
      C                   EndIf
       *                                                                                       250600
      C                   Eval      PMISOC = W_BBCOLC                                          250600
      C                   Exsr      GetISOCode                                                 250600
      C                   Eval      W_WIsoCoLc = WISOC                                         250600
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValInputType01 - validate input type                          *
       *****************************************************************
      C     ValInputType  BegSR
- 
+
      C**********         If        PMInpType <> 'C'                                   CSW207A 250600
      C                   If        PMCustNo <> *BLANKS                                        250600
      C                   Movel     PMCustNo      W#Cust                                      CSW207A
@@ -1700,7 +1702,7 @@
      C                   Endif                                                               250600
       *                                                                                      250600
      C                   Select
- 
+
      C                   When      PMInpType = ' '
      C                             OR PMInpType = 'A'                                        250600
       *                                                                                      252878
@@ -1755,24 +1757,24 @@
      C                   Eval      PMValType  = 'FRMT'
      C                   Eval      WContinue = 'Y'
      C                   Exsr      ProcessFRMT
- 
+
      C                   EndSL
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * GetISOCode - Get ISO code                                     *
       *****************************************************************
      C     GetISOCode    BegSR
- 
+
      C                   Call      'AOCTRYR0'
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*KEY'        PMOption
      C                   Parm                    PMISOC
      C     SDCTRY        Parm      SDCTRY        DSFDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      PMReturnCode = '*ERROR'
      C                   Eval      PMMsgID = 'FTS0004'                                       CSW207A
@@ -1784,16 +1786,16 @@
      C                   Else
      C                   Eval      WISOC = A4ISOC
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValIDType - Validate identification type                      *
       *****************************************************************
      C     ValIDType     BegSR
- 
+
      C     WIDTP         Ifne      *Blanks                                                    250600
      C     WIDTP         Chain     SDIDTPL1
      C                   If        Not %Found(SDIDTPL1)
@@ -1810,9 +1812,9 @@
      C                   Eval      WSWCD = IDSWCD
      C                   EndIf
      C                   EndIf                                                                250600
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2088,7 +2090,7 @@
      C                   EXSR      SRVF2to5
       *
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2147,19 +2149,19 @@
      C                   ENDIF
       *
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValInputParm - validate Input parameter                       *
       *****************************************************************
      C     ValInputParm  BegSR
- 
+
      C                   Exsr      ValBlankCol
- 
+
      C                   If        WBlankCol = 'N'
      C                             And WContinue = 'Y'
- 
+
      C                   Eval      WCtr01 = 0
      C                   Eval      WSlashFlag = 'N'
      C                   Eval      WFirst = 'Y'
@@ -2168,34 +2170,34 @@
      C                   EVAL      WISOChk = *BLANK                                         MD034516
      C                   DoW       WCtr01 < 5
      C                             And WContinue = 'Y'
- 
+
      C**********         Eval      WCtr01 += 1                                              BUG15045
      C                   Eval      WCtr01 = WCtr01 + 1                                      BUG15045
- 
+
      C                   Select
- 
+
      C                   When      WCtr01 = 1
      C                   Eval      WInpParm = PMInpParm1
      C                   EVAL      WNextNCode = %Subst(PMInpParm2:1:1)                      BUG25323
- 
+
      C                   When      WCtr01 = 2
      C                   Eval      WInpParm = PMInpParm2
      C                   EVAL      WNextNCode = %Subst(PMInpParm3:1:1)                      BUG25323
- 
+
      C                   When      WCtr01 = 3
      C                   Eval      WInpParm = PMInpParm3
      C                   EVAL      WNextNCode = %Subst(PMInpParm4:1:1)                      BUG25323
- 
+
      C                   When      WCtr01 = 4
      C                   Eval      WInpParm = PMInpParm4
      C                   EVAL      WNextNCode = %Subst(PMInpParm5:1:1)                      BUG25323
- 
+
      C                   When      WCtr01 = 5
      C                   Eval      WInpParm = PMInpParm5
      C                   EVAL      WNextNCode = *BLANKS                                     BUG25356
- 
+
      C                   EndSL
- 
+
      C                   If        WInpParm <> *Blanks
      C                   Exsr      ValCol1to5
      C                   If        WContinue = 'Y'                                           CSW207A
@@ -2238,7 +2240,7 @@
      C                   EndIf
      C                   Movel     WNcode        WSaveCode         1                         CSW207A
      C                   Movel     WInpParm      WSaveInp         35                         CSW207A
- 
+
      C                   EndDo
                                                                                             BUG25101
       ** CSW209 FDS2.01 Changes                                                             BUG25101
@@ -2256,7 +2258,7 @@
      C                   EndIf                                                              BUG25101
                                                                                             BUG25101
      C                   EndIf                                                              BUG25101
- 
+
      C                   If        WContinue = 'Y'
      C                   Select
      C                   When      WPrevNCode = '2'
@@ -2269,25 +2271,25 @@
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndSL
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C**********         If        WContinue = 'N'                                           250804A
      C**********                   And PMErrType = *Blanks                                   250804A
      C**********         Eval      PMErrType = 'E'                                           250804A
      C**********         EndIf                                                               250804A
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValFRMTParm - validate FRMT validation type                   *
       *****************************************************************
      C     ValFRMTParm   BegSR
- 
+
      C                   DoW       PMReturnCode <> '*EOF'
- 
+
      C                   Eval      WFC1 = OM50F1
      C                   Eval      WFC2 = OM50F2
      C                   Eval      WFC3 = OM50F3
@@ -2305,43 +2307,43 @@
      C                   When      OM50F5 = *Blanks                                         BUG15045
      C                   Eval      WExcsLine = 1                                            BUG15045
      C                   EndSl                                                              BUG15045
- 
+
      C                   Exsr      ValBlankCol
- 
+
      C                   If        WBlankCol = 'N'
- 
+
      C                   Eval      WCtr01 = 0
      C                   Eval      WSlashFlag = 'N'
      C                   Eval      WFirst = 'Y'
      C                   Eval      CtrSwf67 = 0                                             BUG25101
      C                   DoW       WCtr01 < 5
- 
+
      C**********         Eval      WCtr01 += 1                                              BUG15045
      C                   Eval      WCtr01 = WCtr01 + 1                                      BUG15045
- 
+
      C                   Select
- 
+
      C                   When      WCtr01 = 1
      C                   Eval      WInpParm = WFC1
- 
+
      C                   When      WCtr01 = 2
      C                   Eval      WInpParm = WFC2
- 
+
      C                   When      WCtr01 = 3
      C                   Eval      WInpParm = WFC3
- 
+
      C                   When      WCtr01 = 4
      C                   Eval      WInpParm = WFC4
- 
+
      C                   When      WCtr01 = 5
      C                   Eval      WInpParm = WFC5
- 
+
      C                   EndSL
- 
+
      C                   If        WInpParm <> *Blanks
      C                   Eval      WContinue = 'Y'
      C                   Exsr      ValCol1to5
- 
+
      C                   If        WContinue = 'Y'
      C                   Select
      C                   When      PMValType = 'FRMT'
@@ -2349,13 +2351,13 @@
      C                   Eval      PMMsgID = *Blanks                                        BUG14856
      C                   Exsr      FormatOutParm
      C                   EndSL
- 
+
      C                   Else
      C                   Leave
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndDo
                                                                                             BUG25101
       ** CSW209 FDS2.01 Changes                                                             BUG25101
@@ -2372,7 +2374,7 @@
      C                   EndIf                                                              BUG25101
                                                                                             BUG25101
      C                   EndIf                                                              BUG25101
- 
+
       ** Process excess lines for Sub-field 1, 6/ and 7/.                                     CSW209
       *                                                                                       CSW209
      C                   If        CSW209 = 'Y'                                               CSW209
@@ -2409,15 +2411,15 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndSL
- 
+
      C                   If        WContinue = 'Y'
      C                   Eval      PMMsgID = *Blanks
      C                   Eval      PMErrType = *Blanks
      C                   Leave
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   If        WContinue = 'N'
      C**********         Eval      PMErrType = *Blanks                              CSW207A BUG14856
      C**********         Eval      PMReturnCode = *Blanks                           CSW207A BUG14856
@@ -2428,20 +2430,20 @@
      C                   Eval      PMOption = '*NEXTEQ'                                       250600
      C                   Exsr      ValAOOUFMR0
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndDo
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValCol1to5 - validate columns 1 to 5                          *
       *****************************************************************
      C     ValCol1to5    BegSR
- 
+
       ** CSW209 FDS2.01 Changes                                                             BUG25101
                                                                                             BUG25101
      C                   EXSR      SRLINE8                                                  BUG25101
@@ -2452,11 +2454,11 @@
      C                   Eval      WSlash1 = *Blanks
      C                   Eval      WSlash2 = *Blanks
      C                   Eval      WSlash3 = *Blanks
- 
+
      C                   Eval      WSwiftCode = *Blanks
      C                   Eval      WNCode     = *Blanks
      C                   Eval      WISOCode   = *Blanks
- 
+
      C                   Eval      WISODesc   = 'N'
      C                   Eval      WIssFlag   = 'N'
      C                   Eval      WIssDesc   = 'N'
@@ -2465,19 +2467,19 @@
      C                   Eval      WSWCD = WSWCDSave                                          250600
      C                   Eval      WSWCDSave = *Blanks                                        250600
      C                   Endif                                                                250600
- 
+
      C                   If        %Subst(WInpParm:1:1) = '/'
      C**********                   Or PMInpType = 'I' and WCtr01 = 1                        BUG14755
      C                             And WCtr01 = 1                                           BUG14755
      C**********                   And (PMInpType = 'R'                              BUG14755 250600
      C**********                   Or  PMInpType = 'I')                              BUG14755 250600
- 
+
      C                   Exsr      ValSlash
       ** Not /
      C                   Else
      C                   Eval      WSwiftCode = %Subst(WInpParm:1:4)
      C                   Eval      W#ISOC = %Subst(WInpParm:6:2)                             CSW207A
- 
+
      C                   SETON                                        94                      250600
      C                   If        WSwiftCode <> *Blanks                                      250600
      C     WSwiftCode    LOOKUP    IdCode                                 94                  250600
@@ -2615,9 +2617,9 @@
      C                   Eval      WInpParm = %TrimR(WInpParm) +                            BUG25101
      C                                        Line8                                         BUG25101
      C                   EndIf                                                              BUG25101
- 
+
      C                   Exsr      ValSwift
- 
+
       ** CSW209 FDS2.01 Changes                                                             BUG25101
                                                                                             BUG25101
      C                   If        WParmSav <> *Blanks                                      BUG25101
@@ -2626,7 +2628,7 @@
      C                   EndIf                                                              BUG25101
                                                                                             BUG25101
      C                   Else
- 
+
      C                   Eval      WNCode = %Subst(WInpParm:1:1)
      C                   If        WNCode >= '1'
      C                             And WNCode <= '8'                                         CSW207A
@@ -2642,9 +2644,9 @@
      C                                        Line8                                         BUG25101
      C                   Eval      CtrSwf67 = CtrSwf67 + 1                                  BUG25101
      C                   EndIf                                                              BUG25101
- 
+
      C                   Exsr      ValNCode
- 
+
       ** CSW209 FDS2.01 Changes                                                             BUG25101
                                                                                             BUG25101
      C                   If        WParmSav <> *Blanks                                      BUG25101
@@ -2711,18 +2713,18 @@
      C                   EndIf                                                               CSW207A
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValSlash  - validate slash                                    *
       *****************************************************************
      C     ValSlash      BegSR
- 
+
      C**********         If        PMInpType = 'I'                                            250600
      C**********                   And %Subst(WInpParm:1:1) <> '/'                            250600
      C                   If        %Subst(WInpParm:1:1) = '/'                                 250600
@@ -2745,7 +2747,7 @@
       *                                                                                     BUG15209
      C                   Eval      PMMsgID = 'FTS0032'
      C                   Exsr      SetError
- 
+
      C                   Else
      C                   Eval      WSlashFlag = 'Y'
      C**********         If        PMInpType = 'G'                                            250600
@@ -2753,36 +2755,36 @@
      C**********                   Or PMInpType = 'F'                                         250600
      C**********                   Or PMInpType = 'R'                                         250600
      C**********                   Or PMInpType = 'I'                                         250600
- 
+
      C**********         If        %Subst(WInpParm:2:1) <> *Blanks                          BUG14755
       *                                                                                       250600
      C                   If        PMAccount <> *Blanks                                       250600
      C                             Or P@IBAN <> *Blanks                                       250600
- 
+
      C                   Exsr      ValACOUNTIBAN
- 
+
      C**********         Else                                                               BUG14755
      C**********         Eval      PMMsgID = 'FTS0032'                                      BUG14755
      C**********         Exsr      SetError                                                 BUG14755
      C**********         EndIf                                                              BUG14755
- 
+
      C**********         Else                                                                250804A
      C**********         Eval      PMMsgID = 'FTS0032'                                      BUG14593
      C**********         Eval      PMMsgID = 'FTS0051'                              BUG14593 250804A
      C**********         Exsr      SetError                                                  250804A
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValSwift - validate swift code                                *
       *****************************************************************
      C     ValSwift      BegSR
- 
+
      C**********         If        PMInpType = *Blanks                               BUG14856 250600
       *                                                                                       250600
      C                   Eval      FromOtherDtl = 'N'                                         250600
@@ -2818,25 +2820,25 @@
      C                   If        WContinue = 'Y'                                           CSW207A
                                                                                              CSW207A
      C                   Exsr      GetSlash
- 
+
      C                   Select
- 
+
      C                   When      WSlash3 = '/'
      C                   Exsr      ValSYYYYXXCCC
- 
+
      C                   When      WSlash2 = '/'
      C                   Exsr      ValSYYYYXX
- 
+
      C                   When      WSlash1 = '/'
      C                   Exsr      ValSYYYY
- 
+
      C                   EndSL
                                                                                              CSW207A
      C                   EndIf                                                               CSW207A
- 
+
      C     Ex_ValSwift   Tag                                                                  250600
      C                   EndSR
- 
+
       *****************************************************************                      CSW207A
       /EJECT                                                                                 CSW207A
       *****************************************************************                      CSW207A
@@ -2934,9 +2936,9 @@
       * ValNCode - validate number code                               *
       *****************************************************************
      C     ValNCode      BegSR
- 
+
      C                   Exsr      GetSlash
- 
+
      C                   Eval      WNDesc   = 'N'
      C                   Eval      WISOCode = *Blanks
      C                   Eval      WISODesc = 'N'
@@ -2946,33 +2948,33 @@
      C                   IF        CSW215 = 'Y' AND Wncode = '3'                              CSW215
      C                   EVAL      CtrN3  = CtrN3 + 1                                         CSW215
      C                   ENDIF                                                                CSW215
- 
+
      C                   Select
- 
+
      C                   When      WSlash3 = '/'
      C                   Exsr      ValNXXCCC
- 
+
      C                   When      WSlash2 = '/'
      C                   Exsr      ValNXX
- 
+
      C                   When      WSlash1 = '/'
      C                   Exsr      ValN
- 
+
      C                   EndSL
- 
+
      C                   If        WContinue = 'Y'
      C                   Exsr      ValColAsc
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * GetSlash - get slash per column                               *
       *****************************************************************
      C     GetSlash      BegSR
- 
+
      C                   Eval      WPtr  = 0
      C                   Eval      WSlashCtr = 0
      C     '/'           Scan      WInpParm:1    WPtr
@@ -3000,26 +3002,26 @@
      C                   Else
      C                   EndIf
      C                   EndIf
- 
+
      C                   If        WPtr1 > 0
      C**********         Eval      WPtr1 -= 1                                               BUG15045
      C                   Eval      WPtr1 = WPtr1 - 1                                        BUG15045
      C                   EndIf
- 
+
      C                   If        WPtr2 > 0
      C**********         Eval      WPtr2 -= 1                                               BUG15045
      C                   Eval      WPtr2 = WPtr2 - 1                                        BUG15045
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValSYYYYXXCCC - validate swift code, ISO code and issuer code *
       *****************************************************************
      C     ValSYYYYXXCCC BegSR
- 
+
      C                   If        WSwiftCode =  'CUST'                                     BUG15045
      C                             Or  WSwiftCode =  'DRLC'                                 BUG15045
      C                             Or  WSwiftCode =  'EMPL'                                 BUG15045
@@ -3074,7 +3076,7 @@
      C**********         Else                                                               BUG24297
      C                   Eval      WISOCode = %Subst(WInpParm:WPtr1+1:2)
      C                   Eval      WIssFlag = 'Y'
- 
+
      C                   If        PMMsgID = *BLANKS                                        BUG25101
      C                   Select
      C                   When      PMValType = 'TRAN'
@@ -3107,7 +3109,7 @@
      C                   EVAL      WIssDesc = 'Y'                                           BUG24555
      C                   ENDIF                                                              BUG24555
      C                   EndIf
- 
+
      C**********         When      PMValType = 'FRMT'                                       BUG15090
       **********                                                                            BUG15090
       ***Issuer*should*be*blanks                                                            BUG15090
@@ -3117,25 +3119,25 @@
      C**********         Exsr      SetError                                                 BUG15090
      C**********         Eval      PMErrType = 'E'                                 BUG15045 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
      C                   EndIf                                                              BUG25101
- 
+
      C                   If        WContinue = 'Y'
      C                   Exsr      ValISOCode
      C                   EndIf
- 
+
      C**********         EndIf                                                              BUG24297
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValSYYYYXX - validate swift code and ISO code                 *
       *****************************************************************
      C     ValSYYYYXX    BegSR
- 
+
      C**********         If        WSwiftCode = 'CUST'                               CSW207A CSW207A
      C                   If        (WSwiftCode = 'CUST'                                      CSW207A
      C                             OR WSwiftCode = 'DRLC'                                    CSW207A
@@ -3165,10 +3167,10 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15178
      C                   EndIf                                                                CSW209
- 
+
      C                   Else
      C                   Eval      WISOCode = %Subst(WInpParm:WPtr1+1:2)
- 
+
      C                   Select
      C                   When      PMValType = 'TRAN'
       *
@@ -3201,7 +3203,7 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndIf
- 
+
      C**********         When      PMValType = 'FRMT'                                       BUG15090
       **********                                                                            BUG15090
       ***ISO*code*description*should*be*blanks                                              BUG15090
@@ -3224,26 +3226,26 @@
      C**********         Exsr      SetError                                                 BUG15090
      C**********         Eval      PMErrType = 'E'                                 BUG15045 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
- 
+
      C                   If        WContinue = 'Y'
      C                   Exsr      ValISOCode
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValSYYYY- validate Swift code                                 *
       *****************************************************************
      C     ValSYYYY      BegSR
- 
+
      C                   Eval      WISOCode = %Subst(WInpParm:WPtr1+1:2)
- 
+
      C                   Select
      C                   When      PMValType = 'TRAN'
       *
@@ -3264,7 +3266,7 @@
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndIf                                                              BUG15045
      C                   EndIf                                                                CSW209
- 
+
      C**********         When      PMValType = 'FRMT'                                       BUG15090
       **********                                                                            BUG15090
       ***ISO*code*description*should*be*blanks                                              BUG15090
@@ -3275,11 +3277,11 @@
      C**********         Exsr      SetError                                                 BUG15090
      C**********         Eval      PMErrType = 'E'                                 BUG15045 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -3298,7 +3300,7 @@
      C                   EVAL      PMErrType = 'E'                                            CSW215
      C                   LEAVESR                                                              CSW215
      C                   ENDIF                                                                CSW215
- 
+
       *                                                                                     BUG24297
       ** Each lines can have several '/' whatever the                                       BUG24297
       ** first digit in the line                                                            BUG24297
@@ -3327,7 +3329,7 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndIf
- 
+
       *                                                                                     BUG24466
       ** Issuer description should not start with '/' for 6/.                               BUG24466
       *                                                                                     BUG24466
@@ -3352,10 +3354,10 @@
      C**********         Exsr      SetError                                                 BUG15090
      C**********         Eval      PMErrType = 'E'                                 BUG15045 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
      C                   ENDIF                                                              BUG24509
- 
+
       *                                                                                     BUG24297
       ** Validate ISO code if line starts with 3/, 5/, 6/ or 7/                             BUG24297
       *                                                                                     BUG24297
@@ -3379,18 +3381,18 @@
      C                   EXSR      SetError                                                   CSW215
      C                   EVAL      PMErrType = 'E'                                            CSW215
      C                   ENDIF                                                                CSW215
- 
+
      C**********         EndIf                                                              BUG24297
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValNXX - validate n code and ISO code                         *
       *****************************************************************
      C     ValNXX        BegSR
- 
+
       *                                                                                       CSW215
       ** If not 1st occurence of 3, issue format error as required value                      CSW215
       ** should be additional details when CSW215 is enabled                                  CSW215
@@ -3408,7 +3410,7 @@
      C                             And WNCode <> '5'
      C                             And WNCode <> '6'
      C                             And WNCode <> '7'
- 
+
       ** Free format for code 1/, 2/, 4/ or 8/                                              BUG15045
      C**********         Eval      PMMsgID = 'FTS0023'                                      BUG15045
      C**********         Exsr      SetError                                                 BUG15045
@@ -3457,7 +3459,7 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndIf
- 
+
      C**********         When      PMValType = 'FRMT'                                       BUG15090
       **********                                                                            BUG15090
      C**********         If        %Subst(WInpParm:WPtr2+1:1) <> *Blanks                    BUG15090
@@ -3482,24 +3484,24 @@
      C**********         Exsr      SetError                                                 BUG15090
      C**********         Eval      PMErrType = 'E'                                 BUG15045 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
- 
+
      C                   If        WContinue = 'Y'
      C                   Exsr      ValISOCode
      C                   EndIf
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValN - validate n code                                        *
       *****************************************************************
      C     ValN          BegSR
- 
+
      C                   IF        CSW215 = 'Y' AND WNCode = '3'                              CSW215
      C                             AND PMValType = 'TRAN'                                     CSW215
       *                                                                                       CSW215
@@ -3543,7 +3545,7 @@
      C**********                   Or WNCode =  '7'                                          CSW207A
      C                             Or WNCode =  '7')                                         CSW207A
      C                             And PMValType ='TRAN'                                     CSW207A
- 
+
      C**********         Eval      PMMsgID = 'FTS0029'                                       CSW207A
      C**********         Exsr      SetError                                                  CSW207A
      C                   IF        CSW215 = 'Y' AND WNCode = '3'                              CSW215
@@ -3553,7 +3555,7 @@
      C                   ENDIF                                                                CSW215
      C                   Exsr      SetError                                                  CSW207A
      C                   Eval      PMErrType = 'E'                                          BUG15045
- 
+
      C                   Else
       *
       ** Address should not be blanks
@@ -3656,7 +3658,7 @@
      C                   Exsr      SetError
      C                   Eval      PMErrType = 'E'                                          BUG15045
      C                   EndIf
- 
+
      C**********         When      PMValType = 'FRMT'                                       BUG15090
       **********                                                                            BUG15090
      C**********         If        %Subst(WInpParm:WPtr1+1:1) <> *Blanks                    BUG15090
@@ -3680,20 +3682,20 @@
      C**********         EndSl                                                              BUG15090
      C**********         Exsr      SetError                                                 BUG15090
      C**********         EndIf                                                              BUG15090
- 
+
      C                   EndSL
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValColAsc - validate column in ascending                      *
       *****************************************************************
      C     ValColAsc     BegSR
- 
+
      C                   If        WFirst = 'Y'
      C                   Eval      WPrevNCode = WNCode
      C                   Eval      WFirst = 'N'
@@ -3768,83 +3770,83 @@
      C                   EndIf
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValBlankCol - Validate blank in-between columns               *
       *****************************************************************
      C     ValBlankCol   BegSR
- 
+
      C                   Select
      C                   When      PMValType = 'TRAN'
      C                             And WOrgValType = 'TRAN'
      C                   When      PMValType = 'TRAN'                                        250804A
      C                             And WOrgValType = 'FRMT'                                  250804A
- 
+
      C                   Eval      WParm1 = PMInpParm1
      C                   Eval      WParm2 = PMInpParm2
      C                   Eval      WParm3 = PMInpParm3
      C                   Eval      WParm4 = PMInpParm4
      C                   Eval      WParm5 = PMInpParm5
- 
+
      C                   When      PMValType = 'FRMT'
      C                             And WOrgValType = 'FRMT'
      C                             Or PMValType = 'FRMT'
      C                             And WOrgValType = 'TRAN'
- 
+
      C                   Eval      WParm1 = WFC1
      C                   Eval      WParm2 = WFC2
      C                   Eval      WParm3 = WFC3
      C                   Eval      WParm4 = WFC4
      C                   Eval      WParm5 = WFC5
- 
+
      C                   EndSL
- 
+
      C                   Eval      WBlankCol = 'N'
      C                   Select
- 
+
      C                   When      WParm5 <> *Blanks
      C                   If        WParm4 = *Blanks
      C                             Or WParm3 = *Blanks
      C                             Or WParm2 = *Blanks
      C                   Eval      WBlankCol = 'Y'
      C                   EndIf
- 
+
      C                   When      WParm4 <> *Blanks
      C                   If        WParm3 = *Blanks
      C                             Or WParm2 = *Blanks
      C                   Eval      WBlankCol = 'Y'
      C                   EndIf
- 
+
      C                   When      WParm3 <> *Blanks
      C                   If        WParm2 = *Blanks
      C                   Eval      WBlankCol = 'Y'
      C                   EndIf
- 
+
      C                   When      WParm2 <> *Blanks
      C                   If        WParm1 = *Blanks
      C                   Eval      WBlankCol = 'Y'
      C                   EndIf
- 
+
      C                   EndSL
- 
+
      C                   If        WBlankCol = 'Y'
      C                   Eval      PMMsgID = 'FTS0016'
      C                   Exsr      SetError
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValACOUNTIBAN - Validate Account IBAN                         *
       *****************************************************************
      C     ValACOUNTIBAN BegSR
- 
+
      C                   Eval      WIBAN = *Blanks
      C                   Eval      WRetailFlag = *Blanks
       * Check for valid Retail, to determine later the way to output the                      250600
@@ -3882,7 +3884,7 @@
      C                             Or WOMFLAGA = 'P'                                          250600
      C                             Or @@Slash = '/'                                           250600
      C**********         Exsr      ValRetail                                                  250600
- 
+
      C                   Else
      C                   If        WOMFLAGA = 'M' or                                          250600
      C                             %Subst(IBAN:1:2) <> WISOCode                               250600
@@ -3892,19 +3894,19 @@
      C                   Exsr      SetError
      C                   EndIf                                                                250600
      C                   EndIf
- 
+
      C                   EndIf
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValISOCode - Validate ISO Code                                *
       *****************************************************************
      C     ValISOCode    BegSR
- 
+
      C**********         If        WISOCode <> WISOC                                         CSW207A
      C**********                   And WISOCode <> *Blanks                                   CSW207A
      C**********                   And PMValType = 'FRMT'                                    CSW207A
@@ -3951,29 +3953,29 @@
      C                   EXSR      SetError                                                 BUG24297
      C                   EVAL      PMErrType = 'E'                                          BUG24297
      C                   ENDIF                                                              BUG24297
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ValRetail - Validate Retail                                   *
       *****************************************************************
      C     ValRetail     BegSR
- 
+
      C                   If        BMRANR = 'Y' And ACNO > 0
      C                   Eval      WRetailFlag = 'Y'
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * FormatOutParm
       *****************************************************************
      C     FormatOutParm BegSR
- 
+
      C                   EVAL      WExcsLine3 = 'N'                                           CSW215
       ** Message Line 1
      C                   If        WCtr01 = 1
@@ -3983,7 +3985,7 @@
      C                   Eval      PMOutParm3 = *Blanks
      C                   Eval      PMOutParm4 = *Blanks
      C                   Eval      PMOutParm5 = *Blanks
- 
+
       ** Get ISO country code from Issuing country                                           255628A
      C                   If        PMNonAcctHldr <> *Blanks                                  255628A
      C                   Eval      PMISOC    = NHISCT                                        255628A
@@ -3999,24 +4001,24 @@
      C                   EndIf                                                               255628A
                                                                                              255628A
      C                   If        WSlashFlag = 'N'
- 
+
      C                   If        PMNonAcctHldr <> *Blanks                                  CSW207A
      C                   Eval      W_E5TINO = NHTINO                                         CSW207A
      C                   Eval      W_E5ISCD = NHISAU                                         CSW207A
      C                   Endif                                                               CSW207A
                                                                                              CSW207A
      C                   Select
- 
+
      C                   When      WSwiftCode = 'ARNU'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
      C                   When      WSwiftCode = 'CCPT'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
      C                   When      WSwiftCode = 'CUST'
      C**********         If        FromOtherDtl = 'N'                                250600 BUG24666
      C**********                   And W_E5ISCD <> *Blanks                           252903 BUG24666
@@ -4034,19 +4036,19 @@
      C                   Eval      WLN1 = W_NAHO                                              250600
      C                   Endif                                                                250600
      C                   Endif                                                                250600
- 
+
      C                   When      WSwiftCode = 'DRLC'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5ISCD) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
      C                   When      WSwiftCode = 'EMPL'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5ISCD) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
       * Note: No specific field for non account holder                                        250600
      C                   When      WSwiftCode = 'IBEI'
      C**********         If        BBCBEI <> *Blanks                                        BUG14893
@@ -4065,7 +4067,7 @@
      C**********         Exsr      SetError                                          BUG14893 250600
      C                   EndIf
      C                   EndIf                                                                CSW209
- 
+
       * NIDN can be set either in specific field xxIDNO or in Tax iD if required by           250600
       * tax authorities                                                                       250600
       * Note: No specific field for non account holder                                        250600
@@ -4081,17 +4083,17 @@
      C**********                   + %Trim(W_E5IDNO)                                         CSW207A
      C                             + %Trim(W_E5TINO)                                         CSW207A
      C                   Endif                                                                250600
- 
+
      C                   When      WSwiftCode = 'SOSE'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
      C                   When      WSwiftCode = 'TXID'
      C                   Eval      WLN1 = WSwiftCode + '/'
      C                             + %Trim(WISOC) + '/'
      C                             + %Trim(W_E5TINO)
- 
+
      C                   EndSL
      C                   Eval      PMOutParm1 = %Trim(WLN1)
       ** Set error if customer details is blanks                                            BUG14856
@@ -4111,7 +4113,7 @@
                                                                                             BUG15045
       ** For '/'
      C                   Else
- 
+
      C**********         If        WIBAN <> *Blanks                                         BUG14755
      C**********         Eval      PMOutParm1 = '/' + %Trim(WIBAN)                          BUG14755
       **********                                                                            BUG14755
@@ -4151,21 +4153,21 @@
      C                   Exsr      SetError                                                   250600
       *                                                                                       250600
      C                   Endsl                                                                250600
- 
+
      C                   EndIF
- 
+
      C                   Else
       ** Message Line 2 to 5
- 
+
      C                   Eval      WLN2 = *Blanks
      C                   Select
- 
+
      C                   When      WNCode = '1'
- 
+
      C**********         If        PMCustNo <> *Blanks                                      BUG14755
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
- 
+
      C**********         If        W_E5IDNO <> *Blanks                             BUG21024 BUG24657
      C                   If        W_E5CNA2 <> *Blanks
      C                   Eval      WLN2 = WNcode + '/' + %Trim(W_E5CNA1)
@@ -4181,7 +4183,7 @@
      C**********         Else                                                      BUG21024 BUG24657
      C**********         Eval      WLN2 = WNCode + '/' + %Trim(W_BBCNA1)           BUG21024 BUG24657
      C**********         Endif                                                     BUG21024 BUG24657
- 
+
      C                   Else
      C                   If        PMNonAcctHldr <> *Blanks
      C**********         If        NHIDE1 <> *Blanks                                         CSW207A
@@ -4196,15 +4198,15 @@
      C                   Eval      PMMsgID = 'FTS0052'                                      BUG14856
      C                   Exsr      SetError                                                 BUG14856
      C                   EndIf                                                              BUG14856
- 
+
      C                   When      WNCode = '2'
- 
+
      C**********         If        PMCustNo <> *Blanks                                      BUG14755
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
- 
+
      C**********         If        WCNA2Flag = 'Y'                                          BUG15045
- 
+
      C**********         If        W_E5IDNO <> *Blanks                             BUG21024 BUG24657
      C                   If        W_E5CNA3 = *Blanks
      C                   Eval      WLN2 = WNCode + '/'
@@ -4222,7 +4224,7 @@
      C**********         Eval      WLN2 = WNCode + '/'                             BUG21024 BUG24657
      C**********                   + %Trim(W_BBCNA2)                               BUG21024 BUG24657
      C**********         EndIf                                                     BUG21024 BUG24657
- 
+
      C**********         Else                                                               BUG15045
      C**********         If        W_E5CNA3 = *Blanks                                       BUG15045
      C**********         Eval      WLN2 = WNCode + '/' + %Trim(W_E5CNA2)                    BUG15045
@@ -4233,7 +4235,7 @@
      C**********         EndIf                                                              BUG15045
       **********                                                                            BUG15045
      C**********         EndIf                                                              BUG15045
- 
+
      C                   Else
      C                   If        PMNonAcctHldr <> *Blanks
      C**********         If        NHIDE3 <> *Blanks                                         CSW207A
@@ -4248,36 +4250,38 @@
      C                   Eval      PMMsgID = 'FTS0052'                                      BUG14856
      C                   Exsr      SetError                                                 BUG14856
      C                   EndIf                                                              BUG14856
- 
+
      C                   When      WNCode = '3'
- 
+
      C**********         If        PMCustno <> *Blanks                                      BUG14755
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
- 
+
      C                   If        W_E5CITY <> *Blanks
-     C                   Eval      WLN2 = WNCode + '/' + %Trim(W_BBCOLC)
+     C**********         Eval      WLN2 = WNCode + '/' + %Trim(W_BBCOLC)                    MD037941
+     C                   EVAL      WLN2 = WNCode + '/' + %Trim(W_CIsoCoLc)                  MD037941
      C                             + '/' + %Trim(W_E5CITY)
      C**********                   + '/' + %Trim(W_E5ZIPC)                                  BUG14755
      C                             + ' ' + %Trim(W_E5ZIPC)                                  BUG14755
      C                   Else
-     C                   Eval      WLN2 = WNCode + '/' + %Trim(W_BBCOLC)
+     C**********         Eval      WLN2 = WNCode + '/' + %Trim(W_BBCOLC)                    MD037941
+     C                   EVAL      WLN2 = WNCode + '/' + %Trim(W_CIsoCoLc)                  MD037941
      C**********                   + '/' + %Trim(W_BBCNA3)                                  BUG15045
      C                             + '/' + %Trim(W_BBCRTN)                                  BUG15045
      C                   EndIf
- 
+
      C                   Else
      C                   If        PMNonAcctHldr <> *Blanks
- 
+
      C**********         If        NHCITY <> *Blanks                                         CSW207A
      C**********                   And NHCOLC <> *Blanks                                     CSW207A
      C                   Eval      WLN2 = WNCode + '/' + %Trim(WISOC)
      C**********                   + %Trim(NHCITY) + ' ' + %Trim(NHZIPC)                     CSW207A
      C                             + '/' + %Trim(NHCITY) + ' ' + %Trim(NHZIPC)               CSW207A
      C**********         EndIf                                                               CSW207A
- 
+
      C                   EndIf
- 
+
      C                   EndIf
       ** Set error if customer details (CITY) is blanks                                     BUG14856
      C                   If        %Subst(WLN2:6) = *Blanks                                 BUG14856
@@ -4294,7 +4298,7 @@
      C                   EVAL      WExcsLine3 = 'Y'                                           CSW215
      C                   ENDIF                                                                CSW215
      C                   ENDIF                                                                CSW215
- 
+
      C                   When      WNCode = '4'
      C**********         If        WNAHOFlag = 'N'                                           CSW207A
      C                   If        PMNonAcctHldr = *Blanks                                   CSW207A
@@ -4308,21 +4312,21 @@
      C                                        %SUBST(W_E5BRT1:1:2)                          BUG21178
       *                                                                                     BUG21178
      C                   If        W_E5DBTH <> *BLANKS                                       CSW207A
- 
+
      C**********         CallB     'ZDATE9'                                                  CSW207A
      C**********         Parm      W_E5BRTH      PMMidasDate                                 CSW207A
      C**********         Parm      W_E5DBTH      PMMidasDate                                 CSW207A
      C**********         Parm                    PMYYYYMMDD                                  CSW207A
      C**********         Parm      *Blanks       PMYMDRetC                                   CSW207A
- 
+
      C**********         Eval      WLN2 = WNCode + '/' + %Char(PMYYYYMMDD)                   CSW207A
      C                   Eval      WLN2 = WNCode + '/' + W_E5DBTH                            CSW207A
- 
+
      C**********         Else                                                               BUG14856
      C**********         Eval      WLN2 = WNCode                                             CSW207A
      C**********         Eval      WLN2 = WNCode + '/'                              CSW207A BUG14856
      C                   EndIf
- 
+
      C                   Else
      C                   Eval      WLN2 = WNCode + '/' + NHDBTH
      C                   EndIf
@@ -4331,19 +4335,19 @@
      C                   Eval      PMMsgID = 'FTS0052'                                      BUG14856
      C                   Exsr      SetError                                                 BUG14856
      C                   EndIf                                                              BUG14856
- 
+
      C                   When      WNCode = '5'
- 
+
      C**********         If        PMCustNo <> *Blanks                                      BUG14755
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
- 
+
      C**********         Eval      WLN2 = WNCode + '/' + %Trim(WISOC)                       BUG15185
      C                   Eval      WLN2 = WNCode + '/' + %Trim(ACISOC)                      BUG15185
      C**********                   + '/' + %Trim(W_E5BTHC)                                  BUG14755
      C                             + '/' + %Trim(W_E5BTHT)
- 
- 
+
+
      C                   Else
      C**********         If        PMNonAcctHldr <> *Blanks                                  CSW207A
      C**********         If        NHBTHC <> *Blanks                                         CSW207A
@@ -4353,16 +4357,16 @@
      C                             + '/' + %Trim(NHBTHT)                                     CSW207A
      C**********         EndIf                                                               CSW207A
      C**********         EndIf                                                               CSW207A
- 
+
      C                   EndIf
       ** Set error if Birth Place is blanks                                                 BUG14856
      C                   If        %Subst(WLN2:3) = *Blanks                                 BUG14856
      C                   Eval      PMMsgID = 'FTS0052'                                      BUG14856
      C                   Exsr      SetError                                                 BUG14856
      C                   EndIf                                                              BUG14856
- 
+
      C                   When      WNCode = '6'
- 
+
       * This code is the internal cutomer number of the customer or non account holder        250600
       * The country of location is the one of the customer                                    250600
       * The issuer is the branch in which  the customer is registered                         250600
@@ -4370,7 +4374,7 @@
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
      C                             And PMCustNo <> *Blanks                                    250600
- 
+
      C**********         Eval      WLN2 = WNCode + '/' + %Trim(WISOC)                         250600
      C**********                   + '/' + %Trim(W_E5ISCD)                                    250600
      C**********                   + '/' + %Trim(W_E5IDNO)                                    250600
@@ -4407,7 +4411,7 @@
      C**********         Eval      PMMsgID = 'FTS0052'                               BUG14856 250600
      C**********         Exsr      SetError                                          BUG14856 250600
      C**********         EndIf                                                       BUG14856 250600
- 
+
      C                   Else
      C                   If        PMNonAcctHldr <> *Blanks
      C                   Eval      WLN2 = WNCode + '/' + %Trim(WISOC)
@@ -4420,9 +4424,9 @@
      C                   Exsr      SetError                                                 BUG14856
      C                   EndIf                                                              BUG14856
      C                   EndIf
- 
+
      C                   EndIf
- 
+
       ** Check if line 6 exceeds 35 chars                                                     CSW209
       ** If yes and a line is available, output the exceeding characters using 8/             CSW209
      C                   If        CSW209 = 'Y'                                               CSW209
@@ -4435,15 +4439,15 @@
      C                   EndIf                                                                CSW209
                                                                                               CSW209
      C                   When      WNCode = '7'
- 
+
      C**********         If        PMCustNo <> *Blanks                                      BUG14755
      C**********                   And PMNonAcctHldr = *Blanks                      CSW207A BUG14755
      C                   If        PMNonAcctHldr = *Blanks                                  BUG14755
- 
+
      C**********         Eval      WLN2 = WNCode + '/' + %Trim(WISOC)                       BUG15045
      C                   Eval      WLN2 = WNCode + '/' + %Trim(W_CIsoCitz)                  BUG15045
      C                             +'/' + %Trim(W_E5IDNO)
- 
+
      C                   Else
      C                   If        PMNonAcctHldr <> *Blanks
      C**********         If        WISOC <> *Blanks                                          CSW207A
@@ -4453,7 +4457,7 @@
      C                             +'/' + %Trim(NHTINO)
      C**********         EndIf                                                               CSW207A
      C                   EndIf
- 
+
      C                   EndIf
       ** Set error if Customer details is blanks                                            BUG14856
      C                   If        %Subst(WLN2:3) = *Blanks                                 BUG14856
@@ -4472,16 +4476,16 @@
      C                   EVAL      WExcsLine7 = '8/' + %SUBST(WLN2:36:33)                     CSW209
      C                   ENDIF                                                                CSW209
      C                   EndIf                                                                CSW209
- 
+
      C                   EndSL
- 
+
      C                   If        PMMsgID <> *Blanks                                       BUG14856
      C                   Movel     PMMsgID       WMsgID                                     BUG14856
      C                   LeaveSR                                                            BUG14856
      C                   EndIf                                                              BUG14856
      C                   Eval      WLN = WLN2
      C                   Exsr      MovePMMsg2to5
- 
+
      C                   If        CSW209 = 'Y'                                               CSW209
      C                   IF        WnCode = '1'  or                                           CSW209
      C                             WExcsLine3 = 'Y' OR                                        CSW215
@@ -4491,47 +4495,47 @@
      C                   Else                                                                 CSW209
      C                   Exsr      ChkExcsChar
      C                   EndIf                                                                CSW209
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * ChkExcsChar - Check excess character                          *
       *****************************************************************
      C     ChkExcsChar   BegSR
- 
+
      C                   Eval      WPtr1 = 0
      C                   Eval      WStr01 = 35
- 
+
      C     ' '           CheckR    WLN2          WPtr1
- 
+
      C                   If        WPtr1 > 35
- 
+
      C                   Eval      WCtr03 = 0
      C                   DoW       WCtr03 < 3
      C**********         Eval      WCtr03 += 1                                              BUG15045
      C                   Eval      WCtr03 = WCtr03 + 1                                      BUG15045
- 
+
      C                   Eval      WDummy = *Blanks
       *                                                                                     BUG15045
      C                   If        WnCode <> '3' And                                        BUG15045
      C                             WnCode <> '5'                                            BUG15045
- 
+
      C                   Eval      WDummy = %SubSt(WLN2:WStr01+1:33)
- 
+
      C                   If        WDummy <> *Blanks
- 
+
      C                   Eval      WLN = WNCode + '/' + %Trim(WDummy)
      C                   If        WExcsLine > 0                                            BUG15045
      C                   Exsr      MovePMMsg2to5
      C                   Eval      WExcsLine = WExcsLine - 1                                BUG15045
      C                   EndIf                                                              BUG15045
- 
+
      C                   EndIf
- 
+
      C                   Eval      WStr01 = WStr01 + 33
       *                                                                                     BUG15045
      C                   Else                                                               BUG15045
@@ -4558,44 +4562,44 @@
      C                   EndIf                                                              BUG15045
       *                                                                                     BUG15045
      C                   Endif                                                              BUG15045
- 
+
      C                   EndDo
- 
+
      C                   EndIf
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * MovePMMsg2to5 - Move parameter message 2 to 5                 *
       *****************************************************************
      C     MovePMMsg2to5 BegSR
- 
+
      C                   Select
      C                   When      PMOutParm2 = *Blanks
      C                   Eval      PMOutParm2 = WLN
- 
+
      C                   When      PMOutParm3 = *Blanks
      C                   Eval      PMOutParm3 = WLN
- 
+
      C                   When      PMOutParm4 = *Blanks
      C                   Eval      PMOutParm4 = WLN
- 
+
      C                   When      PMOutParm5 = *Blanks
      C                   Eval      PMOutParm5 = WLN
- 
+
      C                   EndSL
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
       * SetError - Set error message                                  *
       *****************************************************************
      C     SetError      BegSR
- 
+
      C                   Eval      WContinue = 'N'
      C                   Eval      WCtr01 = 5                                               BUG14856
      C                   Eval      PMOutParm1 = *Blanks                                     BUG14856
@@ -4603,12 +4607,12 @@
      C                   Eval      PMOutParm3 = *Blanks                                     BUG14856
      C                   Eval      PMOutParm4 = *Blanks                                     BUG14856
      C                   Eval      PMOutParm5 = *Blanks                                     BUG14856
- 
+
      C                   Select
      C                   When      WOMFLAGF = 'P'
      C                             or WOMFLAGF = 'M'
      C                   Eval      PMErrType = 'E'
- 
+
      C                   When      WOMFLAGF = 'W'
       ** If flag is otional, no special set-up is done, field 50K will be produced            250600
      C**********                   or WOMFLAGF = 'O'                                          250600
@@ -4617,11 +4621,11 @@
      C                   When      WOMFLAGF = 'O'                                             250600
      C                             or WOMFLAGF = 'O'                                         250804A
      C                   Eval      PMErrType = ' '                                            250600
- 
+
      C                   EndSL
- 
+
      C                   EndSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                     BUG15045
@@ -4784,7 +4788,7 @@
      C                   EVAL      varInput4  = *BLANKS                                       CSW215
      C                   ENDIF                                                                CSW215
      C                   EVAL      varInput5  = *BLANKS                                       CSW215
-      *                                                                                       CSW215      
+      *                                                                                       CSW215
      C                   When      %SubSt(PMinpParm4:1:2) = '1/'                            BUG24614
      C                   If        %SubSt(PMinpParm5:1:2) <> '8/'                           BUG24614
      C                   Eval      varInput3 = %SubSt(PMinpParm5:1:2)                       BUG24614
@@ -4856,9 +4860,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *Inzsr        BegSR
- 
+
      C     *ENTRY        PLIST
       *
       ** Return Code
@@ -4968,13 +4972,13 @@
       ** Message Line 5
       *
      C                   Parm                    PMOutParm5
- 
+
       *
       ** Check if SWIFT2007 is installed
       *
      C                   Call      'SWIF2007'
      C                   Parm      *Blanks       PMReturnCode
- 
+
      C                   If        PMReturnCode = 'CSW2007'
      C                   Eval      CSW207 = 'Y'
      C                   Else
@@ -5009,7 +5013,7 @@
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*VERIFY'     PMOption
      C                   Parm      'CFT004'      PMSAR
- 
+
      C                   If        PMReturnCode = *Blanks
      C                   Eval      CFT004 = 'Y'
      C                   EndIf
@@ -5021,7 +5025,7 @@
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*VERIFY'     PMOption
      C                   Parm      'CSW024'      PMSAR
- 
+
      C                   If        PMReturnCode = *Blanks
      C                   Eval      CSW024 = 'Y'
      C                   EndIf
@@ -5058,7 +5062,7 @@
      C                   Parm      *Blanks       PMReturnCode
      C                   Parm      '*FIRST'      PMOption
      C     SDRETL        Parm      SDRETL        DSSDY
- 
+
      C                   If        PMReturnCode <> *Blanks
      C                   Eval      DbFile = 'SDRETLPD'
      C                   Eval      Dbase  = 01
@@ -5127,7 +5131,7 @@
      C**********         Eval      Dbase  = 11                                    BUG15149 BUG15149A
      C**********         Exsr      *PSSR                                          BUG15149 BUG15149A
      C**********         ENDIF                                                    BUG15149 BUG15149A
- 
+
      C                   EndSR
       *****************************************************************
       /EJECT

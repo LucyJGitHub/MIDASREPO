@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE100             Date 21Mar14               *
-      *  Prev Amend No. MD022635           Date 30Sep13               *
+      *  Last Amend No. MD034990           Date 25May16               *
+      *  Prev Amend No. CRE100             Date 21Mar14               *
+      *                 MD022635           Date 30Sep13               *
       *                 MD021155 *CONVERT  Date 10Jul13               *
       *                 MD020099           Date 22Apr13               *
       *                 CRE093             Date 06Aug12               *
@@ -70,6 +71,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD034990 - Postings not posted against account sequence of   *
+      *             the retail account.                               *
       *  CRE100 - Allow Customer Number For Retail Accrual And Charge *
       *           Postings.                                           *
       *  MD022635 - Multiple reconciliation differences field OTRF,   *
@@ -226,7 +229,8 @@
      D CPY@            S             80    DIM(1) CTDATA PERRCD(1)
                                                                                               CRE100
       ** System Value Array Definition                                                        CRE100
-     D SVAL            S             20    DIM(1) CTDATA PERRCD(1)                            CRE100
+     D*SVAL*****       S             20    DIM(1) CTDATA PERRCD(1)                   CRE100 MD034990
+     D SVAL            S             20    DIM(2) CTDATA PERRCD(1)                          MD034990
      D ##BR            S              3    DIM(999)
      D ##BI            S              6    DIM(999)
  
@@ -774,12 +778,14 @@
       ** accrual should be posted at customer or bank level.                                  CRE100
                                                                                               CRE100
      C                   Eval      *IN38 = *Off                                               CRE100
+     C                   Eval      *IN39 = *Off                                             MD034990
       *                                                                                       CRE100
      C                   Call      'AOSVALR0'                                                 CRE100
      C                   Parm      *Blanks       W0RTCD            1                          CRE100
      C                   Parm      SVAL(1)       PVALK1           20                          CRE100
      C                   Parm      *Blanks       PVAL1           200                          CRE100
-     C                   Parm      *Blanks       PVALK2           20                          CRE100
+     C**********         Parm      *Blanks       PVALK2           20                 CRE100 MD034990
+     C                   Parm      SVAL(2)       PVALK2           20                        MD034990
      C                   Parm      *Blanks       PVAL2           200                          CRE100
      C                   Parm      *Blanks       PVALK3           20                          CRE100
      C                   Parm      *Blanks       PVAL3           200                          CRE100
@@ -804,6 +810,10 @@
      C                   Eval      *IN38 = *On                                                CRE100
      C                   Endif                                                                CRE100
       *                                                                                       CRE100
+     C                   If        PVAL2 = 'Y'                                              MD034990
+     C                   Eval      *IN39 = *On                                              MD034990
+     C                   Endif                                                              MD034990
+      *                                                                                     MD034990
      C                   Else                                                                 CRE100
       *                                                                                       CRE100
      C                   If        W0RTCD <> '*NRF'                                           CRE100
@@ -2660,6 +2670,7 @@
      O                       QQACOD              14
      O/COPY WNCPYSRC,RE3666O003
      O                                           16 '01'
+     O               39      ACSQ                16                                         MD034990
      O/COPY WNCPYSRC,RE3666O004
      O                                           32 '0000000000'
      O                       RNDT                35P
@@ -2854,3 +2865,4 @@ JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC
 (c) Misys International Banking Systems Ltd. 2001
 **   SVAL  -  SYSTEM VALUES ARRAY                                                             CRE100
 RET_INTAC_CUST_LVL                                                                            CRE100
+RET_SEQ_CUST_LVL                                                                            MD034990

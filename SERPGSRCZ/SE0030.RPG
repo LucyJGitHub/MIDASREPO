@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 255419             Date 13Nov12               *
-      *  Prev Amend No. 255417             Date 12Nov12               *
+      *  Last Amend No. MD037885           Date 25May16               *
+      *  Prev Amend No. 255419             Date 13Nov12               *
+      *                 255417             Date 12Nov12               *
       *                 CAP208             Date 06Dec10               *
       *                 CSW210             Date 04May10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -120,6 +121,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037885 - Error with enquiry and delete action for          *
+      *             non-existent investment type                      *
       *  255419 - SD Correct action is shown as an error (reverse) in *
       *           Standard Settlements Maintenance.                   *
       *  255417 - Unexpected symbol in error line in Securities       *
@@ -1205,6 +1208,7 @@
      C/COPY WNCPYSRC,SE0030C011
      C                     MOVE 'N'       WERR1   1                       CEU005
      C                     MOVE *BLANKS   WSSCCY  3                       CEU005
+     C                     MOVEL*BLANKS   WTOPK                                             MD037885
      C*
      C** CLEAR WHOLE SCREEN
      C*
@@ -1361,14 +1365,31 @@
       ** Read previous subfile page if no selection is made.                                  211791
       *                                                                                       211791
      C           PAGK      IFEQ *BLANK                                                        211791
-     C                     Z-ADD0         I       20                                          211791
+     C**********           Z-ADD0         I       20                                 211791 MD037885
+     C                     Z-ADD1         I       20                                        MD037885
      C           I         DOWLT19                                                            211791
      C           *IN53     ANDEQ'0'                                                           211791
-     C                     READPSTDSEX                   53                                   211791
+     C**********           READPSTDSEX                   53                          211791 MD037885
+     C                     READPSTDSEDFL                 53                                 MD037885
      C                     ADD  1         I                                                   211791
      C                     ENDDO                                                              211791
      C           *IN53     IFEQ '1'                                                           211791
-     C           *LOVAL    SETLLSTDSEX                                                        211791
+      *                                                                                     MD037885
+      ** Read previous record                                                               MD037885
+      *                                                                                     MD037885
+     C                     MOVEL'0'       *IN53                                             MD037885
+     C                     Z-ADD1         I                                                 MD037885
+     C           I         DOWLT19                                                          MD037885
+     C           *IN53     ANDEQ'0'                                                         MD037885
+     C                     READPSTDSEDFL                 53                                 MD037885
+     C                     ADD  1         I                                                 MD037885
+     C                     ENDDO                                                            MD037885
+     C           STDSEK    SETLLSTDSEX                                                      MD037885
+     C           STDADK    SETLLSTDSEDFL                                                    MD037885
+     C********** *LOVAL    SETLLSTDSEX                                               211791 MD037885
+     C                     ELSE                                                             MD037885
+     C           STDSEK    SETLLSTDSEX                                                      MD037885
+     C           STDADK    SETLLSTDSEDFL                                                    MD037885
      C                     ENDIF                                                              211791
      C                     ENDIF                                                              211791
      C*                                                                                       211791
@@ -1390,12 +1411,19 @@
      C           PAGK      IFEQ *BLANK                                                        211791
      C           AID       ANDEQ'RA'                                                          211791
      C           WRETK     IFEQ *BLANK                                                        211791
+     C           WTOPK     IFNE *BLANKS                                                     MD037885
+     C                     MOVE WTOPK     INPK                                              MD037885
+     C           STDSEK    SETLLSTDSEX                                                      MD037885
+     C           STDADK    SETLLSTDSEDFL                                                    MD037885
+     C                     ELSE                                                             MD037885
      C           *LOVAL    SETLLSTDSEX                                                        211791
      C           *LOVAL    SETLLSTDSEDFL                                                    BUG13200
+     C                     ENDIF                                                            MD037885
      C                     ELSE                                                               211791
      C                     MOVE WRETK     INPK                                                211791
      C                     MOVE *BLANK    WRETK                                               211791
      C           STDSEK    SETLLSTDSEX                                                        211791
+     C           STDADK    SETLLSTDSEDFL                                                    MD037885
      C                     ENDIF                                                              211791
      C                     ELSE                                                               211791
      C***********STDSEK    SETLLSTDSEX                                                        215878
@@ -1497,6 +1525,7 @@
      C                     MOVELWBLNK     HERCD
      C                     MOVEL*BLANK    SCRMSG
      C                     MOVEL*BLANK    REVW
+     C                     MOVEL'0'       *IN83                                             MD037885
      C*
      C***C*K*1*,*C*K*5*,*H*E*L*P*,*R*E*C*O*R*D**S*E*L*E*C*T-**S*T*A*R*T   S01199
      C** C K 3 , C K 5 , R E C O R D  S E L E C T-  S T A R T             S01199
@@ -1545,6 +1574,17 @@
      C***********          MOVELSBRH      SSBRH                           S01117
      C                     MOVELSBRA      SSBRH                           S01117
      C********** CSTM      IFNE *ZERO                                                  CSE028 CSD027
+      *                                                                                     MD037885
+      ** Initialiase if Action code = Blanks                                                MD037885
+      *                                                                                     MD037885
+     C           ACTN      IFEQ *BLANKS                                                     MD037885
+     C                     MOVEL*BLANKS   CSTM                                              MD037885
+     C                     MOVEL*BLANKS   SIBK                                              MD037885
+     C                     MOVEL*BLANKS   CYSI                                              MD037885
+     C                     MOVEL*BLANKS   SMKT                                              MD037885
+     C                     MOVEL*BLANKS   ITSI                                              MD037885
+     C                     MOVEL*BLANKS   SPTFR                                             MD037885
+     C                     ENDIF                                                            MD037885
      C           CSTM      IFNE *BLANKS                                                       CSD027
      C                     MOVELCSTM      SCSTM
      C                     ELSE                                                               CSE028
@@ -1569,6 +1609,7 @@
      C** NO ERRORS, UPDATE SCREEN CAN BE PROCESSED NEXT
      C*
      C           SCRMSG    IFEQ *BLANK
+     C           ACTN      ANDNE*BLANKS                                                     MD037885
      C                     MOVEA'1'       *IN,12
      C                     MOVEL'Y'       REVW
      C                     END
@@ -1831,6 +1872,7 @@
      C           REVW      IFEQ 'Y'
      C**********           MOVELPPAGK     PAGK                                                211791
      C           PAGK      IFEQ *BLANK                                                        211791
+     C           AID       ANDNE'RA'                                                        MD037885
      C                     MOVE WTOPK     WRETK                                               211791
      C                     ENDIF                                                              211791
      C                     MOVEA'1'       *IN,11
@@ -2087,6 +2129,7 @@
       *                                                                                       CSE028
      C           *IN,99    IFEQ '1'
      C           ACTN      ANDNE'D'                                       180544
+     C           ACTN      ANDNE'E'                                                         MD037885
      C                     ADD  1         EC         22
      C                     MOVEL' 102'    ERR,EC
      C                     ELSE
@@ -2313,6 +2356,8 @@
      C*
      C           *IN,24    IFEQ *ZERO
      C           RECI      ANDEQ'*'
+     C           ACTN      ANDNE'E'                                                         MD037885
+     C           ACTN      ANDNE'D'                                                         MD037885
      C                     MOVEA'1'       *IN,24
      C                     END
      C*

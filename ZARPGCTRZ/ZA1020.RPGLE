@@ -19,6 +19,7 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
+      *  Last Amend No. MD037890           Date 25May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
@@ -30,10 +31,11 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037890 - Display negative amounts correctly.               *
       *  CAP002 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -52,51 +54,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the ZA standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D @D              S              1    DIM(15)
       **  Array for amount input.
- 
+
      D @E              S              1    DIM(21)
       **  Array for display amount.
- 
+
      D @C              S              1    DIM(21)
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -127,7 +129,9 @@
      C     ZA1020        BEGSR
      C**  Define and initialise fields used.
      C                   Z-ADD     @@IAMT        @@IAMT           15 0
-     C                   MOVEL     @@IAMT        @@AMDS           15
+     C**********         MOVEL     @@IAMT        @@AMDS           15                        MD037890
+     C                   MOVEL     *BLANKS       @@AMDS           15                        MD037890
+     C                   MOVE      '0'           *IN60                                      MD037890
      C                   Z-ADD     @@CRET        @@CRET            2 0
      C                   Z-ADD     @@CDP         @@CDP             1 0
      C                   MOVE      *BLANKS       @@ADSP           21
@@ -152,7 +156,9 @@
      C**  Take modulus of input amount.
      C     @@IAMT        IFLT      *ZERO                                        B1
      C                   Z-SUB     @@IAMT        @@IAMT                         *1
+     C                   MOVE      '1'           *IN60                                      MD037890
      C                   END                                                    E1
+     C                   MOVEL     @@IAMT        @@AMDS                                     MD037890
      C**  Move input amount to @D.
      C                   MOVEA     @@AMDS        @D
      C**  Move decimal portion of amount to @E.
@@ -231,6 +237,12 @@
      C     ZA1028        TAG                                                    **ZA1028**
      C**  Move @E to display field.
      C                   MOVEA     @E            @@ADSP
+     C     *IN60         IFEQ      '1'                                                      MD037890
+     C                   MOVE      @@ADSP        WADSP            20                        MD037890
+     C                   MOVE      *BLANKS       @@ADSP                                     MD037890
+     C                   MOVE      '-'           @@ADSP                                     MD037890
+     C                   MOVEL     WADSP         @@ADSP                                     MD037890
+     C                   ENDIF                                                              MD037890
      C     ZA1029        ENDSR                                                  **ZA1029**
      C****************************************************************
       /EJECT

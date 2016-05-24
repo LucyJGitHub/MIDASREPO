@@ -16,17 +16,25 @@
      F*
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                              *
+      *  Last Amend No. 222393             Date 25May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       * Midas Release 4 --------------- Base -------------------------*
       * Midas DBA 3.00 ---------------- Base -------------------------*
-      *  Last Amend No. CAP006  *CREATE    Date 21Jan99               *
-      *  Prev Amend No.                    Date ddmmmyy               *
+      *  Prev Amend No. CAP006  *CREATE    Date 21Jan99               *
+      *                                    Date ddmmmyy               *
      F*                                                              *
      F****************************************************************
      F*                                                              *
+      *  222393 - Automatic security trade numbers maintenance shows  *
+      *           data fields but the text descriptions are missing.  *
+      *           The same with depot movement numbers and futures    *
+      *           trade numbers maintenances. Fix is to pass the      *
+      *           message ID value of the hidden fields introduced by *
+      *           amendment CAP040 in display file APTRDNODF.         *
+      *         - Applied for MD-35060.                               *
       *  CAP006 - Conversion of Midas inputs to modular API structure *
      F****************************************************************
      F*
@@ -73,13 +81,13 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FZAAVFFL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FZAAVSDL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FZAAVSTL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FZATNRGL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(ZATNRGD0:ZATNRG)
      FZATNRGL0  UF   E           K DISK    INFSR(*PSSR)
@@ -96,39 +104,39 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
- 
+
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D**
      D DNATN           DS             5
      D**  DATA STRUCTURE TO UPDATE LAST TRANSACTION NUMBER DTARA.
@@ -177,7 +185,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -188,7 +196,7 @@
      C     Start         TAG
       ** Note: the above tag is only there to force the first comments in
       ** the C-specs to appear after the D- or I-specs in compiled listings.
- 
+
      C**  INITIAL PROCESSING
      C                   EXSR      #A
      C*
@@ -808,6 +816,14 @@
      C*
      C**  MOVE PROGRAM NAME INTO LDA IN CASE OF DATABASE ERROR
      C                   MOVEL     'APTRDNOMNT'  DBPGM
+      *                                                                                       222393
+      ** Setup the values of the message IDs to be retrieved in                               222393
+      ** message file ZZGBMSGF.                                                               222393
+      *                                                                                       222393
+     C                   MOVEL     'APA1045'     NXTAUTOUSE                                   222393
+     C                   MOVEL     'APA1046'     RNGSTRT                                      222393
+     C                   MOVEL     'APA1047'     NXTAUTOGEN                                   222393
+     C                   MOVEL     'APA1051'     SCNHEAD                                      222393
      C*
      C**  INITIALISE PROGRAM VARIABLES AND INDICATORS
      C                   EXSR      #AA

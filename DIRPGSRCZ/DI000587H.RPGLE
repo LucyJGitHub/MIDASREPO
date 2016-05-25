@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD027107           Date 11Dec14               *
-      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *  Last Amend No. MD035656           Date 25May16               *      
+      *  Prev Amend No. MD027107           Date 11Dec14               *
+      *                 MD029739 *RENAMED* Date 15Aug14               *
       *                 MD033895           Date 03Feb14               *
       *                 MD024772           Date 03Feb14               *
       *                 MD024681A          Date 18Feb14               *
@@ -26,6 +27,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035656 - Batch with wrong account configured in the        *
+      *             accounting rules do not appears in the repair     *
+      *             queue.                                            *
       *  MD027107 - Split the Accounting Rules Journal Batch Entry    *
       *             once it reach 998 entries. (Recompile)            *
       *  MD029739 - File renaming for integration layer.              *
@@ -330,6 +334,10 @@
      C                   EVAL      WkSoap = WkSoap +
      C                                      getOldSoapParm('DDMBRB'
      C                                                    : BHMBRB )
+     C                   ELSE                                                               MD035656
+     C                   EVAL      WkSoap = WkSoap +                                        MD035656
+     C                                      getOldSoapParm('DDMBRB'                         MD035656
+     C                                                    : 'Y' )                           MD035656
      C                   ENDIF
       *
       ** - Batch Description

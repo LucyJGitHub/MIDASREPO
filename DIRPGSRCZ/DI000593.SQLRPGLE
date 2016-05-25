@@ -18,13 +18,16 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD029739 *RENAMED* Date 15Aug14               *
-      *  Prev Amend No. MD029683           Date 19Aug14               *
+      *  Last Amend No. MD035766           Date 25May16               *      
+      *  Prev Amend No. MD029739 *RENAMED* Date 15Aug14               *
+      *                 MD029683           Date 19Aug14               *
       *                 MD023629           Date 22Nov13               *
       *                 CGL135A *CREATE    Date 08Oct13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD035766 - Monitor Nostro Reconciliation Process screen is   *
+      *             showing wrong Account ID for some Nostro accounts *      
       *  MD029739 - File renaming for integration layer.              *
       *  MD029683 - Nostro Accounts Reconciliation Monitor            *
       *             Enhancement.                                      *
@@ -1350,6 +1353,11 @@
      C                   EVAL      #1LTIM = WHR + ':' + WMIN + ':' + WSEC
  
       ** Account ID                                                                         MD029683
+      *                                                                                     MD035766
+     C                   IF        B_ARNBTID <> XFBTID                                      MD035766
+     C                   MOVEL     B_ARNOACN     WFACID                                     MD035766
+     C                   ENDIF                                                              MD035766
+      *                                                                                     MD035766
      C                   MOVE      WFACID        #1ACID                                     MD029683
                                                                                             MD029683
       ** Account Number                                                                     MD029683

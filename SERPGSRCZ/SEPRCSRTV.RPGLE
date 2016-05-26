@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR1092524          Date 12Mar13               *
-      *  Prev Amend No. 255418             Date 13Nov12               *
+      *  Last Amend No. MD037408           Date 25May16               *
+      *  Prev Amend No. AR1092524          Date 12Mar13               *
+      *                 255418             Date 13Nov12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 256564             Date 17Sep08               *
@@ -53,6 +54,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037408 - SE PRICES Input Insert New Security Shortname not *
+      *             validated initially eventhough value of field is  *
+      *             invalid                                           *
       *  AR1092524 - Data inserted in Branch, Market & Book were not  *
       *           displayed in the Main list view of Securities       *
       *           Prices.                                             *
@@ -102,16 +106,16 @@
       ** +--------------------------------------+
      F**********PRICE     IF   E           K DISK    INFSR(*PSSR)                             CAP060
      FPRICEL1   IF   E           K DISK    INFSR(*PSSR)                                       CAP060
- 
+
      FSECTY     IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSECTYL5   IF   E           K DISK    INFSR(*PSSR)                                       CAP060
      F                                     RENAME(SECTYDF:SECTYMDF)                           CAP060
      F                                     PREFIX(MDF)                                        CAP060
- 
+
      FPRICEL0   IF   E           K DISK    INFSR(*PSSR)                                       CAP060
      F                                     RENAME(PRICEDF:SEPRCSFOI)                          CAP060
- 
+
      FBKPHD     IF   E           K DISK    INFSR(*PSSR)                                       CAP060
                                                                                               CAP060
      F***CPOSN**   IF   E           K DISK    INFSR(*PSSR)                             CAP060 241575
@@ -127,70 +131,70 @@
       ** ¦ Automatically included D-specs       ¦
       ** ¦ ==============================       ¦
       ** +--------------------------------------+
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA layout
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structure.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR Midas Module Details
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       * SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
      D PRCSFilFmt    E DS                  EXTNAME(PRICED)
      D FL_RECI       E                     EXTFLD(RECI)                                      CAP060
- 
+
       ** Price record in File Format
- 
+
      D ZMUSER        E DS                  EXTNAME(ZMUSER)
       ** Obtain default branch for user
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)                                 CAP060
       ** Branch details                                                                      CAP060
       *                                                                                      CAP060
@@ -212,25 +216,25 @@
                                                                                              CAP060
       ** Array for manipulating decimal positions                                            CAP060
      D POWER8          S              8  4 DIM(8) CTDATA PERRCD(1)                           CAP060
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
      D Wx              S              3P 0                                                   CAP060
- 
+
      D* Profit Centre Switchable Feature                                                     CAP060
      D CAC005          S              1A                                                     CAP060
- 
+
      D* Sec Prices API switchable feature                                                    CAP060
      D CAP060F         S              1A                                                     CAP060
- 
+
      D* Sec Prices API switchable feature                                                    205873
      D CSD006F         S              1A                                                     205873
- 
+
      D* Customer No in file format                                                           CAP060
      D*@PCNM****       S              6S 0                                            CAP060  CSD027
      D @PCNM           S              6A                                                      CSD027
@@ -653,7 +657,7 @@
      C                   ENDIF                                                                CAP060
       *                                                                                     BUG11512
      C                   ENDIF                                                              BUG11512
- 
+
      C     EMDFVAL       ENDSR                                                                CAP060
       *****************************************************************                       CAP060
       /EJECT                                                                                  CAP060
@@ -673,7 +677,7 @@
      C     @PRICK        CHAIN     PRICEL1                            99                      CAP060
                                                                                               CAP060
      C                   MOVE      RECI          FL_RECI                                      CAP060
- 
+
       * Price details not found                                                               CAP060
      C     *IN99         IFEQ      '1'                                                        CAP060
      C                   MOVEL     'N'           OKACTN                                       CAP060
@@ -932,7 +936,8 @@
      C                   MOVE      'N'           OKPCNM                                       255418
      C                   ADD       1             Ix                                           255418
      C                   MOVEL     'DDPCNM'      FldNameArr(Ix)                               255418
-     C                   MOVEL     '45045848'    MsgIdArr(Ix)                                 255418
+     C**********         MOVEL     '45045848'    MsgIdArr(Ix)                        255418 MD037408
+     C                   MOVEL     '5045848'     MsgIdArr(Ix)                               MD037408
      C                   ELSE                                                                 255418
       *                                                                                       255418
       ** Securities customer must either be safe custody or discretionary customer            255418
@@ -941,7 +946,8 @@
      C                   MOVE      'N'           OKPCNM                                       255418
      C                   ADD       1             Ix                                           255418
      C                   MOVEL     'DDPCNM'      FldNameArr(Ix)                               255418
-     C                   MOVEL     '45045849'    MsgIdArr(Ix)                                 255418
+     C**********         MOVEL     '45045849'    MsgIdArr(Ix)                        255418 MD037408
+     C                   MOVEL     '5045849'     MsgIdArr(Ix)                               MD037408
      C                   ENDIF                                                                255418
      C                   ENDIF                                                                255418
      C                   ENDIF                                                                255418
@@ -1193,7 +1199,7 @@
      C                   ENDIF                                                                CAP060
                                                                                               CAP060
      C                   IF        DDPPRT = 'V'                                               CAP060
- 
+
      C     DDPSSN        CHAIN     SECTYDF                            99                      CAP060
      C                   IF        *IN99  OR                                                  CAP060
      C                             RECI <> 'D'                                                CAP060
@@ -1431,7 +1437,7 @@
       * ICD
       * Extel Indicator
      C                   PARM                    BVEXOP            1                          CAP060
- 
+
       * OUTPUTS
       *
       **(Current)*forward*rates*in*file*format                                                CAP060
@@ -1509,7 +1515,7 @@
      C                   KFLD                    @PBOK             2
      C                   KFLD                    @PPRT             2
      C                   KFLD                    @PTFR             4
- 
+
      C     BKPHDK        KLIST                                                                CAP060
      C                   KFLD                    DDPSSN                                       CAP060
      C                   KFLD                    @PBRA                                        CAP060
@@ -1532,7 +1538,7 @@
      C                   KFLD                    DDPSSN                                       CAP060
      C                   KFLD                    WTVDA             1                          CAP060
      C                   KFLD                    @PVDT             5 0                        CAP060
- 
+
       ** ACCESS BANK DETAILS
       *  (database error handling done in access program)
       *
@@ -1555,7 +1561,7 @@
      C                   PARM      '*FIRST '     P@OPTN            7                          CAP060
      C     SDPORT        PARM      SDPORT        DSFDY                                        CAP060
      C                   ENDIF                                                                CAP060
- 
+
       ***  Check if CAC005 is on                                                              CAP060
       *                                                                                       CAP060
      C                   CALL      'AOSARDR0'                                                 CAP060

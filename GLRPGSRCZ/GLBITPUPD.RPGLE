@@ -2277,7 +2277,7 @@ E1   C                   ENDIF                                                  
      C                   EVAL      CSC011 = 'N'                                               CSC011
      C                   ENDIF                                                                CSC011
      C/COPY WNCPYSRC,GLBITPDC03
-      *                                                                                       CRE023
+      *                                                                                     MD036967
       ** Check for Account Balance Check Flag                                               MD036967
       *                                                                                     MD036967
      C                   EVAL      CAP207 = 'N'                                             MD036967

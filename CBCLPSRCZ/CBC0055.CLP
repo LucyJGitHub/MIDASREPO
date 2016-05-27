@@ -10,12 +10,13 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. MD035310           Date 25May16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
-/*       Last Amend No. CSC023             Date 29Jan04              */
-/*       Prev Amend No. CGP002             Date 04Jul03              */
+/*       Prev Amend No. CSC023             Date 29Jan04              */
+/*                      CGP002             Date 04Jul03              */
 /*                      107700             Date 04Sep96              */
 /*                      CCB012             Date 26Mar02              */
 /* Midas Release 4 --------------- Base -----------------------------*/
@@ -43,6 +44,8 @@
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD035310 - GL0761P1 report is showing previous run day as   */
+/*                  period date on header during COB.                */
 /*       CSC023 - MidasPlus additional packaging.  SBMJOB change.    */
 /*                OUTQ must always be *JOBD.                         */
 /*       CGP002 - Add call to GOC000100 to update the global         */
@@ -282,6 +285,10 @@
 /**********  OVRMSGF    MSGF(LBUSRMSG) TOMSGF(&LBUSRMSG)   /*S01498*/ /*099150*/
 /**********  OVRMSGF    MSGF(RTSMSGF)  TOMSGF(&RTSMSGF)    /*CRT001*/ /*099150*/
 /**/
+             CRTPF      FILE(QTEMP/CBFLAGQT) RCDLEN(1) TEXT('Flag to +
+                          indicate that process is running in CoB')                     /*MD035310*/
+             MONMSG     MSGID(CPF5813)                                                  /*MD035310*/
+                                                                                        /*MD035310*/
              CHGVAR     VAR(&S01420) VALUE('N')                       /*S01420*/
              CHGVAR     VAR(&RTN) VALUE('       ')                    /*S01420*/
              CHGVAR     VAR(&OPN) VALUE('*VERIFY')                    /*S01420*/

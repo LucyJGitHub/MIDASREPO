@@ -12,7 +12,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. CGL158   *CREATE   Date 16Sep14               *
+      *  Last Amend No. MD038445           Date 27May16               *
+      *  Prev Amend No. CGL158   *CREATE   Date 16Sep14               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
@@ -109,7 +110,8 @@
      C                   IF        DLCOUNT <> 3
      C                   EVAL      GenError = 'Y'
      C                   ADD       1             Idx
-     C                   MOVEL     'USR9899'     MsgIDXArr(Idx)
+     C**********         MOVEL     'USR9899'     MsgIDXArr(Idx)                 MD038445
+     C                   MOVEL     'USR9481'     MsgIDXArr(Idx)                 MD038445
      C                   EVAL       *INLR = *ON
      C                   RETURN
      C                   ENDIF

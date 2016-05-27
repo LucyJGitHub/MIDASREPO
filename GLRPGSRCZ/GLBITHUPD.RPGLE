@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD036967           Date 11May16               *
-      *  Prev Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. MD033630A          Date 25May16               *
+      *  Prev Amend No. MD036967           Date 25May16               *
+      *                 MD035554           Date 25May16               *
       *                 AR922022A          Date 26Apr16               *
       *                 AR922022           Date 26Apr16               *
       *                 MD033630           Date 23Jun15               *
@@ -71,6 +72,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict betwen CAP207 and CRE023. Update files   *
       *             for Credit after accept when both feat are ON.    *
       *  MD035554 - 2o'clock/ABC compatibility                        *
@@ -676,7 +678,7 @@
      C     BRBTNB        READE     @BTREAK                                98                 BUG3500
      C     *IN98         DOWEQ     *OFF                                                      BUG3500
                                                                                            AR792734A
-     C**********         Move      'N'           OUTWRD            1               MD033630 MD033630
+     C**********         Move      'N'           OUTWRD            1              MD033630 MD033630A
      C*****CRE023        IFEQ      'Y'                                            AR792734A MD036967
      C                   IF        CRE023 = 'Y' AND CAP207='N'                              MD036967
      C                             OR CRE023='Y' AND CAP207='Y'                             MD036967
@@ -686,8 +688,8 @@
                                                                                            AR792734A
      C                   DELETE    @BTREAK                                                   BUG3500
      C     CGL016        IFEQ      'Y'                                                     AR792734A
-     C*****CRE023        OREQ      'Y'                                            AR792734A MD033630
-     C*****OUTWRD        AndEq     'Y'                                             MD033630 MD033630
+     C*****CRE023        OREQ      'Y'                                           AR792734A MD033630A
+     C*****OUTWRD        AndEq     'Y'                                            MD033630 MD033630A
      C                   EXSR      REVPOST                                                 AR792734A
      C                   ENDIF                                                             AR792734A
      C     BRBTNB        READE     @BTREAK                                98                 BUG3500
@@ -818,9 +820,9 @@
      C     B1BTSF        IFEQ      'A'                                                        239155
      C     BRSHPI        ANDNE     'Y'                                                        CAP084
      C     CGL016        ANDNE     'Y'                                                     AR792734A
-     C*****B1BTSF        OREQ      'A'                                            AR792734A MD033630
-     C*****BRSHPI        ANDNE     'Y'                                            AR792734A MD033630
-     C*****CRE023        ANDNE     'Y'                                            AR792734A MD033630
+     C*****B1BTSF        OREQ      'A'                                           AR792734A MD033630A
+     C*****BRSHPI        ANDNE     'Y'                                           AR792734A MD033630A
+     C*****CRE023        ANDNE     'Y'                                           AR792734A MD033630A
      C/COPY WNCPYSRC,GLH00303
      C                   CALL      'GLSBMBCH'                                                 CAP084
      C                   PARM      *BLANK        PRTCD             7                          CAP084
@@ -1705,38 +1707,38 @@
       *****************************************************************                    AR792734A
       *                                                                                    AR792734A
      C     UPDPOST       BEGSR                                                             AR792734A
-      *                                                                                     MD033630
-     C     BTRACN        CHAIN     MEMOSL2                                                  MD033630
-      *                                                                                     MD033630
-     C                   IF        (NOT(%FOUND)) OR                                         MD033630
-     C                             (%FOUND AND RECI <> 'D')                                 MD033630
-     C                   UNLOCK    MEMOSL2                                                  MD033630
-     C                   LEAVESR                                                            MD033630
-     C                   ENDIF                                                              MD033630
-      *                                                                                     MD033630
-      ** Update ledger balance of MEMOSL2                                                   MD033630
-      *                                                                                     MD033630
-     C                   IF        BTDCIN = 'D'                                             MD033630
-     C                   EVAL      LDBLN = LDBLN + BTPTAM                                   MD033630
-     C                   ELSE                                                               MD033630
-     C                   EVAL      LDBLN = LDBLN - BTPTAM                                   MD033630
-     C                   ENDIF                                                              MD033630
-      *                                                                                     MD033630
-      ** Update the cleared balance                                                         MD033630
-      *                                                                                     MD033630
-     C                   IF        BTVLDT <= BJRDNB                                         MD033630
-      *                                                                                     MD033630
-     C                   IF        BTDCIN = 'D'                                             MD033630
-     C                   EVAL      CLBLN = CLBLN + BTPTAM                                   MD033630
-     C                   ELSE                                                               MD033630
-     C                   EVAL      CLBLN = CLBLN - BTPTAM                                   MD033630
-     C                   ENDIF                                                              MD033630
-      *                                                                                     MD033630
-     C                   ENDIF                                                              MD033630
-      *                                                                                     MD033630
-      ** Update MEMOS file                                                                  MD033630
-      *                                                                                     MD033630
-     C                   UPDATE    MEMOSMDF                                                 MD033630
+      *                                                                                    MD033630A
+     C     BTRACN        CHAIN     MEMOSL2                                                 MD033630A
+      *                                                                                    MD033630A
+     C                   IF        (NOT(%FOUND)) OR                                        MD033630A
+     C                             (%FOUND AND RECI <> 'D')                                MD033630A
+     C                   UNLOCK    MEMOSL2                                                 MD033630A
+     C                   LEAVESR                                                           MD033630A
+     C                   ENDIF                                                             MD033630A
+      *                                                                                    MD033630A
+      ** Update ledger balance of MEMOSL2                                                  MD033630A
+      *                                                                                    MD033630A
+     C                   IF        BTDCIN = 'D'                                            MD033630A
+     C                   EVAL      LDBLN = LDBLN + BTPTAM                                  MD033630A
+     C                   ELSE                                                              MD033630A
+     C                   EVAL      LDBLN = LDBLN - BTPTAM                                  MD033630A
+     C                   ENDIF                                                             MD033630A
+      *                                                                                    MD033630A
+      ** Update the cleared balance                                                        MD033630A
+      *                                                                                    MD033630A
+     C                   IF        BTVLDT <= BJRDNB                                        MD033630A
+      *                                                                                    MD033630A
+     C                   IF        BTDCIN = 'D'                                            MD033630A
+     C                   EVAL      CLBLN = CLBLN + BTPTAM                                  MD033630A
+     C                   ELSE                                                              MD033630A
+     C                   EVAL      CLBLN = CLBLN - BTPTAM                                  MD033630A
+     C                   ENDIF                                                             MD033630A
+      *                                                                                    MD033630A
+     C                   ENDIF                                                             MD033630A
+      *                                                                                    MD033630A
+      ** Update MEMOS file                                                                 MD033630A
+      *                                                                                    MD033630A
+     C                   UPDATE    MEMOSMDF                                                MD033630A
       *                                                                                    AR792734A
       ** Setup posting amount fields of REMEMLL0                                           AR792734A
       *                                                                                    AR792734A
@@ -1754,8 +1756,8 @@
      C                             Or (%FOUND And GRECI = 'D'                               MD035554
      C                                And GOCLR = 'Y' and BTVLDT = BJRDNB)                  MD035554
      C                   LEAVESR                                                           AR792734A
-     C**********         Else                                                      MD033630 MD033630
-     C**********         Move      'Y'           OUTWRD                            MD033630 MD033630
+     C**********         Else                                                     MD033630 MD033630A
+     C**********         Move      'Y'           OUTWRD                           MD033630 MD033630A
      C                   ENDIF                                                             AR792734A
       *                                                                                    AR792734A
      C     BTRACN        CHAIN     REMEMLL0                                                AR792734A

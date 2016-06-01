@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034990           Date 25May16               *
-      *  Prev Amend No. CRE100             Date 21Mar14               *
+      *  Last Amend No. MD039111           Date 01Jun16               *
+      *  Prev Amend No. MD034990           Date 25May16               *
+      *                 CRE100             Date 21Mar14               *
       *                 MD022635           Date 30Sep13               *
       *                 MD021155 *CONVERT  Date 10Jul13               *
       *                 MD020099           Date 22Apr13               *
@@ -71,6 +72,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD039111 - REC3666 in MSGW during COB                        *
       *  MD034990 - Postings not posted against account sequence of   *
       *             the retail account.                               *
       *  CRE100 - Allow Customer Number For Retail Accrual And Charge *
@@ -167,7 +169,7 @@
       *  S01413 - Retail 3 Incorporation.                             *
       *                                                               *
       *****************************************************************
- 
+
      FREACRD    UF   E             DISK    COMMIT
      F                                     RECNO(RRN)
      FACCNT     UF   E           K DISK    COMMIT
@@ -182,7 +184,7 @@
      FREGEIEZZ  O    F   23        DISK    COMMIT
      FRE3666AU  O    F  132        PRINTER
      F/COPY WNCPYSRC,RE3666F001
- 
+
       *****************************************************************
       *                                                               *
       *   F U N C T I O N   O F   I N D I C A T O R S                 *
@@ -213,11 +215,11 @@
       *          U8   File out of Balance                             *
       *                                                               *
       *****************************************************************
- 
+
      ** Arrays to hold acumulating debit & credit hash totals
      ** Items 1 & 2 in each arrays are DR & CR hash totals for ACCNT
      ** Not used by Retail II. because of inclusion of REACR file.
- 
+
      D INT             S             15  0 DIM(3)
      D DEC             S              3  0 DIM(3)
      D ZIR             S             11  7 DIM(11)
@@ -233,9 +235,9 @@
      D SVAL            S             20    DIM(2) CTDATA PERRCD(1)                          MD034990
      D ##BR            S              3    DIM(999)
      D ##BI            S              6    DIM(999)
- 
+
       ** Define array to hold Account Codes and details from AOACODR0.
- 
+
      D ##AC            S             10    DIM(300)
      D ##AR            S             47    DIM(300)
      D #LRU            S             13  0 DIM(300)
@@ -243,44 +245,44 @@
      D QQACOD          S              4  0
      D XRFN            S             10  0
      D LTAI            S              1  0
- 
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D  TITL         E                     EXTFLD(BJURPT)
      D  DNWD         E                     EXTFLD(BJDNWD)
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** Module Details Accessed via access program
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** SAR File details accessed via access program AOSARDR0
- 
+
      D CGPNAR        E DS                  EXTNAME(CGPNARPD)
       ** UDC Multi Language Narrative Data Structure
- 
+
      D ##PRM1          DS
       ** Data Structure for Customer and Branch
- 
+
      D  A#CUST                 1      6
      D  A#BRCA                 7      9
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Customer Details Data Structure
- 
+
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D  APDA         E                     EXTFLD(BKAPDT)
      D  PFCU         E                     EXTFLD(BKPRCU)
      D  QQACC1       E                     EXTFLD(QQACCD)
- 
+
      D SDRETL        E DS                  EXTNAME(SDRETLPD)
      D  LDAC         E                     EXTFLD(BMLDAI)
      D  QQACC2       E                     EXTFLD(QQACCD)
- 
+
       ** Branch Codes Record
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
      D  BICN         E                     EXTFLD(A8BICN)
      D  QQDFA1       E                     EXTFLD(QQDFAC)
- 
+
      D SDACOD        E DS                  EXTNAME(SDACODPD)
      D  ATYP         E                     EXTFLD(A5ACTY)
      D  ACCS         E                     EXTFLD(A5ACSC)
@@ -289,9 +291,9 @@
      D  CIAD         E                     EXTFLD(A5CIAD)
      D  CIAC         E                     EXTFLD(A5CIAC)
      D  QQACC3       E                     EXTFLD(QQACCD)
- 
+
       ** Data Structure for ACOD details caching.
- 
+
      D ACODDS          DS            47
      D  #ATYP                  1      1
      D  #ACCS                  2      3
@@ -300,50 +302,50 @@
      D  #CIAD                 24     33
      D  #CIAC                 34     43
      D  #QQACC                44     47
- 
+
       ** Data Structure for Date format DD/MM/YY
- 
+
      D                 DS
      D  RESULT                 1      6  0
      D  ZDAY                   1      2  0
      D  ZMTH                   3      4  0
      D  ZYEAR                  5      6  0
- 
+
       ** Data Structure for Beginning Date
- 
+
      D                 DS
      D  SRES                   1      6  0
      D  ZISD                   1      2  0
      D  ZISM                   3      4  0
      D  ZISY                   5      6  0
- 
+
       ** Data Structure for Finishing Date
- 
+
      D                 DS
      D  FRES                   1      6  0
      D  ZIFD                   1      2  0
      D  ZIFM                   3      4  0
      D  ZIFY                   5      6  0
- 
+
       ** Data Structure for Beginning Date MM/DD/YY
- 
+
      D                 DS
      D  SRESX                  1      6  0
      D  ZISMX                  1      2  0
      D  ZISDX                  3      4  0
      D  ZISYX                  5      6  0
- 
+
       ** Data Structure for Finishing Date MM/DD/YY
- 
+
      D                 DS
      D  FRESX                  1      6  0
      D  ZIFMX                  1      2  0
      D  ZIFDX                  3      4  0
      D  ZIFYX                  5      6  0
- 
+
       ** Data Structure to split from alpha to numeric Debit and
       ** Credit balances
- 
+
      D WDBAL           DS
      D  ZIBD                   1     88P 0
      D                                     DIM(11)
@@ -359,7 +361,7 @@
      D  ZBD10                 73     80P 0
      D  ZBD11                 81     88P 0
      D  ZBD12                 89     96P 0
- 
+
      D WCBAL           DS
      D  ZIBC                   1     88P 0
      D                                     DIM(11)
@@ -375,10 +377,10 @@
      D  ZBC10                 73     80P 0
      D  ZBC11                 81     88P 0
      D  ZBC12                 89     96P 0
- 
+
       ** Data Structure to split from alpha to numeric Debit and
       ** Credit rates
- 
+
      D WDRAT           DS
      D  ZIRD                   1     66P 7
      D                                     DIM(11)
@@ -394,7 +396,7 @@
      D  ZRD10                 55     60P 7
      D  ZRD11                 61     66P 7
      D  ZRD12                 67     72P 7
- 
+
      D WCRAT           DS
      D  ZIRC                   1     66P 7
      D                                     DIM(11)
@@ -411,9 +413,9 @@
      D  ZRC11                 61     66P 7
      D  ZRC12                 67     72P 7
      D/COPY WNCPYSRC,RE3666I001
- 
+
       ** Key Data Structure : REHKEY to fill LKEY if error
- 
+
      D                 DS
      D  REHKEY                 1     29
      D  BRCA                   1      3
@@ -422,31 +424,31 @@
      D  ACOD                  13     22  0
      D  ACSQ                  23     24  0
      D  REHDAT                25     29  0
- 
+
       ** Table Key-Data Structure
- 
+
      D                 DS
      D  KEYTAB                 1     12
       **   KEY FOR ACCOUNT CODES RECORDS
- 
+
      D  RECTKY                 1      2
      D  ACODKY                 2     11
      D  SRECKY                12     12
       ** Key for Branch Codes records
- 
+
      D  BRCAKY                10     12
- 
+
       ** Data Area Rundat
- 
+
      D RUNDAT          DS
      D  RUNA                   1      7
      D  RUND                   8     10P 0
      D  SSF                   11     11
      D  DATF                  12     12
      D  MBIN                  13     13
- 
+
       ** Standard Local Data Area fields
- 
+
      D LDA             DS           256
      D  LPROC                  1      8
      D  LFILE                134    141
@@ -459,9 +461,9 @@
      D  DBASE                181    183  0
      D  LRUND                187    191  0
      D  LRUNA                192    198
- 
+
       ** Data Structure for key in database error
- 
+
      D ACKEY1          DS
      D  CNUM1                  1      6
      D  CNUM1A                 1      6
@@ -470,16 +472,16 @@
      D  ACSQ1                 20     21  0
      D  ACSQ1A                20     21
      D  BRCA1                 22     24
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** First DS for access programs, short Data Structure
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Second DS for access programs, long Data Structure
- 
+
      D DSPNAR          DS            30
       ** DS to set up Posting Narrative
- 
+
      D  D#TXT                  1      6
      D  D#CNUM                 7     12
      D  D#CCY                 13     15
@@ -487,13 +489,13 @@
      D  D#ACSQ                26     27
      D  D#BRCA                28     30
      D  D#ACNO                14     23
- 
+
       ** Constant Value
- 
+
      D I#TXT           C                   CONST('ACCR. ')
- 
+
       ** Account Master detail record
- 
+
      IACCNTABF
      I              ACNO                        AACNO
      I              DAIC                        ADAIC
@@ -503,9 +505,9 @@
      I              MADI                        AMADI
      I              MACI                        AMACI
      I              PFCU                        APFCU
- 
+
       ** REACR file - Detail record
- 
+
      IREACRDF
      I              DAIC1                       DAIC
      I              CAIC1                       CAIC
@@ -514,24 +516,24 @@
      I              ASEQ                        ACSQ
      I              LCD                         RHISD
      I              HISB                        RHISB
- 
+
       ** Rename REHRCJF format fields - REHRCJ file
- 
+
      IREHRCJF
      I              INTH                        INTHC
- 
+
       ** Rename REHRDJF format fields - REHRDJ file
- 
+
      IREHRDJF
      I              INTH                        INTHD
- 
+
      I/COPY WNCPYSRC,RE3666I002
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** Key Field to access to REHRDJ/REHRCJ file
- 
+
      C     DCKEY         KLIST
      C                   KFLD                    BRCA
      C                   KFLD                    CNUM
@@ -539,18 +541,18 @@
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    KDATE
- 
+
       ** Key Field to access to ACCNT file
- 
+
      C     ACCKEY        KLIST
      C                   KFLD                    CNUM
      C                   KFLD                    CCY
      C                   KFLD                    ACOD
      C                   KFLD                    ACSQ
      C                   KFLD                    BRCA
- 
+
       ** Work Fields definition
- 
+
      C                   MOVE      *BLANKS       ERRDAT           15
      C     *LIKE         DEFINE    ACOD          ZLYCHK
      C     *LIKE         DEFINE    RUND          ZIBEG
@@ -585,12 +587,12 @@
      C                   Z-ADD     *ZEROS        ZIFY2             3 0
      C     *LIKE         DEFINE    DIIE          ZINTR
      C     *LIKE         DEFINE    DRIS          ZIRATE
- 
+
      C     *DTAARA       DEFINE                  LDA
      C     *DTAARA       DEFINE                  RUNDAT
- 
+
       **   First Cycle Calcs
- 
+
      C                   SETOFF                                       30
      C  N40              SETON                                        30
      C   40              GOTO      DETAIL
@@ -602,30 +604,30 @@
      C                   Z-ADD     0             ##BNDX            4 0
      C     *LIKE         DEFINE    ##BNDX        B
      C     *LIKE         DEFINE    ##BNDX        ##BSV
- 
+
       ** Define variables for LRU and initializations
- 
+
      C                   Z-ADD     0             #LEAST           13 0
      C     *LIKE         DEFINE    #LEAST        ##LC
- 
+
      C                   Z-ADD     0             ##ANDX            4 0
      C     *LIKE         DEFINE    ##ANDX        A
      C     *LIKE         DEFINE    ##ANDX        ##ASAV
      C                   Z-ADD     300           ##ANDX
      C                   Z-ADD     0             ##LC
- 
+
      C                   IN        RUNDAT
- 
+
      C                   MOVE      ' '           BLK200          200
      C                   BITOFF    '1'           PRIN              1
- 
+
      C                   Z-ADD     RUND          LRUND
      C                   MOVE      RUNA          LRUNA
- 
+
      C     DATF          IFEQ      'M'
      C                   SETON                                        98
      C                   END
- 
+
      C                   MOVEL     'RE3666'      LPROG
      C                   MOVEL     'RE3666'      DBPGM
      C                   MOVE      *BLANKS       LFILE
@@ -648,15 +650,15 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   END
- 
+
      C/COPY WNCPYSRC,RE3666C024
- 
+
       ** Call Module Prog. for module details.
      C                   CALL      'AOMMODR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     *LOCK         IN        LDA
      C                   MOVEL     'SDMMODPD'    DBFILE
@@ -667,20 +669,20 @@
      C                   EXSR      *PSSR
      C                   ELSE
      C/COPY WNCPYSRC,REH00404
- 
+
       ** Call SAR Prog. for Switchable feature
- 
+
      C                   MOVE      'N'           REPNAR            1
      C                   MOVE      '0'           *IN65
      C     BGN1ST        IFEQ      'Y'
      C/COPY WNCPYSRC,REH00405
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'REPNAR'      @SARD             6
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFNE      *BLANK
      C     @RTCD         ANDNE     '*NRF   '
      C     *LOCK         IN        LDA
@@ -691,27 +693,27 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     @RTCD         IFEQ      *BLANK
      C                   MOVE      'Y'           REPNAR
      C                   MOVE      '1'           *IN65
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Access SAR details to see if CGL020 is enabled.
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CGL020'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C                   MOVE      'N'           CGL020            1
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CGL020
      C                   ELSE
- 
+
      C     @RTCD         IFNE      '*NRF'
      C     *LOCK         IN        LDA
      C                   MOVEL     'SCSARDPD'    DBFILE
@@ -721,11 +723,11 @@
      C                   MOVE      *ON           *INLR
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Determine if Cash Management is installed
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      '       '     @RTCD
      C                   PARM      '*VERIFY'     @OPTN
@@ -744,34 +746,34 @@
      C                   OPEN      REGAHLJ2
      C                   OPEN      REZSHLJ2
      C                   ENDIF
- 
+
       ** Call AOSARDR0 to check for CER016
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM      '*VERIFY'     @OPTN
      C                   PARM      'CER016'      @SARD
      C     SCSARD        PARM      SCSARD        DSFDY
- 
+
      C     @RTCD         IFEQ      *BLANKS
      C                   MOVE      'Y'           CER016            1
      C                   MOVE      'Y'           WFIRST            1
- 
+
      C                   ELSE
      C                   MOVE      'N'           CER016
      C                   MOVE      'N'           WFIRST
      C                   ENDIF
- 
+
      C     @RTCD         IFNE      *BLANKS
      C     @RTCD         ANDNE     '*NRF   '
- 
+
      C     *LOCK         IN        LDA
      C                   MOVEL     'CER016'      DBKEY
      C                   MOVEL     'SCSARDPD'    DBFILE
      C                   Z-ADD     106           DBASE
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ENDIF
                                                                                               CRE100
       ** Determine system values whether internal postings for interest                       CRE100
@@ -781,7 +783,8 @@
      C                   Eval      *IN39 = *Off                                             MD034990
       *                                                                                       CRE100
      C                   Call      'AOSVALR0'                                                 CRE100
-     C                   Parm      *Blanks       W0RTCD            1                          CRE100
+     C**********         Parm      *Blanks       W0RTCD            1                 CRE100 MD039111
+     C                   Parm      *Blanks       W0RTCD            7                        MD039111
      C                   Parm      SVAL(1)       PVALK1           20                          CRE100
      C                   Parm      *Blanks       PVAL1           200                          CRE100
      C**********         Parm      *Blanks       PVALK2           20                 CRE100 MD034990
@@ -826,7 +829,7 @@
      C                   Endif                                                                CRE100
       *                                                                                       CRE100
      C                   Endif                                                                CRE100
- 
+
      C/COPY WNCPYSRC,RE3666C031
      C                   CALL      'AOGELRR1'
      C                   PARM      '*MSG   '     @RTCD
@@ -842,23 +845,23 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   END
- 
+
       ** If Profit Centre is not used, blank the Profit Centre field
       ** in all related files
- 
+
      C     PFCU          IFNE      'Y'
      C                   SETON                                        70
      C                   END
- 
+
      C     MBIN          IFEQ      'Y'
      C                   MOVE      '1'           *IN50
      C                   ELSE
      C                   MOVE      '0'           *IN50
      C                   END
      C/COPY WNCPYSRC,RE3666C019
- 
+
      C   LR              GOTO      END
- 
+
      C                   CALL      'AORETLR0'
      C                   PARM      '*MSG   '     @RTCD
      C                   PARM      '*FIRST '     @OPTN
@@ -872,30 +875,30 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   END
- 
+
      C   LR              GOTO      END
- 
+
      C                   Z-ADD     RUND          RNDT              5 0
      C                   Z-ADD     APDA          RUND
- 
+
      C     LDAC          IFNE      'Y'
      C                   ADD       1             RUND
      C                   END
- 
+
      C                   Z-ADD     0             ZERO03            3 0
      C                   Z-ADD     0             ZERO5             5 0
      C                   Z-ADD     0             ZERO15           15 0
      C                   Z-ADD     0             ZERO13           13 0
- 
+
      C                   MOVE      '  '          BLNK12           12
- 
+
      C                   Z-ADD     0             RRACM             5 0
      C                   Z-ADD     0             RRN               9 0
- 
+
      C/COPY WNCPYSRC,RE3666CCP1
- 
+
       ** Initialise Account Posting fields for PF/GEIERPD.
- 
+
      C                   Z-ADD     *ZEROS        SDLB             15 0
      C                   Z-ADD     *ZEROS        SDCB             15 0
      C                   Z-ADD     *ZEROS        CHGA             13 0
@@ -905,15 +908,15 @@
      C                   MOVEL     '91080'       OTTP             10
      C                   MOVE      *BLANKS       OTST             10
      C                   MOVE      *BLANKS       BOKC              2
- 
+
       ** Initialise fields for Management Accounting
- 
+
      C                   Z-ADD     0             VOIN              1 0
      C                   Z-ADD     235959        PTIM              6 0
      C                   Z-ADD     1             NITMS             5 0
- 
+
       ** Clear the AML Fee Fields for CGL020 enhancement
- 
+
      C                   MOVE      *BLANK        ACKEY            20
      C                   MOVE      *BLANK        FEEFLG            1
      C                   Z-ADD     0             FEEVAL           13 0
@@ -935,36 +938,36 @@
      C                   Z-ADD     *ZEROS        NOMINL           13 2
      C                   MOVE      *BLANKS       FPTRID           16
      C                   Z-ADD     0             ORAMT            13 0
- 
+
       ** Main Processing
- 
+
      C     DETAIL        TAG
- 
+
       ** Do not generate postings if Accr Profit Date > Next Working Day
- 
+
      C     APDA          IFGE      DNWD
      C                   MOVE      *ON           *INLR
      C                   GOTO      END
      C                   ENDIF
- 
+
      C                   READ      REACRDPD
      C     REFERN        SETLL     REACRD
      C                   READ      REACRD
      C                   DOW       NOT %EOF(REACRD) AND RRN <= RETERN
- 
+
       ** Set off Indicators
- 
+
      C                   SETOFF                                       020304
      C                   SETOFF                                       6082
      C                   SETOFF                                       808185
      C                   MOVE      '0'           *IN86
- 
+
      C/COPY WNCPYSRC,RE3666C025
- 
+
       ** Records read
- 
+
      C     RECI          IFEQ      'D'
- 
+
      C                   SETON                                        02
      C                   ELSE
      C     RECI          IFEQ      'C'
@@ -972,17 +975,17 @@
      C                   ELSE
      C                   SETON                                        03
      C                   END
- 
+
      C                   END
      C   04
      COR 02RRACM         ADD       1             RRACM
- 
+
      C   04
      COR 03              GOTO      END
- 
+
       ** Access Details
       ** Get Account Codes details
- 
+
      C                   MOVE      ACOD          ACODKY
      C/COPY WNCPYSRC,RE3666C012
      C                   CALL      'AOACODR0'
@@ -1000,14 +1003,14 @@
      C                   EXSR      *PSSR
      C                   END
      C   U7              GOTO      END
- 
+
       ** Get Branch details
- 
+
      C                   MOVEL     BRCA          ##KB
      C                   EXSR      ##CHKB
- 
+
       ** If branch is in the array then use the details
- 
+
      C     ##FIC         IFEQ      'Y'
      C                   EXSR      ##SETB
      C                   ELSE
@@ -1025,26 +1028,26 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ** Details found on the DB so add them to the array
       ** if the array still has room
- 
+
      C                   EXSR      ##ADDB
      C                   END
      C                   ENDIF
      C   U7              GOTO      END
- 
+
       ** Save original Account Code information for future use
- 
+
      C                   MOVE      DIAD          DIAD1            10
      C                   MOVE      DIAC          DIAC1            10
      C                   MOVE      CIAD          CIAD1            10
      C                   MOVE      CIAC          CIAC1            10
      C/COPY WNCPYSRC,RE3666C014
- 
+
       ** Interest calculation between two dates and update DR/CR
       ** interest on REACR file
- 
+
      C                   MOVE      CNUM          CNUM1
      C                   MOVE      CCY           CCY1
      C                   MOVE      ACOD          ACOD1
@@ -1053,17 +1056,17 @@
      C                   EXSR      ACTCHN
      C   U7              GOTO      END
      C/COPY WNCPYSRC,RE3666C004
- 
+
      C                   Z-ADD     *ZEROS        DINT
      C                   Z-ADD     *ZEROS        CINT
      C                   Z-ADD     *ZEROS        INRT
      C                   Z-ADD     *ZEROS        INTP
      C                   Z-ADD     *ZEROS        ZINTR
      C                   Z-ADD     *ZEROS        ZLDTM
- 
+
       ** Suppress calculation of accrued interest as this is now
       ** done by RE3662
- 
+
      C     DINT          IFNE      0
      C     CINT          ORNE      0
      C                   ADD       DINT          DAIC
@@ -1071,22 +1074,22 @@
      C                   MOVE      '1'           *IN86
      C                   EXSR      OUTPUT
      C                   END
- 
+
       ** Process Debits
- 
+
      C     DEBITS        TAG
- 
+
       ** Do not process debit accruals for secondary accounts.
       ** Instead, post a reversing entry to PF/GEIERPD and also
       ** to PF/ACRLAR when DIIE is not equal to zero.
- 
+
      C     LTAC          IFEQ      *ZERO
      C/COPY WNCPYSRC,RE3666C005
      C                   Z-ADD     DAIC          OAINTD           15 0
      C     OAINTD        ADD       MADI          OAINTD
      C     OAINTD        ADD       GADI          OAINTD
      C     OAINTD        COMP      0                                      33
- 
+
      C     AACNO         COMP      0                                  3131
      C     OAINTD        SUB       DIIE          PSTAD            13 0  4260
      C                   ELSE
@@ -1096,29 +1099,29 @@
      C   61DIIE          COMP      0                                      61
      C                   Z-ADD     PSTAD         DAIP             13 0
      C   42              Z-SUB     PSTAD         PSTAD
- 
+
       ** Do not output record if total is zero & no changes this month
- 
+
      C   61              GOTO      DGEIER
      C                   SETON                                        81
      C                   EXSR      OUTPUT
      C     RWACRL        ADD       1             RWACRL            5 0
- 
+
       ** If zero do not output debit interest posting records
- 
+
      C     DGEIER        TAG
- 
+
      C   60              GOTO      CREDIT
- 
+
       ** Posting to income amount - CR if interest is debit
- 
+
      C                   MOVE      DIAC1         ACODGE           10
      C/COPY WNCPYSRC,RE3666C015
      C                   MOVE      '1'           DRCRGE            1
      C   42              MOVE      '0'           DRCRGE
      C                   EXSR      ACDCHN
      C   LR              GOTO      END
- 
+
      C                   SETON                                        8083
      C/COPY WNCPYSRC,RE3666C026
      C*****CRE008        IFEQ      'Y'                                                      MD022635
@@ -1130,16 +1133,16 @@
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
      C/COPY WNCPYSRC,RE3666C027
- 
+
       ** Posting to A.I. receivable account - DB if interest is debit
- 
+
      C                   MOVE      DIAD1         ACODGE
      C/COPY WNCPYSRC,RE3666C016
      C                   MOVE      '0'           DRCRGE
      C   42              MOVE      '1'           DRCRGE
      C                   EXSR      ACDCHN
      C   LR              GOTO      END
- 
+
      C                   SETON                                        8083
      C*****CRE008        IFEQ      'Y'                                                      MD022635
      C                   MOVEL     DIAD1         OTST
@@ -1149,22 +1152,22 @@
      C*****CRE008        IFEQ      'Y'                                                      MD022635
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
- 
+
       ** Control Totals
       ** Hash total of records written to GEIER
- 
+
      C                   Z-ADD     3             S                 2 0
      C     PSTAD         DIV       500           ZZAMT
      C                   EXSR      HASH
- 
+
       ** Count of records written to GEIER
- 
+
      C     RWGEI         ADD       2             RWGEI             5 0
- 
+
       ** Process Credits
- 
+
      C     CREDIT        TAG
- 
+
       ** Do not process credit accruals for secondary accounts.
       ** Instead, post a reversing entry to PF/GEIERPD and also
       ** to PF/ACRLAR when CIIE is not equal to zero.
@@ -1173,7 +1176,7 @@
      C     OAINTC        ADD       MACI          OAINTC
      C     OAINTC        ADD       GACI          OAINTC
      C     OAINTC        COMP      0                                      34
- 
+
      C     AACNO         COMP      0                                  3131
      C     OAINTC        SUB       CIIE          PSTAC            13 0  4160
      C                   ELSE
@@ -1183,29 +1186,29 @@
      C   61CIIE          COMP      0                                      61
      C                   Z-ADD     PSTAC         CAIP             13 0
      C   41              Z-SUB     PSTAC         PSTAC
- 
+
       ** Do not output record if total is zero & no changes this month
- 
+
      C   61              GOTO      CGEIER
      C                   SETON                                        82
      C                   EXSR      OUTPUT
      C     RWACRL        ADD       1             RWACRL
- 
+
       ** If zero do not output credit interest posting records
- 
+
      C     CGEIER        TAG
- 
+
      C   60              GOTO      END1
- 
+
       ** Posting to Expense Account - DR if interest is credit
- 
+
      C                   MOVE      CIAD1         ACODGE
      C/COPY WNCPYSRC,RE3666C017
      C                   MOVE      '1'           DRCRGE
      C  N41              MOVE      '0'           DRCRGE
      C                   EXSR      ACDCHN
      C   LR              GOTO      END
- 
+
      C                   SETON                                        8084
      C/COPY WNCPYSRC,RE3666C028
      C*****CRE008        IFEQ      'Y'                                                      MD022635
@@ -1217,9 +1220,9 @@
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
      C/COPY WNCPYSRC,RE3666C029
- 
+
       ** Posting to A.I. payable account - CR if interest is credit
- 
+
      C                   MOVE      CIAC1         ACODGE
      C/COPY WNCPYSRC,RE3666C018
      C                   MOVE      '0'           DRCRGE
@@ -1235,43 +1238,43 @@
      C*****CRE008        IFEQ      'Y'                                                      MD022635
      C                   MOVEL     *BLANK        OTST
      C**********         ENDIF                                                              MD022635
- 
+
       ** Hash total of records written to GEIER
- 
+
      C                   Z-ADD     3             S
      C     PSTAC         DIV       500           ZZAMT
      C                   EXSR      HASH
- 
+
       ** Count of records written to GEIER
- 
+
      C     RWGEI         ADD       2             RWGEI
      C/COPY WNCPYSRC,RE3666C006
- 
+
      C     END1          TAG
- 
+
       ** Update ACCNT record with new fields
- 
+
      C                   SETON                                        85
      C                   EXSR      OUTPUT
      C/COPY WNCPYSRC,REH00153
      C     END           TAG
- 
+
      C                   MOVEL     LKEY          KEY              15
      C     *INLR         IFEQ      *ON
      C     *INU7         ANDEQ     *ON
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   READ      REACRD
      C                   ENDDO
- 
+
       ** Update trailers
       ** REACRLZZ trailer
- 
+
      C                   ADD       RWACRL        NOREZ             5 0
- 
+
       ** REGEIEZZ trailer
- 
+
      C                   ADD       RWGEI         NORE1             5 0
      C     HRWN          MULT      1000          #WRK20           20 0
      C     #WRK20        ADD       HRDC          TFILE            20 0
@@ -1281,11 +1284,11 @@
      C     #WRK20        DIV       1000          HRWN             15 0
      C     HRWN          MULT      1000          #HRWN            20 0
      C     #WRK20        SUB       #HRWN         HRDC              3 0
- 
+
      C                   MOVE      *ON           *INLR
- 
+
       ** Level Breaks & Subroutines
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1295,53 +1298,53 @@
       *****************************************************************
      C     ##CHKA        BEGSR
      C                   MOVE      *IN20         #IN20             1
- 
+
      C                   ADD       1             ##LC
      C     *LIKE         DEFINE    ACODGE        ##KA
      C                   MOVEL     *BLANK        ##AFIC            1
- 
+
       ** Restore saved value of A index
- 
+
      C                   Z-ADD     ##ASAV        A
- 
+
       ** Defend against A == 0
- 
+
      C     A             IFEQ      0
      C                   Z-ADD     1             A
      C                   ENDIF
- 
+
       ** Is this the same as the last LOKUP? if so, we can bypass LOKUP
- 
+
      C     ##KA          IFEQ      ##AC(A)
      C                   SETON                                        20
      C                   ELSE
- 
+
       ** Begin lookup from last saved or if full, start from 1.
- 
+
      C     ##ANDX        IFEQ      0
      C                   Z-ADD     1             A
      C                   ELSE
      C                   Z-ADD     ##ANDX        A
      C                   ENDIF
- 
+
      C     ##KA          LOOKUP    ##AC(A)                                20
      C                   ENDIF
- 
+
      C     *IN20         IFEQ      *ON
- 
+
       ** Update LRU
- 
+
      C                   MOVE      ##LC          #LRU(A)
- 
+
       ** Save the last update to A
- 
+
      C                   Z-ADD     A             ##ASAV
- 
+
       ** Turn on indicator so that program will know it is in the array
- 
+
      C                   MOVEL     'Y'           ##AFIC
      C                   ENDIF
- 
+
      C                   MOVE      #IN20         *IN20
      C                   ENDSR
       *****************************************************************
@@ -1353,12 +1356,12 @@
       *****************************************************************
      C     ##ADDA        BEGSR
      C                   MOVE      *IN40         #IN40             1
- 
+
       ** Check if there is still an available slot in the array.
- 
+
      C     ##ANDX        IFNE      0
      C                   Z-ADD     ##ANDX        A
- 
+
      C                   MOVE      ATYP          #ATYP
      C                   MOVE      ACCS          #ACCS
      C                   MOVE      DIAD          #DIAD
@@ -1366,22 +1369,22 @@
      C                   MOVE      CIAD          #CIAD
      C                   MOVE      CIAC          #CIAC
      C                   MOVE      QQACC3        #QQACC
- 
+
      C                   MOVE      ACODGE        ##AC(A)
      C                   MOVE      ACODDS        ##AR(A)
- 
+
      C                   MOVE      ##LC          #LRU(A)
      C                   SUB       1             ##ANDX
- 
+
       ** Else replace the LRU
- 
+
      C                   ELSE
      C                   Z-ADD     1             A
      C                   MOVEA     #LRU          #LRUC
      C                   SORTA     #LRUC
      C                   Z-ADD     #LRUC(1)      #LEAST
      C     #LEAST        LOOKUP    #LRU(A)                                40
- 
+
      C                   MOVE      ATYP          #ATYP
      C                   MOVE      ACCS          #ACCS
      C                   MOVE      DIAD          #DIAD
@@ -1389,16 +1392,16 @@
      C                   MOVE      CIAD          #CIAD
      C                   MOVE      CIAC          #CIAC
      C                   MOVE      QQACC3        #QQACC
- 
+
      C                   MOVE      ACODGE        ##AC(A)
      C                   MOVE      ACODDS        ##AR(A)
- 
+
      C                   MOVE      ##LC          #LRU(A)
      C                   ENDIF
- 
+
       ** Update ASAVE so next call to ##CHKB checks
       ** this newly added element.
- 
+
      C                   Z-ADD     A             ##ASAV
      C                   MOVE      #IN40         *IN40
      C                   ENDSR
@@ -1421,121 +1424,121 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** ##CHKB - Subroutine to check the Branch in the arrays
- 
+
      C     ##CHKB        BEGSR
- 
+
      C     *LIKE         DEFINE    A8BRCD        ##KB
- 
+
       ** Set off the branch found indicator
- 
+
      C                   MOVEL     *BLANK        ##FIC             1
- 
+
       ** Save the state of indicator 30 so it can be reset at the end
       ** of the SR as it may be used elsewhere in the code
- 
+
      C     *IN30         IFEQ      *ON
      C                   MOVEL     'Y'           #IN30             1
      C                   ELSE
      C                   MOVEL     'N'           #IN30
      C                   ENDIF
- 
+
      C                   SETOFF                                           30
- 
+
       ** Restore the saved Value of B
- 
+
      C                   Z-ADD     ##BSV         B
- 
+
       ** Check whether details for Branch already in array
       ** Is this the same as the last LOKUP, if so we can bypass
       ** the LOKUP
       ** Defend against B being 0
- 
+
      C     B             IFEQ      0
      C                   Z-ADD     1             B
      C                   ENDIF
- 
+
       ** If the branch being checked is the same then use these
       ** details rather than doing a LOKUP
- 
+
      C     ##KB          IFEQ      ##BR(B)
- 
+
       ** Found so seton 30
- 
+
      C                   SETON                                            30
      C                   ELSE
      C                   Z-ADD     1             B
      C     ##KB          LOOKUP    ##BR(B)                                30
      C                   ENDIF
- 
+
       ** Save the last update to B
- 
+
      C     *IN30         IFEQ      *ON
      C                   Z-ADD     B             ##BSV
- 
+
       ** Set the indicator to show the data was found
- 
+
      C                   MOVEL     'Y'           ##FIC
      C                   ENDIF
- 
+
       ** Reset the state of indicator 30.
- 
+
      C     #IN30         IFEQ      'Y'
      C                   MOVEL     *ON           *IN30
      C                   ELSE
      C                   MOVEL     *OFF          *IN30
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** ##SETB - Sets up the SDBRCHPD fields used in the code from the
       ** arrays
- 
+
      C     ##SETB        BEGSR
- 
+
      C                   MOVEL     ##BR(B)       A8BRCD
      C                   MOVEL     ##BI(B)       BICN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** ##ADDB - Adds the SDBRCHPD fields used in the code to the
       ** arrays
- 
+
      C     ##ADDB        BEGSR
- 
+
       ** If there is still room in the array then add the details
- 
+
      C     ##BNDX        IFLT      999
      C                   ADD       1             ##BNDX
      C                   Z-ADD     ##BNDX        B
      C                   MOVEL     A8BRCD        ##BR(B)
      C                   MOVEL     BICN          ##BI(B)
      C                   ENDIF
- 
+
       ** Update ##BSV  so next call to ##CHKB checks this latest
       ** addition to the array files
- 
+
      C                   Z-ADD     B             ##BSV
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Subr. to chain to A/C Codes table records
- 
+
      C     ACDCHN        BEGSR
- 
+
      C                   MOVEL     ACODGE        ##KA
      C                   EXSR      ##CHKA
- 
+
      C     ##AFIC        IFEQ      'Y'
      C                   EXSR      ##SETA
      C                   ELSE
@@ -1553,28 +1556,28 @@
      C                   SETON                                        U7LR
      C                   EXSR      *PSSR
      C                   ELSE
- 
+
       ** If found, add the details into the array
- 
+
      C                   EXSR      ##ADDA
      C                   END
      C                   ENDIF
      C                   ENDSR
- 
+
       ** Subr. to do EXCPT OUTPUT
- 
+
      C     OUTPUT        BEGSR
- 
+
       ** Move values to exception fields
- 
+
      C                   Z-ADD     DIIE          DAIL             13 0
      C                   Z-ADD     CIIE          CAIL             13 0
      C                   Z-ADD     ZIEND         RHISD
      C                   Z-ADD     APDA          LPAR
- 
+
       ** CIIE must be conditioned otherwise DR output will change CIIE
       ** before it is used in credit selection check for *IN60.
- 
+
      C     *IN83         IFEQ      '1'
      C                   Z-ADD     DAID          DIIE
      C                   END
@@ -1582,14 +1585,14 @@
      C     *IN84         IFEQ      '1'
      C                   Z-ADD     CAID          CIIE
      C                   END
- 
+
      C/COPY WNCPYSRC,REH00166
      C     *IN70         IFEQ      '1'
      C                   MOVE      *BLANKS       PRFC
      C                   END
- 
+
       ** Get the posting narrative if a posting is to be output.
- 
+
      C     *IN80         IFEQ      *ON
      C                   EXSR      SRPNAR
      C/COPY WNCPYSRC,RE3666C030
@@ -1599,10 +1602,10 @@
      C                   EXSR      ACCDET
      C                   ENDIF
      C                   Z-ADD     0             XRFN                                         CRE100
- 
+
      C/COPY WNCPYSRC,RE3666C003
      C                   EXCEPT
- 
+
      C                   SETOFF                                       808182
      C                   SETOFF                                       838485
      C                   MOVE      '0'           *IN86
@@ -1611,7 +1614,7 @@
      C/EJECT
       *****************************************************************
      C     ACCDET        BEGSR
- 
+
      C                   MOVEL     BRCA1         ORBR              3
      C                   MOVEL     CCY1          TRCCY             3
      C                   MOVEL     *BLANK        FACO             10
@@ -1626,20 +1629,20 @@
      C     CMACKY        CHAIN     REZSHLJ2                           99
      C  N99              MOVE      'Z'           TRST
      C                   ENDIF
- 
+
      C     CMACKY        KLIST
      C                   KFLD                    CNUM1
      C                   KFLD                    CCY1
      C                   KFLD                    ACOD1
      C                   KFLD                    ACSQ1
      C                   KFLD                    BRCA1
- 
+
      C                   ENDSR
- 
+
       ** Subr. to chain Account Master file
- 
+
      C     ACTCHN        BEGSR
- 
+
      C                   SETOFF                                       01
      C     ACCKEY        CHAIN     ACCNT                              99
      C     *IN99         IFEQ      '1'
@@ -1650,129 +1653,129 @@
      C   U7              MOVE      BLK200        LKEY
      C   U7              MOVEL     ACKEY1        LKEY
      C   U7              Z-ADD     003           LDBNO
- 
+
      C/COPY WNCPYSRC,RE3666C013
      C                   ENDSR
- 
+
       ** Subr. to accumulate hash totals
- 
+
      C     HASH          BEGSR
- 
+
      C                   Z-ADD     INT(S)        ZZTOTI
      C                   Z-ADD     DEC(S)        ZZTOTD
- 
+
      C                   EXSR      GLZADD
- 
+
      C                   Z-ADD     ZZTOTI        INT(S)           15 0
      C                   Z-ADD     ZZTOTD        DEC(S)            3 0
- 
+
      C                   ENDSR
- 
+
       ** Subroutine to add an amount (ZZAMT) to the total (ZZTOTI,ZZTOTD)
       ** ind '99' is set by an overflow error
- 
+
      CSR   GLZADD        BEGSR
- 
+
      CSR                 Z-ADD     ZZAMT         ZZAMT            15 3    91
      CSR 91              GOTO      ZZAEND
- 
+
       ** Split ZZAMT into integer and decimal fields
- 
+
      CSR                 Z-ADD     ZZAMT         ZZAMTI           15 0
      CSR                 MOVE      ZZAMT         ZZAMTD            3 0
- 
+
       ** Both ZZAMTI and ZZAMTD contain a 'sign' zone now
- 
+
      CSR                 EXSR      GLZSUM
      CSR   ZZAEND        ENDSR
- 
+
       ** Subroutine to carry out the addition for subroutines -
       ** GLZADD, GLZSUB, GLZCMP.
       ** parameters passed -
       ** I/P ZZAMTI ZZAMTD
       ** O/P ZZTOTI ZZTOTD ZZNEGD IND 96 IND 99.
- 
+
      CSR   GLZSUM        BEGSR
- 
+
      CSR                 Z-ADD     ZZTOTI        ZZTOTI           15 0
      CSR                 Z-ADD     ZZTOTD        ZZTOTD            3 0
      CSR                 SETOFF                                       919293
      CSR                 SETOFF                                       949599
- 
+
       ** Determine sign of ZZAMTI & D, 92 if neg
- 
+
      CSR   ZZAMTI        COMP      0                                    9293
      CSR 93ZZAMTD        COMP      0                                    9293
      CSR 93              GOTO      ZZSEND
- 
+
       ** Determine sign of ZZTOTI & D, 91 if neg
- 
+
      CSR   ZZTOTI        COMP      0                                    9193
      CSR 93ZZTOTD        COMP      0                                    9193
- 
+
       ** If ZZTOTAL is zero, return ZZAMOUNT
- 
+
      CSR 93              Z-ADD     ZZAMTI        ZZTOTI
      CSR 93              Z-ADD     ZZAMTD        ZZTOTD
      CSR 93              GOTO      ZZSEND
- 
+
       ** If signs differ, bypass overflow checks
- 
+
      CSR 91
      CANN92
      CORN91
      CAN 92              GOTO      ZZOFPS
- 
+
      CSR   ZZAMTD        ADD       ZZTOTD        ZZWK2             4 0
      CSR   ZZWK2         COMP      999                                93
      CSRN93ZZWK2         COMP      -999                                 93
- 
+
      CSR 93
      CANN92ZZAMTI        ADD       1             ZZWK3            15 0
      CSR 93
      CAN 92ZZAMTI        SUB       1             ZZWK3
      CSR 93ZZTOTI        ADD       ZZWK3         ZZWK3
      CSRN93ZZTOTI        ADD       ZZAMTI        ZZWK3
- 
+
       ** If the modulus of ZZWK3 is LT MOD. ZZTOTI then O/F has occured
- 
+
      CSRN92ZZWK3         COMP      ZZTOTI                               99
      CSR 92ZZWK3         COMP      ZZTOTI                             99
      CSRN99              Z-ADD     ZZWK2         ZZTOTD
      CSRN99              Z-ADD     ZZWK3         ZZTOTI
- 
+
       ** If O/F zeroize ZZAMT , Ind '99' set and ZZTOT fields left intact
- 
+
      CSR 99              Z-ADD     0             ZZAMT            15 3
      CSR                 GOTO      ZZSEND
- 
+
       ** The 'signs' are different
- 
+
      CSR   ZZOFPS        TAG
- 
+
       ** If ZZAMT was negative, make it pos. to COMP with ZZTOT
- 
+
      CSR 92              Z-SUB     ZZAMTI        ZZAMTI           15 0
      CSR 92              Z-SUB     ZZAMTD        ZZAMTD            3 0
- 
+
       ** if ZZTOT was negative, make it pos. to COMP with ZZAMT
- 
+
      CSR 91              Z-SUB     ZZTOTI        ZZTOTI
      CSR 91              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Both ZZAMT and ZZTOT are now positive
- 
+
      CSR   ZZTOTI        COMP      ZZAMTI                             93  95
      CSR 95ZZTOTD        COMP      ZZAMTD                             93  95
- 
+
       ** If ZZTOT eq. ZZAMT return zero
- 
+
      CSR 95              Z-ADD     0             ZZTOTI
      CSR 95              Z-ADD     0             ZZTOTD
      CSR 95              GOTO      ZZSEND
- 
+
       ** If ZZTOT GT ZZAMT
- 
+
      CSR 93ZZAMTD        COMP      ZZTOTD                             94
      CSR 93
      CAN 94ZZTOTI        SUB       1             ZZTOTI
@@ -1783,9 +1786,9 @@
      CAN 94ZZWK2         SUB       ZZAMTD        ZZTOTD
      CSR 93
      CANN94ZZTOTD        SUB       ZZAMTD        ZZTOTD
- 
+
       ** If ZZAMT GT ZZTOT
- 
+
      CSRN93ZZTOTD        COMP      ZZAMTD                             94
      CSRN93
      CAN 94ZZAMTI        SUB       1             ZZWK3            15 0
@@ -1799,9 +1802,9 @@
      CAN 94ZZWK2         SUB       ZZTOTD        ZZTOTD
      CSRN93
      CANN94ZZAMTD        SUB       ZZTOTD        ZZTOTD
- 
+
       ** Reverse sign of ZZTOT if larger I/P fields were negative
- 
+
      CSR                 SETOFF                                       94
      CSR 93
      CAN 91
@@ -1809,31 +1812,31 @@
      CAN 92              SETON                                        94
      CSR 94              Z-SUB     ZZTOTI        ZZTOTI
      CSR 94              Z-SUB     ZZTOTD        ZZTOTD
- 
+
       ** Restore sign of ZZAMTI & ZZAMTD if it was reversed
- 
+
      CSR 92              Z-SUB     ZZAMTI        ZZAMTI
      CSR 92              Z-SUB     ZZAMTD        ZZAMTD
      CSR   ZZSEND        TAG
- 
+
       ** If ZZTOTD is zero, and ZZTOTI is neg. set up ZZNEGD
- 
+
      CSR                 SETOFF                                       96
      CSR   ZZTOTD        COMP      0                                      91
      CSR 91ZZTOTI        COMP      0                                    96
      CSR 96              MOVE      '.000-'       ZZNEGD            5
      CSR                 ENDSR
- 
+
       ** DBSR SR. to detect a database error from INTCAL
- 
+
      C     DBSR          BEGSR
- 
+
      C                   MOVE      '1'           *INLR
      C                   MOVE      '1'           *INU7
      C                   GOTO      END
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       *                                                               *
       * *PSSR  --- SUBROUTINE TO HANDLE ABNORMAL ERROR CONDITIONS     *
@@ -1843,15 +1846,15 @@
       * CALLS: NOTHING                                                *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C     @RUN          IFEQ      *BLANKS
      C                   MOVE      'Y'           @RUN              1
      C                   DUMP
      C                   OUT       LDA
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       *                                                               *
@@ -1861,30 +1864,30 @@
       *      Calls           CRINIT,DATEIN,DRINIT,ZIC00,ZIC01,ZIC02   *
       *****************************************************************
      C     INTCAL        BEGSR
- 
+
       ** Loading of currency to chain to REHRDJ/REHRCJ files
- 
+
      C                   MOVE      CCY           REHCCY
      C                   Z-ADD     *ZEROS        INRT
      C                   Z-ADD     *ZEROS        INTP
      C                   Z-ADD     *ZEROS        INST
      C                   Z-ADD     *ZEROS        ZINTR
      C                   Z-ADD     *ZEROS        ZLDTM
- 
+
       ** Debit processing
- 
+
      C     RHISB         IFGT      *ZEROS
      C     MNBL          ORGT      *ZEROS
      C                   EXSR      DRINIT
      C                   END
- 
+
      C                   Z-ADD     INRT          ZIRATE
      C                   Z-ADD     INTP          ZICT
      C                   Z-ADD     DRIC          ZICALC
      C                   Z-ADD     RHISD         ZIBEG
      C                   Z-ADD     RUND          ZIEND
      C/COPY WNCPYSRC,RE3666C020
- 
+
      C     INTP          IFLT      3
      C     RHISB         IFGT      0
      C                   Z-ADD     RHISB         ZIAMT
@@ -1894,13 +1897,13 @@
      C                   END
      C                   Z-ADD     ZINTR         DINT
      C                   END
- 
+
      C                   ELSE
- 
+
       ** Searching end-of-month date
- 
+
      C                   EXSR      DATEIN
- 
+
      C     RUND          IFLE      ZLDTM
      C     MNBL          IFGT      0
      C                   Z-ADD     MNBL          ZIAMT
@@ -1914,12 +1917,12 @@
      C                   END
      C                   Z-ADD     ZINTR         DINT
      C                   END
- 
+
      C                   ELSE
- 
+
       ** if change of month occurs with methods 3 & 4 then two processings
       ** First Processing:
- 
+
      C     MNBL          IFGT      0
      C                   Z-ADD     MNBL          ZIAMT
      C                   Z-ADD     ZLDTM         ZIEND
@@ -1933,9 +1936,9 @@
      C                   END
      C                   Z-ADD     ZINTR         DINT
      C                   END
- 
+
       ** Second Processing:
- 
+
      C     RHISB         IFGT      0
      C                   Z-ADD     RHISB         ZIAMT
      C                   Z-ADD     ZLDTM         ZIBEG
@@ -1950,31 +1953,31 @@
      C                   END
      C                   ADD       ZINTR         DINT
      C                   END
- 
+
      C                   END
- 
+
      C                   END
      C/COPY WNCPYSRC,RE3666C021
- 
+
       ** Credit Processing
- 
+
      C                   Z-ADD     *ZEROS        INRT
      C                   Z-ADD     *ZEROS        INTP
      C                   Z-ADD     *ZEROS        INST
      C                   Z-ADD     *ZEROS        ZINTR
      C                   Z-ADD     *ZEROS        ZLDTM
- 
+
      C     RHISB         IFLT      *ZEROS
      C     MNBL          ORLT      *ZEROS
      C                   EXSR      CRINIT
      C                   END
- 
+
      C                   Z-ADD     INRT          ZIRATE
      C                   Z-ADD     INTP          ZICT
      C                   Z-ADD     CRIC          ZICALC
      C                   Z-ADD     RHISD         ZIBEG
      C                   Z-ADD     RUND          ZIEND
- 
+
      C     INTP          IFLT      3
      C     RHISB         IFLT      0
      C                   Z-ADD     RHISB         ZIAMT
@@ -1984,13 +1987,13 @@
      C                   END
      C                   Z-ADD     ZINTR         CINT
      C                   END
- 
+
      C                   ELSE
- 
+
       ** Searching end-of-month date
- 
+
      C                   EXSR      DATEIN
- 
+
      C     RUND          IFLE      ZLDTM
      C     MNBL          IFGT      0
      C                   Z-ADD     MNBL          ZIAMT
@@ -2004,12 +2007,12 @@
      C                   END
      C                   Z-ADD     ZINTR         CINT
      C                   END
- 
+
      C                   ELSE
- 
+
       ** If change of month occurs with methods 3 & 4 then two processings
       ** First Processing:
- 
+
      C     MNBL          IFGT      0
      C                   Z-ADD     MNBL          ZIAMT
      C                   Z-ADD     ZLDTM         ZIEND
@@ -2023,9 +2026,9 @@
      C                   END
      C                   Z-ADD     ZINTR         CINT
      C                   END
- 
+
       ** Second Processing:
- 
+
      C     RHISB         IFGT      0
      C                   Z-ADD     RHISB         ZIAMT
      C                   Z-ADD     ZLDTM         ZIBEG
@@ -2040,78 +2043,78 @@
      C                   END
      C                   ADD       ZINTR         CINT
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   ENDSR
      C/COPY ZSRSRC,ZICDREZ2LE
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** ZIC00 subroutine to calculate interest (type=00)
       **     Called by       INTCAL
       **     Calls           ZICD
- 
+
      C     ZIC00         BEGSR
      C/COPY WNCPYSRC,RE3666C001
- 
+
       ** Reverse sign of amount if it's negative
- 
+
      C     ZIAMT         IFLT      0
      C                   Z-SUB     ZIAMT         ZIAMT
      C                   END
- 
+
       ** Find number of days to calculate interest according to calc. basis
       ** For calc basis 6, use the factored number of days
- 
+
      C     ZIAMT         MULT      ZIRATE        ZIWRK1
      C     ZICALC        IFEQ      6
      C     ZIWRK1        MULT      INT6DY        ZIWRK2
- 
+
      C                   ELSE
      C     ZIWRK1        MULT      ZDAYN2        ZIWRK2
      C                   ENDIF
- 
+
      C     ZICALC        IFEQ      7
      C     ZICALC        OREQ      5
      C     ZICALC        OREQ      3
      C     ZICALC        OREQ      2
      C     ZIWRK2        DIV(H)    36000         ZINTR
      C                   END
- 
+
      C     ZICALC        IFEQ      4
      C     ZICALC        OREQ      1
      C     ZIWRK2        DIV(H)    36500         ZINTR
      C                   END
- 
+
      C     ZICALC        IFEQ      6
      C     ZIWRK2        DIV(H)    36600         ZINTR
      C                   END
- 
+
      C/COPY WNCPYSRC,RE3666C002
      C                   ENDSR
       ********************************************************************
      C/EJECT
       ********************************************************************
- 
+
       ** ZIC01 subroutine to calculate interest (type=01)
       **     Called by       INTCAL
       **     Calls           ZICD
- 
+
      C     ZIC01         BEGSR
      C/COPY WNCPYSRC,RE3666C008
- 
+
       ** Reverse sign of amount if it's negative
- 
+
      C     ZIAMT         IFLT      0
      C                   Z-SUB     ZIAMT         ZIAMT
      C                   END
- 
+
       ** Initialize work fields
- 
+
      C                   Z-ADD     ZIAMT         ZIAMT1
      C                   Z-ADD     1             Z
      C                   Z-ADD     *ZEROS        ZIAMTR
@@ -2120,53 +2123,53 @@
      C                   Z-ADD     *ZEROS        LOOP
      C                   Z-ADD     *ZEROS        Y
      C                   Z-ADD     *ZEROS        ZIN
- 
+
       ** Interest is only calculated on an amount that exceeds the
       ** initial threshold balance
- 
+
      C     ZIAMT         IFGT      ZITHR
- 
+
       ** Find number of days to calculate interest according to calc. basis
- 
+
      C     LOOP          DOWEQ     0
      C                   Z-ADD     ZIAMT1        ZIAMTR
- 
+
      C     Z             IFEQ      11
      C                   Z-ADD     ZIAMTR        ZIA(Z)
      C                   Z-ADD     1             LOOP
- 
+
      C                   ELSE
      C                   ADD       1             Y
      C                   ADD       1             Z
- 
+
      C     ZIB(Z)        IFEQ      0
      C                   ADD       ZIAMTR        ZIA(Y)
      C                   Z-ADD     1             LOOP
- 
+
      C                   ELSE
      C     ZIB(Z)        SUB       ZIB(Y)        ZBAL
      C     ZIAMTR        SUB       ZBAL          ZIAMT1
- 
+
      C     ZIAMT1        IFLE      0
      C                   ADD       ZIAMTR        ZIA(Y)
      C                   Z-ADD     1             LOOP
- 
+
      C                   ELSE
      C                   ADD       ZBAL          ZIA(Y)
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
      C                   END
- 
+
       ** if the sub-type is from 50000 to 99999, calculate the interest
       ** on the amount exceeding the initial threshold. Otherwise, the
       ** interest is calculated on the whole balance whenever it exceeds
       ** the initial threshold.
- 
+
      C     INST          IFGE      50000
      C                   Z-ADD     1             Z
      C     Z             DOWLT     12
@@ -2181,54 +2184,54 @@
      C                   ADD       1             Z
      C                   END
      C                   END
- 
+
       ** For calc basis 6, use the factored number of days
- 
+
      C     ZIA           MULT      ZIR           ZIA1
      C     ZICALC        IFEQ      6
      C     ZIA1          MULT      INT6DY        ZIA1
- 
+
      C                   ELSE
      C     ZIA1          MULT      ZDAYN2        ZIA1
      C                   ENDIF
- 
+
      C     ZICALC        IFEQ      7
      C     ZICALC        OREQ      5
      C     ZICALC        OREQ      3
      C     ZICALC        OREQ      2
      C     ZIA1          DIV(H)    36000         ZIN
- 
+
      C                   END
- 
+
      C     ZICALC        IFEQ      4
      C     ZICALC        OREQ      1
      C     ZIA1          DIV(H)    36500         ZIN
- 
+
      C                   END
- 
+
      C     ZICALC        IFEQ      6
      C     ZIA1          DIV(H)    36600         ZIN
- 
+
      C                   END
      C                   XFOOT     ZIN           ZINTR
- 
+
      C                   END
      C/COPY WNCPYSRC,RE3666C009
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** ZIC02 subroutine to calculate interest (type=02)
       **     Called by       INTCAL
       **     Calls           ZICD
- 
+
      C     ZIC02         BEGSR
      C/COPY WNCPYSRC,RE3666C010
- 
+
       ** Fill the end of the table with highval
- 
+
      C                   Z-ADD     2             Z
      C     Z             DOWLE     11
      C     ZIB(Z)        IFEQ      *ZEROS
@@ -2236,102 +2239,102 @@
      C                   END
      C                   ADD       1             Z
      C                   END
- 
+
       ** Reverse sign of amount if it's negative
- 
+
      C     ZIAMT         IFLT      0
      C                   Z-SUB     ZIAMT         ZIAMT
      C                   END
- 
+
       ** Interest is only calculated on an amount that exceeds the
       ** initial threshold balance
- 
+
      C     ZIAMT         IFGT      ZITHR
- 
+
       ** Find number of days to calculate interest according to calc. basis
       ** Make sure the correct Rate is used when History balance has a
       ** matching threshold balance.
- 
+
      C                   Z-ADD     1             Z
      C     ZIAMT         LOOKUP    ZIB(Z)                                 40
      C     *IN40         IFEQ      *OFF
      C                   Z-ADD     1             Z
      C     ZIAMT         LOOKUP    ZIB(Z)                               40
      C                   ENDIF
- 
+
       ** if the sub-type is from 50000 to 99999, calculate the interest
       ** on the amount exceeding the initial threshold. Otherwise, the
       ** interest is calculated on the whole balance whenever it exceeds
       ** the initial threshold.
- 
+
      C     INST          IFGE      50000
      C     ZIAMT         SUB       ZITHR         ZIAMT
      C                   END
- 
+
       ** For calc basis 6, use the factored number of days
- 
+
      C     ZIAMT         MULT      ZIR(Z)        ZIWRK1
      C     ZICALC        IFEQ      6
      C     ZIWRK1        MULT      INT6DY        ZIWRK2
- 
+
      C                   ELSE
      C     ZIWRK1        MULT      ZDAYN2        ZIWRK2
      C                   ENDIF
- 
+
      C     ZICALC        IFEQ      7
      C     ZICALC        OREQ      5
      C     ZICALC        OREQ      3
      C     ZICALC        OREQ      2
      C     ZIWRK2        DIV(H)    36000         ZINTR
- 
+
      C                   END
- 
+
      C     ZICALC        IFEQ      4
      C     ZICALC        OREQ      1
      C     ZIWRK2        DIV(H)    36500         ZINTR
- 
+
      C                   END
- 
+
      C     ZICALC        IFEQ      6
      C     ZIWRK2        DIV(H)    36600         ZINTR
- 
+
      C                   END
- 
+
      C/COPY WNCPYSRC,RE3666C022
      C/COPY WNCPYSRC,RE3666C023
      C                   END
      C/COPY WNCPYSRC,RE3666C011
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** DRINIT subroutine for debit rates loading
       **     Called by       INTCAL
       **     Calls           DBSR
- 
+
      C     DRINIT        BEGSR
- 
+
      C                   Z-ADD     *ZEROS        ZIRD
      C                   Z-ADD     *ZEROS        ZIBD
      C                   Z-ADD     *ZERO         ZITHR
      C                   Z-ADD     *ZEROS        INTHD
- 
+
       ** Chain to Debit Rate Changes file
- 
+
      C                   Z-ADD     DRCD          KDATE
- 
+
      C     DCKEY         CHAIN     REHRDJ                             99
- 
+
       ** Error in REHRDJ
- 
+
      C     *IN99         IFEQ      '1'
      C     DRIB          ANDEQ     *ZEROS
      C     DRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      *BLANKS       LFILE
      C                   Z-ADD     92            LDBNO
@@ -2341,65 +2344,65 @@
      C                   MOVEL     REHKEY        LKEY
      C                   EXSR      DBSR
      C                   END
- 
+
       ** Pick-up debit threshold balance
- 
+
      C                   Z-ADD     INTHD         ZITHR
- 
+
       ** Setup work debit fields with fields read
- 
+
      C     RAT2          IFNE      *BLANKS
      C                   MOVEL     RAT2          WDRAT
      C                   END
- 
+
      C     RAT3          IFNE      *BLANKS
      C                   MOVE      RAT3          WDRAT
      C                   END
- 
+
      C     BAL2          IFNE      *BLANKS
      C                   MOVEL     BAL2          WDBAL
      C                   END
- 
+
      C     BAL3          IFNE      *BLANKS
      C                   MOVE      BAL3          WDBAL
      C                   END
- 
+
       ** Loading of debit interest rates and debit interest balances
- 
+
      C                   Z-ADD     ZIRD          ZIR
      C                   Z-ADD     ZIBD          ZIB
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** CRINIT subroutine for credit rates loading
       **     Called by       INTCAL
       **     Calls           DBSR
- 
+
      C     CRINIT        BEGSR
- 
+
      C                   Z-ADD     *ZEROS        ZIRC
      C                   Z-ADD     *ZEROS        ZIBC
      C                   Z-ADD     *ZERO         ZITHR
      C                   Z-ADD     *ZEROS        INTHC
- 
+
       ** Chain to Credit Rate Changes file
- 
+
      C                   Z-ADD     CRCD          KDATE
- 
+
      C     DCKEY         CHAIN     REHRCJ                             99
- 
+
       ** Error in REHRCJ
- 
+
      C     *IN99         IFEQ      '1'
      C     CRIB          ANDEQ     *ZEROS
      C     CRIS          ANDEQ     *ZEROS
      C                   MOVE      '0'           *IN99
      C                   END
- 
+
      C     *IN99         IFEQ      '1'
      C                   MOVE      *BLANKS       LFILE
      C                   Z-ADD     93            LDBNO
@@ -2409,57 +2412,57 @@
      C                   MOVEL     REHKEY        LKEY
      C                   EXSR      DBSR
      C                   END
- 
+
       ** Pick-up credit threshold balance
- 
+
      C                   Z-ADD     INTHC         ZITHR
- 
+
       ** setup work credit fields with fields read processing
- 
+
      C     RAT2          IFNE      *BLANKS
      C                   MOVEL     RAT2          WCRAT
      C                   END
- 
+
      C     RAT3          IFNE      *BLANKS
      C                   MOVE      RAT3          WCRAT
      C                   END
- 
+
      C     BAL2          IFNE      *BLANKS
      C                   MOVEL     BAL2          WCBAL
      C                   END
- 
+
      C     BAL3          IFNE      *BLANKS
      C                   MOVE      BAL3          WCBAL
      C                   END
- 
+
       ** Loading of credit interest rates and credit interest balances
- 
+
      C                   Z-ADD     ZIRC          ZIR
      C                   Z-ADD     ZIBC          ZIB
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       ** DATEIN subroutine for date init processing
       **     Called by       INTCAL
       **     Calls           DBSR
- 
+
      C     DATEIN        BEGSR
- 
+
       ** Work Field init
- 
+
      C                   Z-ADD     *ZEROS        ZLDTM
- 
+
       ** Calculating date from day number (REACR histore date)
- 
+
      C                   Z-ADD     RHISD         ZDAYNO
      C                   EXSR      ZDATE2
- 
+
       ** Verify if error
- 
+
      C     *IN99         IFNE      '0'
      C                   MOVE      *BLANKS       LFILE
      C                   Z-ADD     94            LDBNO
@@ -2470,16 +2473,16 @@
      C                   MOVEA     '1'           *IN(89)
      C                   EXSR      DBSR
      C                   END
- 
+
       ** Calculating first day of this month to calculate the last one
- 
+
      C                   Z-ADD     ZDATE         RESULT
      C                   Z-ADD     1             ZDAY
      C                   Z-ADD     RESULT        ZDATE
      C                   EXSR      ZDATE1
- 
+
       ** Verify if error
- 
+
      C     *IN99         IFNE      '0'
      C                   MOVE      *BLANKS       LFILE
      C                   Z-ADD     95            LDBNO
@@ -2490,19 +2493,19 @@
      C                   MOVEA     '1'           *IN(89)
      C                   EXSR      DBSR
      C                   END
- 
+
      C     ZMTH          IFEQ      12
      C                   Z-ADD     1             ZMTH
      C                   ADD       1             ZYEAR
      C                   ELSE
      C                   ADD       1             ZMTH
      C                   END
- 
+
      C                   Z-ADD     RESULT        ZDATE
      C                   EXSR      ZDATE1
- 
+
       ** Verify if error
- 
+
      C     *IN99         IFNE      '0'
      C                   MOVE      *BLANKS       LFILE
      C                   Z-ADD     96            LDBNO
@@ -2513,34 +2516,34 @@
      C                   MOVEA     '1'           *IN(89)
      C                   EXSR      DBSR
      C                   END
- 
+
      C     ZDAYNO        SUB       1             ZLDTM
- 
+
      C                   ENDSR
- 
+
       ********************************************************************
      C/EJECT
       ********************************************************************
       *   Subroutine SRPNAR determines the required narratives.          *
       ********************************************************************
      C     SRPNAR        BEGSR
- 
+
       ** Define the data structure parameter:
- 
+
      C     *LIKE         DEFINE    CGPNAR        ##PNAR
- 
+
       ** Define the narrative fields:
- 
+
      C                   MOVE      *BLANKS       O#PNAR           30
- 
+
       ** If the facility is switched off or unavailable,
       ** or UDC is not installed, exit this subroutine:
- 
+
      C     REPNAR        IFNE      'Y'
- 
+
       **  Determine the current narrative and message id to use (*IN31
       **  signifies Retail Account Number.)
- 
+
      C                   CLEAR                   DSPNAR
      C                   MOVE      I#TXT         D#TXT
      C     *IN31         IFEQ      *ON
@@ -2553,17 +2556,17 @@
      C                   MOVE      BRCA          D#BRCA
      C                   ENDIF
      C                   MOVE      DSPNAR        O#PNAR
- 
+
      C                   GOTO      EXPNAR
      C                   ENDIF
- 
+
       ** Determine the customer's name:
       ** OUTPUT CALLS SRPNAM and OUTPUT can be called many times for same
       ** customer. If this is the same customer as the last CHAIN then use
       ** the last information gathered rather than call AOCUSTR* again
- 
+
      C                   MOVEL(P)  CNUM          ##KEY
- 
+
      C     *LIKE         DEFINE    CNUM          ##LCUS
      C     *LIKE         DEFINE    BBCRNM        ##LCRN
      C     CNUM          IFEQ      ##LCUS
@@ -2575,7 +2578,7 @@
      C                   PARM                    ##KEY            10
      C                   PARM                    ##STS             7
      C     SDCUST        PARM      SDCUST        DSSDY
- 
+
      C     ##RTN         IFNE      *BLANKS
      C                   MOVEL     'SDCUSTPD'    DBFILE
      C                   MOVEL     '101'         DBASE
@@ -2589,10 +2592,10 @@
       *****************************************************************
      C/EJECT
       *****************************************************************
- 
+
       **  Determine the current narrative and message id to use (*IN31
       **  signifies Retail Account Number.)
- 
+
      C                   CLEAR                   DSPNAR
      C                   MOVE      I#TXT         D#TXT
      C     *IN31         IFEQ      *ON
@@ -2607,12 +2610,12 @@
      C                   MOVE      'GB00380'     ##MGID
      C                   ENDIF
      C                   MOVE      DSPNAR        ##NARR
- 
+
       ** Determine the value for the first narrative using AOPNARR0:
- 
+
      C                   CLEAR                   CGPNAR
      C                   CLEAR                   ##PRM1
- 
+
      C                   MOVE      'RE'          MNMODI
      C                   MOVE      CNUM          MNCUST
      C                   MOVE      CCY           MNCYCD
@@ -2625,7 +2628,7 @@
      C                   MOVEL(P)  ##NARR        MNNARR
      C                   MOVE      CNUM          MNASOC
      C/COPY WNCPYSRC,REH00406
- 
+
      C                   CALL      'AOPNARR0'
      C                   PARM                    ##RTN
      C                   PARM                    ##MGID            7
@@ -2633,38 +2636,38 @@
      C     CGPNAR        PARM      CGPNAR        ##PNAR
      C                   PARM                    ##NARR           50
      C/COPY WNCPYSRC,REH00407
- 
+
      C     ##RTN         IFNE      *BLANKS
      C                   MOVEL     'CGPNARPD'    DBFILE
      C                   MOVEL     '102'         DBASE
      C                   MOVEL     MNCUST        DBKEY
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   MOVEL     ##NARR        O#PNAR
- 
+
      C     EXPNAR        TAG
- 
+
      C                   ENDSR
       *****************************************************************
      C/COPY WNCPYSRC,RE3666C007
      C/COPY ZSRSRC,ZDATE2Z2LE
      C/COPY ZSRSRC,ZDATE1Z2LE
       *****************************************************************
- 
+
       ** Generated Entries
- 
+
       ** Detail Record
- 
+
      OGEIERPD   E    80
      O                                            1 'P'
- 
+
      O/COPY WNCPYSRC,RE3666OOP1
- 
+
      O                       BICN                 7
- 
+
      O/COPY WNCPYSRC,RE3666OOP2
- 
+
      O               38      CNUM                 7                                           CRE100
      O                       CCY                 10
      O                       QQACOD              14
@@ -2739,16 +2742,16 @@
      O                       ACODGE             599
      O                       OTRF               620
      O                       ORAMT              316P
- 
+
       ** Blank Profit Centre if Profit Centre not used
- 
+
      O               70                         134 '    '
- 
+
       ** Monthly Accruals
- 
+
       ** Detail Record
      O/COPY WNCPYSRC,RE3666O001
- 
+
      OACRLAR    E    81
      O         OR    82
      O                                            1 'D'
@@ -2775,45 +2778,45 @@
      O                  82   CIAD1              100
      O                  82   CIAC1              110
      O/COPY WNCPYSRC,RE3666O002
- 
+
       ** Trailer
- 
+
      OREACRLZZ  T
      O                       NOREZ                3P
      OREGEIEZZ  T
      O                       NORE1
      O                       HRWN                13P
      O                       HRDC                15P
- 
+
       ** REACR Detail
- 
+
      OREACRDF   E    86
- 
+
      O                       DAIC
      O                       CAIC
      O                       RHISD
      O/COPY WNCPYSRC,REH00154
- 
+
       ** Account Master
- 
+
      OACCNTABF  E    85
- 
+
       ** Debit fields
- 
+
      O                       LPAR
      O                       DIIE
- 
+
       ** Credit fields
- 
+
      O                       LPAP
      O                       CIIE
- 
+
       ** Blank profit centre if Profit Centre not used
- 
+
      O                       PRFC
- 
+
       ** File Controls
- 
+
      ORE3666AU  T    LR                     2 03
      O                                           22 'REFERENCE RE3666AU'
      O                       TITL                89
@@ -2842,9 +2845,9 @@
      O                                           73 'NUMBER OF RECORDS WRITTE'
      O                                           74 'N'
      O                       RWACRL        3     89
- 
+
       ** Database Error
- 
+
      O          T    LR U7                    43
      O                                           58 'DATABASE ERROR '
      O                       DBASE               61

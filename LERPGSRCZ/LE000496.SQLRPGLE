@@ -918,7 +918,7 @@
                                 : pDSSDY
                                );
                    SDBANK = pDSSDY;
-																						  //MD038473
+
                    PrtLn1 = 0;                                                            //MD038473
                    PrtLn2 = 0;                                                            //MD038473
                    PrtLn3 = 0;                                                            //MD038473
@@ -938,7 +938,7 @@
        begsr *Pssr;
                    *Inu7 = *ON;
                    *Inu8 = *ON;
-                   Dump;                                                                       
+                   Dump;
                    *Inlr = *ON;
                    Return;
        endsr;

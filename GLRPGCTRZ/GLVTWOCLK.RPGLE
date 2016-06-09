@@ -18,7 +18,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. MD035554           Date 25May16               *
+      *  Last Amend No. MD039309           Date 08Jun16               *
+      *  Prev Amend No. MD035554           Date 25May16               *
       *  Prev Amend No. MD033630           Date 11May16               *
       *                 MD027587           Date 19Jun14               *
       *                 MD000091           Date 08May13               *
@@ -32,6 +33,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039309 - Unable to Edit/Delete CRE023 Credit Journal Entry *
+      *             Reversed some of the MD033630 fixes that were     *
+      *             affected by the changes in MD035554 regarding the *
+      *             updating of files during insert/accept            *
       *  MD035554 - 2o'clock/ABC compatibility                        *
       *  MD033630 - Credit Entries are not being validated on AMEND   *
       *             and DELETE. Debit Entries amount need not be      *
@@ -172,6 +177,9 @@
      D   BLen                  1      2B 0                                                  MD000091
      D   LenStr                1      2                                                     MD000091
                                                                                             MD000091
+     D CAP207          S              1                                                     MD039309
+      ** Account balance Check                                                              MD039309
+                                                                                            MD039309
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -411,6 +419,7 @@
      C                   ENDIF
       *
      C                   If        GOCLR = 'Y'                                              MD033630
+     C                             And CAP207 = 'N'                                         MD039309
      C                   Eval      WCMPAMT = BTPTAM - S_GTAMT                               MD033630
      C                   EndIf                                                              MD033630
       *                                                                                     MD033630
@@ -436,8 +445,10 @@
      C                             Or GB2PTAM > WCMPAMT And GOCLR = 'Y' And                 MD033630
      C                                DDACTN = 'D'                                          MD033630
      C                                And GB2VLDT > P_BJRDNB                                MD035554
+     C                                And CAP207 = 'N'                                      MD039309
      C                             Or GB2PTAM < WCMPAMT And GOCLR = 'Y' And                 MD033630
      C                                DDACTN = 'A'                                          MD033630
+     C                                And CAP207 = 'N'                                      MD039309
      C                   EVAL      DDPTAMOK = 'N'
      C                   EVAL      P_Idx             = P_Idx + 1
      C                   EVAL      FldNameArr(P_Idx) = 'DDPTAM'
@@ -484,6 +495,30 @@
      C     K_GLJEN       KLIST
      C                   KFLD                    K_BTBTNB
      C                   KFLD                    K_BTBINB
+      *                                                                                     MD039309
+      ** Check for Account Balance Check Flag                                               MD039309
+      *                                                                                     MD039309
+     C                   EVAL      CAP207 = 'N'                                             MD039309
+     C                   CALLB     'AOSARDR0'                                               MD039309
+     C                   PARM      *BLANKS       @RTCD                                      MD039309
+     C                   PARM      '*VERIFY'     @OPTN                                      MD039309
+     C                   PARM      'CAP207'      @SARD                                      MD039309
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD039309
+      *                                                                                     MD039309
+      ** An NRF (No Record Found) return code is valid.  Issue database error               MD039309
+      ** only for error return codes.                                                       MD039309
+      *                                                                                     MD039309
+     C                   IF        (@RTCD <> *BLANKS) AND                                   MD039309
+     C                             (@RTCD <> '*NRF   ')                                     MD039309
+     C                   EVAL      DBKEY = 'CAP207'                                         MD039309
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD039309
+     C                   EVAL      DBASE = 11                                               MD039309
+     C                   EXSR      *PSSR                                                    MD039309
+     C                   ENDIF                                                              MD039309
+      *                                                                                     MD039309
+     C                   IF        @RTCD = *BLANK                                           MD039309
+     C                   EVAL      CAP207 = 'Y'                                             MD039309
+     C                   ENDIF                                                              MD039309
       *
      C                   ENDSR
 

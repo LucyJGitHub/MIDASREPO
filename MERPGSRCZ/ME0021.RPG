@@ -11,8 +11,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD038182           Date 25May16               *
-      *  Prev Amend No. MD024165           Date 25May16               *
+      *  Last Amend No. MD039286           Date 09Jun16               *
+      *  Prev Amend No. MD038182           Date 25May16               *
+      *                 MD024165           Date 25May16               *
       *                 260771             Date 03Dec09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -55,6 +56,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD039286 - Unable to use ? in the SWIFT Accounts Maintenance *
+      *             to specify A/C Code. Populate field SACOD with    *
+      *             the selected account code.                        *
       *  MD038182 - Only set error indicator 18 to off if Internal    *
       *             Only field is Y and MT940 destination is blanks   *
       *  MD024165 - Reposition else statement of fix 260771.          *
@@ -1321,6 +1325,7 @@
      C**********           MOVE '1'       @ACCK                                               CGL029
      C**********           MOVE @ACCK     ACKEY                                               CGL029
      C********** ACKEY     CHAINTABMS                88                                       CGL029
+     C           '?'       SCAN SACOD     WPOS    20                                        MD039286
      C                     CALL 'AOACODR0'                                                    CGL029
      C                     PARM *BLANKS   @RTCD                                               CGL029
      C                     PARM '*KEY   ' @OPTN                                               CGL029
@@ -1334,6 +1339,12 @@
      C           @RTCD     IFEQ *BLANKS                                                       CGL029
      C           A5TOIN    ANDNE'Y'                                                           CGL029
      C                     MOVE '0'       *IN10
+      *                                                                                     MD039286
+      ** If ? was used, set field with the selected A/C Code                                MD039286
+      *                                                                                     MD039286
+     C           WPOS      IFGT 0                                                           MD039286
+     C                     MOVELA5ACCD    SACOD                                             MD039286
+     C                     ENDIF                                                            MD039286
       *
      C                     ELSE
       *

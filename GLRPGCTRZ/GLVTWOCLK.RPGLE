@@ -180,6 +180,12 @@
      D CAP207          S              1                                                     MD039309
       ** Account balance Check                                                              MD039309
                                                                                             MD039309
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                MD039309
+      ** Externally described DS for SAR details                                            MD039309
+                                                                                            MD039309
+     D DSFDY         E DS                  EXTNAME(DSFDY)                                   MD039309
+      ** DS for access programs - short data structure                                      MD039309
+                                                                                            MD039309
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦

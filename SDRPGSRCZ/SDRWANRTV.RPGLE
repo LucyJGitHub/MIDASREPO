@@ -493,8 +493,7 @@
      C                   ENDIF
 
       ** Customer number required
-     C     CSD021        IFNE      'Y'                                                      MD039287
-     C     DDACTN        ANDEQ     'I'                                                      MD039287
+     C     CSD021        IFEQ      'N'                                                      MD039287
      C     DDACTN        ORNE      'I'                                                      MD039287
 
      C     DDCUST        IFEQ      *BLANKS

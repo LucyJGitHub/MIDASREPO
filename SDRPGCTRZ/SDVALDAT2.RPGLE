@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. MD039287A          Date 17Jun16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 AR741461           Date 06May11               *
       *                 AR737976           Date 14Apr11               *
       *                 CER059             Date 19Jul10               *
@@ -29,6 +30,8 @@
       *                                                               *
       *--------------------------------------------------------------**
       *                                                               *
+      *  MD039287A - Customer number is not automatically generated   *
+      *              when CSD021 is on                                *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  AR741461 - CUSD Usability Issues (Child: AR741462)           *
@@ -150,6 +153,7 @@
      D PErrorFlag      S              1A
      D PRtcd           S              7A
      D POptn           S              7A
+     D P@Cust          S             10A                                                   MD039287A
      D PKySt           S              7A                                                    BUG23657
      D PColc           S              2A                                                    BUG23657
      D KFCusn          S              6A                                                    BUG23657
@@ -462,7 +466,8 @@
      C                   CALL      'AOCUSTR0'                                               BUG23657
      C                   PARM      *BLANKS       PRtCd                                      BUG23657
      C                   PARM      '*KEY'        POptn                                      BUG23657
-     C                   PARM                    DDCUST                                     BUG23657
+     C**********         PARM                    DDCUST                           BUG23657 MD039287A
+     C                   PARM      DDCUST        P@Cust                                    MD039287A
      C                   PARM                    PKySt                                      BUG23657
      C     SDCUST        PARM      SDCUST        DSSDY                                      BUG23657
       *                                                                                     BUG23657

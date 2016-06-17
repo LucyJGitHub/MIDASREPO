@@ -17,8 +17,9 @@
       *    /COPY, Client or Country amendments must not be            *
       *    applied to this source.                                    *
       *                                                               *
-      *  Last Amend No. MD038850           Date 16May16               *
-      *  Prev Amend No. AR720772           Date 19Aug14               *
+      *  Last Amend No. MD039203           Date 14Jun16               *
+      *  Prev Amend No. MD038850           Date 16May16               *
+      *                 AR720772           Date 19Aug14               *
       *                 CER059             Date 19Jul10               *
       *                 BUG23050A          Date 11Mar09               *
       *                 BUG23101           Date 26Feb09               *
@@ -41,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039203 - When creating an FX Deal, the value of Forward    *
+      *             points and sign were not save upon completion of  *
+      *             the transaction                                   *
       *  MD038850 - Initialize DDFPNT field.                          *
       *  AR720772 - Reverse fix BUG5578 to accept OT deal exchange    *
       *             rate not equal to related OP deal.                *
@@ -291,6 +295,8 @@
      C**********         MOVE      DDRATOD       DDRAT1                             BUG5578 AR720772
      C**********         IF        CER043 = 'Y' and DDREIN = 'Y'                  BUG22009 BUG23050A
      C                   IF        CER043 = 'Y'                                   BUG22009 BUG23050A
+     C                             and (DDDLTP = 'OT' or                                    MD039203
+     C                                  DDDLTP = 'OP')                                      MD039203
      C**********         EVAL      DDFPNT = '0.00'                                BUG23050A MD038850
      C                   EVAL      DDFPNT = '0'                                             MD038850
      C                   EVAL      DDREIN = 'N'                                             BUG22009
@@ -618,6 +624,7 @@
      C                   PARM                    DDBCCY            3            buy ccy
      C                   PARM                    DDSCCY            3            sell ccy
      C**********         PARM                    DDDLTP            2   deal type    BUG5578 AR720772
+     C                   PARM                    DDDLTP            2                        MD039203
       *
      C**********         PARM                    DDRATE           13            exch rate     196952
      C                   PARM                    DDRAT1           14            exch rate     196952

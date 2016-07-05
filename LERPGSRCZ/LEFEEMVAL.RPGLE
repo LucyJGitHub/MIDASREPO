@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD036962           Date 26Apr16               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. MD039613           Date 05Jul16               *
+      *  Prev Amend No. MD036962           Date 26Apr16               *
+      *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027024           Date 19Aug14               *
       *                 MD022414           Date 18Sep13               *
@@ -99,6 +100,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039613 - Fee Amount field in FEEM validates when Facility  *
+      *             Fee is inserted                                   *
       *  MD036962 - Incorrect validation if fee amount left blank     *
       *            when CLE073 is enabled.                            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
@@ -256,7 +259,7 @@
       **   =======                               
       ** +--------------------------------------+
       *****************************************************************
- 
+
       * Fees Settlement/Adjustment Detail
      FLEFEADL2  IF   E           K DISK    INFSR(*PSSR)
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
@@ -297,42 +300,42 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
- 
+
      D/COPY ZACPYSRC,PROCPARMS
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
@@ -353,36 +356,36 @@
      D     WMSGID4     S                   LIKE(#MsgID)                                       CAS019
                                                                                               CAS019
      D MSGDATA         S                   LIKE(#MsgData)                                     CAS019
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
- 
+
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
      D                 DS                                                                     242377
      D  WPARM                  1     20                                                       242377
      D  WPARM1                 1      5                                                       242377
@@ -506,15 +509,15 @@
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D IdxNew          S              3P 0                                                    CAP084
- 
+
       ** Index for arrays of warning message ids etc
      D WId             S              3P 0
      D WIdNew          S              3P 0                                                    CAP084
- 
+
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
      D AIdx            S              3P 0                                                  BUG10955
@@ -608,13 +611,13 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
- 
+
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -1198,6 +1201,7 @@
      C     WFAMT         ANDEQ     0                                                          CLE073
                                                                                               CLE134
      C     CLE073        OREQ      'Y'                                                      MD036962
+     C     DDLNRF        ANDNE     *BLANKS                                                  MD039613
      C     DDCALT        ANDNE     '97'                                                     MD036962
      C     DDCALT        ANDNE     '98'                                                     MD036962
      C     WFAMT         ANDEQ     0                                                        MD036962
@@ -1211,6 +1215,7 @@
      C     DDEAMT        ANDEQ     *BLANKS                                                    CLE073
                                                                                             MD036962
      C     CLE073        OREQ      'Y'                                                      MD036962
+     C     DDLNRF        ANDNE     *BLANKS                                                  MD039613
      C     DDCALT        ANDNE     '97'                                                     MD036962
      C     DDCALT        ANDNE     '98'                                                     MD036962
      C     DDEAMT        ANDEQ     *BLANKS                                                  MD036962

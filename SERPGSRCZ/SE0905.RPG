@@ -20,12 +20,13 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. MD036851           Date 25May16               *
+      *  Last Amend No. MD036759           Date 13Jul16               *
+      *  Prev Amend No. MD036851           Date 25May16               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. 154670             Date 26May06               *
+      *                 154670             Date 26May06               *
       *                 CSE080             Date 14Feb06               *
       *                 CSD031             Date 10Apr06               *
       *                 CSD027             Date 09Dec05               *
@@ -75,6 +76,11 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD036759 - Report SE0905P1 shows current face value /        *
+      *             factored nominal rather than original nominal.    *
+      *             Control display of factored nominal & securities  *
+      *             with zero current factor via new system values.   *
+      *           - Reversed fix MD036851                             *
       *  MD036851 - Report SE0905P1 error. Report both Nominal and    *
       *             converted nominal for MBS.                        *
      F*  154670 - Report not being distributed by RCF.                *
@@ -235,6 +241,8 @@
      F            TABLETPF                          KIGNORE
      FTABTG30 IT  F       3           EDISK                               E16337
      F/COPY WNCPYSRC,SE0905F001
+     FSDSVALL0IF  E           K        DISK                                                 MD036759
+      ** Midas SD system value                                                              MD036759
       /EJECT
      F*****************************************************************
      F*                                                               *
@@ -372,6 +380,10 @@
      IDSSDY     E DSDSSDY                                                                    BUG6688
       ** Second DS for Access Programs, Long Data Structure                                  BUG6688
       *                                                                                      BUG6688
+     I              'DispZeroCurrFactor  'C         WSYSV0                                  MD036759
+      *                                                                                     MD036759
+      ** New system value to display zero current factor                                    MD036759
+      *                                                                                     MD036759
      I/COPY WNCPYSRC,SE0905I001
      C/EJECT
       *================================================================
@@ -1631,22 +1643,29 @@
      C                     END
      C                     SETOF                         70               E18222
      C*
+     C                     MOVELWSYSV0    WSYSVA 20                                         MD036759
+     C                     MOVE 'N'       ZEROCF  1                                         MD036759
+     C                     EXSR SVALCH                                                      MD036759
+     C                     MOVE WSYSVB    ZEROCF                                            MD036759
      C           IACF      IFNE 0
-      *                                                                                     MD036851
-     C           IACF      IFNE 1                                                           MD036851
-     C           IANM      MULT IACF      WNCONV 150                                        MD036851
-     C                     MOVE *ZEROS    ZFLD15                                            MD036851
-     C                     Z-ADDWNCONV    ZFLD15                                            MD036851
-     C                     Z-ADDNMDP      ZDECS                                             MD036851
-     C                     MOVE 'L'       ZECODE                                            MD036851
-      ** Format amount with commas.                                                         MD036851
-     C                     EXSR FMTAMJ                                                      MD036851
-     C                     EXSR ZSEDIT                                                      MD036851
-     C                     MOVE ZOUT21    DTCONV                                            MD036851
-     C                     WRITEDETAIL2X                                                    MD036851
-     C                     ADD  1         LNCNT                                             MD036851
-     C                     ENDIF                                                            MD036851
-      *                                                                                     MD036851
+     C           IACF      OREQ 0                                                           MD036759
+     C           ZEROCF    ANDEQ'Y'                                                         MD036759
+     C           PROT      ANDEQ'8'                                                         MD036759
+      ******************************************************************           MD036851 MD036759
+     C********** IACF      IFNE 1                                                  MD036851 MD036759
+     C********** IANM      MULT IACF      WNCONV 150                               MD036851 MD036759
+     C**********           MOVE *ZEROS    ZFLD15                                   MD036851 MD036759
+     C**********           Z-ADDWNCONV    ZFLD15                                   MD036851 MD036759
+     C**********           Z-ADDNMDP      ZDECS                                    MD036851 MD036759
+     C**********           MOVE 'L'       ZECODE                                   MD036851 MD036759
+      ***Format*amount*with*commas.*************************************           MD036851 MD036759
+     C**********           EXSR FMTAMJ                                             MD036851 MD036759
+     C**********           EXSR ZSEDIT                                             MD036851 MD036759
+     C**********           MOVE ZOUT21    DTCONV                                   MD036851 MD036759
+     C**********           WRITEDETAIL2X                                           MD036851 MD036759
+     C**********           ADD  1         LNCNT                                    MD036851 MD036759
+     C**********           ENDIF                                                   MD036851 MD036759
+      ******************************************************************           MD036851 MD036759
      C                     MOVE *ZEROS    ZFLD15
      C                     MOVE IACF      ZFLD15
      C**********           Z-ADD8         ZDECS                           052254
@@ -2142,6 +2161,24 @@
      C                     ENDSR                                          CSE080
      C*                                                                   CSE080
      C********************************************************************CSE080
+      *                                                               *                     MD036759
+      *  SVALCH - Subroutine to chain to SDSVALPD.                    *                     MD036759
+      *                                                               *                     MD036759
+      *****************************************************************                     MD036759
+      *                                                                                     MD036759
+     C           SVALCH    BEGSR                           *** SVALCH ***                   MD036759
+      *                                                                                     MD036759
+     C           WSYSVA    CHAINSDSVALL0             60                                     MD036759
+     C           *IN60     IFEQ *OFF                                                        MD036759
+     C           GIVAL     ANDEQ'Y'                                                         MD036759
+     C                     MOVEL'Y'       WSYSVB  1                                         MD036759
+     C                     ELSE                                                             MD036759
+     C                     MOVEL'N'       WSYSVB                                            MD036759
+     C                     ENDIF                                                            MD036759
+      *                                                                                     MD036759
+     C                     ENDSR                                                            MD036759
+      *****************************************************************                     MD036759
+      *
      C/COPY WNCPYSRC,SE0905C004
       /EJECT
      C/COPY ZSRSRC,ZDATE2Z2

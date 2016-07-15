@@ -14,8 +14,9 @@
       *  NOTE: Check LE5210 for changes that may apply to it if there *                       CAS005
       *        are amendments done to this program.                   *                       CAS005
       *                                                               *                       CAS005
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD031390           Date 10Jun15               *
+      *  Last Amend No. MD038896           Date 13Jul16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD031390           Date 10Jun15               *
       *                 AR1004109          Date 10Jun15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -52,6 +53,7 @@
      F*                                                                  *
 0011 F*------------------------------------------------------------------*
      F*                                                                  *
+      *  MD038896 - Display loan class in the report.                 *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
      F*  MD031390 - Check System Value LoanCustOriginPurch to decide  *
@@ -360,6 +362,9 @@
      IDSSDY     E DSDSSDY                                                 S01194
      I* SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE                S01194
      I*                                                                   S01194
+     ISCSARD    E DSSCSARDPD                                                                MD038896
+      ** DUMMY RECORD FORMAT FOR SAR DETAILS                                                MD038896
+      *                                                                                     MD038896
      I/COPY WNCPYSRC,LE1120I003
      IRUNDT       DS                                                      S01117
      I**  DATA AREA RUNDAT                                                S01117
@@ -445,6 +450,20 @@
       * Isolate the first character of SVAL1 which = 'P' or 'O'.                            MD031390
      C                     MOVELSVAL1     PPCUST  1                                         MD031390
      C                     ENDIF                                                            MD031390
+      *                                                                                     MD038896
+      ** Check if switchable feature CLE042 is switched on                                  MD038896
+      *                                                                                     MD038896
+     C                     CALL 'AOSARDR0'                                                  MD038896
+     C                     PARM *BLANKS   @RTCD                                             MD038896
+     C                     PARM '*VERIFY' @OPTN                                             MD038896
+     C                     PARM 'CLE042'  @SARD   6                                         MD038896
+     C           SCSARD    PARM SCSARD    DSFDY                                             MD038896
+      *                                                                                     MD038896
+     C           @RTCD     IFEQ *BLANKS                                                     MD038896
+     C                     MOVE 'Y'       CLE042  1                                         MD038896
+     C                     ELSE                                                             MD038896
+     C                     MOVE 'N'       CLE042                                            MD038896
+     C                     END                                                              MD038896
 0189 C**
 0190 C                     EXSR ZSYSTM
 0191 C   99                SETON                     U7U8LR
@@ -671,6 +690,12 @@
 0254 C***L3*99***          GOTO END                                       S01194
 0254 C                     GOTO END                                       S01194
      C                     END                                            S01194
+     C           *INL3     IFEQ *ON                                                         MD038896
+     C           CLE042    ANDEQ'Y'                                                         MD038896
+     C                     MOVE CLAS      TCLAS   4                                         MD038896
+     C                     ELSE                                                             MD038896
+     C                     MOVE *BLANKS   TCLAS                                             MD038896
+     C                     ENDIF                                                            MD038896
 0255 C**
 0256 C**   CHANGE OF CUSTOMER - CHAIN TO CLIENT FILE
 0257 C**
@@ -1174,7 +1199,11 @@
 0491 O        D 2      L3 75                                              S01117
 0492 O*******OR**      OFNL3                                              S01117
 0492 O       OR        OFNL3 75                                           S01117
-0495 O                         LNARR     35
+     O                         LTYP       4                                                 MD038896
+     O                         SUTP       7                                                 MD038896
+     O                         TCLAS     11                                                 MD038896
+0495 O**********               LNARR     35                                                 MD038896
+     O                         LNARR     42                                                 MD038896
 0496 O**
 0497 O**   DETAIL LINE 1
 0498 O**

@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD039260           Date 07Jun16               *
+      *  Prev Ament No. MD039016           Date 26May16               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 261070             Date 16Jul09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -30,6 +34,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039260 - No error message related to Local currency if     *
+      *             value date falls on holiday in Local currency     *
+      *             and settlement method is 14                       *
+      *  MD039016 - Different event codes for BDC validation in       *
+      *             various Lending APIs                              *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           for LE Transactions                                 *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  261070 - Warning message not shown when value date is on a   *
@@ -159,6 +171,28 @@
      D OKFlagsDS     E DS                  EXTNAME(LEERPSCPD)
       ***  Flags to indicate whether transaction fields are valid
       *
+     D LoanBDC         DS            60                                                       CLE141
+     D   CCY1                  1      3                                                       CLE141
+     D   CCY2                  4      6                                                       CLE141
+     D   CCY3                  7      9                                                       CLE141
+     D   CCY4                 10     12                                                       CLE141
+     D   CCY5                 13     15                                                       CLE141
+     D   CCY6                 16     18                                                       CLE141
+     D   CCY7                 19     21                                                       CLE141
+     D   CCY8                 22     24                                                       CLE141
+     D   CCY9                 25     27                                                       CLE141
+     D   CCY0                 28     30                                                       CLE141
+     D   LOC1                 31     33                                                       CLE141
+     D   LOC2                 34     36                                                       CLE141
+     D   LOC3                 37     39                                                       CLE141
+     D   LOC4                 40     42                                                       CLE141
+     D   LOC5                 43     45                                                       CLE141
+     D   LOC6                 46     48                                                       CLE141
+     D   LOC7                 49     51                                                       CLE141
+     D   LOC8                 52     54                                                       CLE141
+     D   LOC9                 55     57                                                       CLE141
+     D   LOC0                 58     60                                                       CLE141
+                                                                                              CLE141
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -310,6 +344,10 @@
      C     WTYPE         ANDNE     '  '
       *
      C                   Z-ADD     RPVDAT        ZDAYNO
+     C                   MOVEL     *Blanks       ZLOC                                       MD039260
+     C**********         EVAL      LoanBDC = *Blanks                                  CLE141 CLE141A
+     C**********         EVAL      ZIND = *Blanks                                     CLE141 CLE141A
+     C**********         EVAL      RetCode = *Blanks                                  CLE141 CLE141A
       *
       ***  Find currency to use
       *
@@ -317,6 +355,29 @@
      C     WTYPE         OREQ      '07'
      C     WTYPE         OREQ      '08'
       *
+     C**********         IF        CLE141 = 'Y'                                       CLE141 CLE141A
+     C**********         EVAL      CCY1 = CL_C1PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY2 = CL_C2PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY3 = CL_C3PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY4 = CL_C4PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY5 = CL_C5PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY6 = CL_C6PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY7 = CL_C7PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY8 = CL_C8PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY9 = CL_C9PI                                     CLE141 CLE141A
+     C**********         EVAL      CCY0 = CL_C0PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC1 = CL_L1PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC2 = CL_L2PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC3 = CL_L3PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC4 = CL_L4PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC5 = CL_L5PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC6 = CL_L6PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC7 = CL_L7PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC8 = CL_L8PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC9 = CL_L9PI                                     CLE141 CLE141A
+     C**********         EVAL      LOC0 = CL_L0PI                                     CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C     CEU004        IFEQ      'Y'
      C     WSCCY         ANDNE     *BLANKS
      C     CLE031        OREQ      'Y'                                                        CLE031
@@ -328,21 +389,36 @@
       *
      C                   ELSE
      C                   MOVE      BJLCCY        ZCCY
+     C                   MOVE      BJSLCD        ZLOC                                       MD039260
      C                   ENDIF
       *
       ***  If date is holiday send warning messages
       *
      C**********         Z-ADD     *ZEROS        ZDAYNO                                       261070
+     C**********         IF        CLE141 = 'Y' and LoanBDC <> *Blanks                CLE141 CLE141A
+     C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
+     C**********         PARM      *BLANKS       RetCode           7                  CLE141 CLE141A
+     C**********         PARM                    LoanBDC                              CLE141 CLE141A
+     C**********         PARM                    ZDAYNO                               CLE141 CLE141A
+     C**********         ELSE                                                         CLE141 CLE141A
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZLOC              3
      C                   PARM      *BLANK        ZIND              1
+     C**********         ENDIF                                                        CLE141 CLE141A
       *
      C     WTYPE         IFEQ      '01'
      C     WTYPE         OREQ      '07'
      C     WTYPE         OREQ      '08'
       *
+     C**********         IF        CLE141 = 'Y' and RetCode <> *BLANKS                CLE141 CLE141A
+     C**********         EVAL      WMsgIDXar = '5048508'                              CLE141 CLE141A
+     C**********         EVAL      DDVDATOK = 'N'                                     CLE141 CLE141A
+     C**********         ADD       1             WId                                  CLE141 CLE141A
+     C**********         EVAL      WFldNmXAr(WId) = 'DDVDAT'                          CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C     ZIND          IFEQ      'H'
       *
      C     CEU004        IFEQ      'Y'
@@ -395,6 +471,44 @@
       *
      C                   ENDIF
       *
+      ** Check if Value Date is Holiday in Business Day Convention                           CLE141A
+                                                                                             CLE141A
+     C                   IF        CLE141 = 'Y'                                              CLE141A
+     C                   EVAL      CCY1 = CL_C1PI                                            CLE141A
+     C                   EVAL      CCY2 = CL_C2PI                                            CLE141A
+     C                   EVAL      CCY3 = CL_C3PI                                            CLE141A
+     C                   EVAL      CCY4 = CL_C4PI                                            CLE141A
+     C                   EVAL      CCY5 = CL_C5PI                                            CLE141A
+     C                   EVAL      CCY6 = CL_C6PI                                            CLE141A
+     C                   EVAL      CCY7 = CL_C7PI                                            CLE141A
+     C                   EVAL      CCY8 = CL_C8PI                                            CLE141A
+     C                   EVAL      CCY9 = CL_C9PI                                            CLE141A
+     C                   EVAL      CCY0 = CL_C0PI                                            CLE141A
+     C                   EVAL      LOC1 = CL_L1PI                                            CLE141A
+     C                   EVAL      LOC2 = CL_L2PI                                            CLE141A
+     C                   EVAL      LOC3 = CL_L3PI                                            CLE141A
+     C                   EVAL      LOC4 = CL_L4PI                                            CLE141A
+     C                   EVAL      LOC5 = CL_L5PI                                            CLE141A
+     C                   EVAL      LOC6 = CL_L6PI                                            CLE141A
+     C                   EVAL      LOC7 = CL_L7PI                                            CLE141A
+     C                   EVAL      LOC8 = CL_L8PI                                            CLE141A
+     C                   EVAL      LOC9 = CL_L9PI                                            CLE141A
+     C                   EVAL      LOC0 = CL_L0PI                                            CLE141A
+                                                                                             CLE141A
+     C                   IF        LoanBDC <> *Blanks                                        CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode           7                         CLE141A
+     C                   PARM                    LoanBDC                                     CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+     C                   IF        RetCode <> *Blanks                                        CLE141A
+     C                   EVAL      DDVDATOK = 'N'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C**********         EVAL      WMsgIDXar(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXar(WId) = '5048562'                               MD039016
+     C                   EVAL      WFldNmXAr(WId) = 'DDVDAT'                                 CLE141A
+     C                   ENDIF                                                               CLE141A
+     C                   ENDIF                                                               CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -544,6 +658,18 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
+                                                                                              CLE141
+      ** Determine if CLE141 is installed                                                     CLE141
+                                                                                              CLE141
+     C                   MOVE      'N'           CLE141            1                          CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       @RTCD                                        CLE141
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVE      'Y'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
       *
       ***  Determine whether program is running interactively or in batch
       ***   ( 0 = batch   1 = interactive)

@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE164             Date 28Nov14               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE164             Date 28Nov14               *
       *                 MD029048           Date 27Oct14               *
       *                 MD024398           Date 11May14               *
       *                 MD025467           Date 08May14               *
@@ -104,8 +105,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           (Recompile)                                         *
+      *           for Lending Transactions                            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD029048 - Default Receipt/Payment details for generated RE  *
       *             via MR.                                           *
@@ -830,6 +832,9 @@
      D PRI1            S              1S 0                                                  AR322732
      D WUpdExpo        S              1A                                                    AR806351
      D UpdateFlag      S              1A                                                    MD022533
+     D CurArr          S              3    DIM(10)                                            CLE141
+     D LocArr          S              3    DIM(10)                                            CLE141
+     D PPDDI           S              1                                                       CLE141
       *
       /EJECT
       *    =============
@@ -892,7 +897,29 @@
                                                                                               CLE134
      I              XRFI                        XRFIL                                         CLE134
      I              XRFN                        XRFNL                                         CLE134
-                                                                                              CLE134
+                                                                                              CLE141
+      ** Business Day Convention                                                              CLE141
+     I              C1PI                        C1PIL                                         CLE141
+     I              C2PI                        C2PIL                                         CLE141
+     I              C3PI                        C3PIL                                         CLE141
+     I              C4PI                        C4PIL                                         CLE141
+     I              C5PI                        C5PIL                                         CLE141
+     I              C6PI                        C6PIL                                         CLE141
+     I              C7PI                        C7PIL                                         CLE141
+     I              C8PI                        C8PIL                                         CLE141
+     I              C9PI                        C9PIL                                         CLE141
+     I              C0PI                        C0PIL                                         CLE141
+     I              L1PI                        L1PIL                                         CLE141
+     I              L2PI                        L2PIL                                         CLE141
+     I              L3PI                        L3PIL                                         CLE141
+     I              L4PI                        L4PIL                                         CLE141
+     I              L5PI                        L5PIL                                         CLE141
+     I              L6PI                        L6PIL                                         CLE141
+     I              L7PI                        L7PIL                                         CLE141
+     I              L8PI                        L8PIL                                         CLE141
+     I              L9PI                        L9PIL                                         CLE141
+     I              L0PI                        L0PIL                                         CLE141
+
      ICLOANCKF
       ***  Rename fields for Loans file - B
       *
@@ -2078,6 +2105,31 @@
 
      C                   MOVE      W@STLL        ZLOC
 
+      ** Get Currency and Location Value (Arrays)                                             CLE141
+                                                                                              CLE141
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EVAL      CurArr(1) = C1PIL                                          CLE141
+     C                   EVAL      CurArr(2) = C2PIL                                          CLE141
+     C                   EVAL      CurArr(3) = C3PIL                                          CLE141
+     C                   EVAL      CurArr(4) = C4PIL                                          CLE141
+     C                   EVAL      CurArr(5) = C5PIL                                          CLE141
+     C                   EVAL      CurArr(6) = C6PIL                                          CLE141
+     C                   EVAL      CurArr(7) = C7PIL                                          CLE141
+     C                   EVAL      CurArr(8) = C8PIL                                          CLE141
+     C                   EVAL      CurArr(9) = C9PIL                                          CLE141
+     C                   EVAL      CurArr(10)= C0PIL                                          CLE141
+     C                   EVAL      LocArr(1) = L1PIL                                          CLE141
+     C                   EVAL      LocArr(2) = L2PIL                                          CLE141
+     C                   EVAL      LocArr(3) = L3PIL                                          CLE141
+     C                   EVAL      LocArr(4) = L4PIL                                          CLE141
+     C                   EVAL      LocArr(5) = L5PIL                                          CLE141
+     C                   EVAL      LocArr(6) = L6PIL                                          CLE141
+     C                   EVAL      LocArr(7) = L7PIL                                          CLE141
+     C                   EVAL      LocArr(8) = L8PIL                                          CLE141
+     C                   EVAL      LocArr(9) = L9PIL                                          CLE141
+     C                   EVAL      LocArr(10)= L0PIL                                          CLE141
+     C                   ENDIF                                                                CLE141
+
       ***  If CLE005 exist, calculate the next repayment date based on
       ***  the Payment Due Day Indicator
 
@@ -2090,6 +2142,25 @@
      C                   PARM                    ZLOC              3
      C                   PARM                    ZZERR@            7
      C                   Z-ADD     *ZERO         ZNRDYS
+      ** Business Day Convention Date Calculation                                             CLE141
+     C**********         IF        CLE141 = 'Y' and (MDST = 01 or                     CLE141 CLE141A
+     C**********                   MDST = 07 or MDST = 08)                            CLE141 CLE141A
+     C                   IF        CLE141 = 'Y'                                              CLE141A
+      *                                                                                       CLE141
+     C                   IF        PDDIL = 'A'                                                CLE141
+     C                   Z-ADD     ZDAYNO        ZDYNBR                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   CALL      'LEZBDYCD'                                                 CLE141
+     C                   PARM                    ZDAYNO                                       CLE141
+     C                   PARM                    CurArr                                       CLE141
+     C                   PARM                    LocArr                                       CLE141
+     C                   PARM      PDDIL         PPDDI                                        CLE141
+     C                   PARM                    BJDFIN                                       CLE141
+     C                   PARM                    ZCCY                                        CLE141A
+     C                   PARM                    ZLOC                                        CLE141A
+     C                   PARM                    ZDYNBR                                       CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ELSE                                                                 CLE141
      C                   SELECT
      C     PDDIL         WHENEQ    'A'
      C                   Z-ADD     ZDAYNO        ZDYNBR
@@ -2150,7 +2221,30 @@
      C                   PARM                    ZDYNBR            5 0
      C                   ENDIF
      C                   ENDSL
+     C                   ENDIF                                                                CLE141
      C                   ELSE
+     C**********         IF        CLE141 = 'Y' and (MDST = 01 or                     CLE141 CLE141A
+     C**********                   MDST = 07 or  MDST = 08)                           CLE141 CLE141A
+     C                   IF        CLE141 = 'Y'                                              CLE141A
+      *                                                                                       CLE141
+     C                   CallB     'ZFRQB3'                                                   CLE141
+     C                   PARM                    ZFREQ                                        CLE141
+     C                   PARM                    ZDAYNO                                       CLE141
+     C                   PARM                    ZMDAY                                        CLE141
+     C                   PARM                    ZCCY                                         CLE141
+     C                   PARM                    ZLOC                                         CLE141
+     C                   PARM                    ZZERR@                                       CLE141
+      *                                                                                       CLE141
+     C                   CALL      'LEZBDYCD'                                                 CLE141
+     C                   PARM                    ZDAYNO                                       CLE141
+     C                   PARM                    CurArr                                       CLE141
+     C                   PARM                    LocArr                                       CLE141
+     C                   PARM      *Blanks       PDDIL                                        CLE141
+     C                   PARM                    BJDFIN                                       CLE141
+     C                   PARM                    ZCCY                                        CLE141A
+     C                   PARM                    ZLOC                                        CLE141A
+     C                   PARM                    ZDYNBR                                       CLE141
+     C                   ELSE                                                                 CLE141
      C                   CallB     'ZFREQB'
      C                   PARM                    PRETCode          7
      C                   PARM                    ZFREQ
@@ -2168,6 +2262,7 @@
      C                   PARM                    ZDYNBR            5 0
      C                   PARM                    ZCCY              3
      C                   PARM                    ZLOC              3
+     C                   ENDIF                                                                CLE141
      C                   ENDIF
      C                   ENDIF
 
@@ -6679,6 +6774,20 @@
      C                   ELSE                                                                 CLE134
      C                   MOVEL     'N'           CLE134            1                          CLE134
      C                   ENDIF                                                                CLE134
+                                                                                              CLE141
+      ** Check if Currency and Location Business Day Convention (CLE141) is On                CLE141
+                                                                                              CLE141
+     C                   CALL      'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       @RTCD                                        CLE141
+     C                   PARM      '*KEY    '    @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVEL     'Y'           CLE141                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   MOVEL     'N'           CLE141            1                          CLE141
+     C                   ENDIF                                                                CLE141
       *                                                                                     MD024342
      C                   MOVEL     'N'           MTHREAD           1                        MD024342
      C**********         MOVE      'MAPY'        WAPIC                             MD024342 MD025467

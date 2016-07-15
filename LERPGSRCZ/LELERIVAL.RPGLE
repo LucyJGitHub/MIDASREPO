@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR702532           Date 13Jan15               *
+      *  Last Amend No. MD039017           Date 26May16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR702532           Date 13Jan15               *
       *                 243608             Date 13Mar15               *
       *                 MD031083           Date 25Nov14               *
       *                 MD028338           Date 25Nov14               *
@@ -104,8 +105,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039017 - Amend generated overridable error message for     *
+      *             Rollover Date                                     *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           (Recompile)                                         *
+      *           for LE Transactions                                 *
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
       *             is still 'R'. Pass reject action parameter to     *
       *             skip validation during rejection to prevent the   *
@@ -480,6 +483,28 @@
      D  WFSEQ                 10     11  0                                                    CLE031
      D  WRCTP                 12     12                                                       CLE031
                                                                                               CLE031
+     D LoanBDC         DS            60                                                       CLE141
+     D   CCY1                  1      3                                                       CLE141
+     D   CCY2                  4      6                                                       CLE141
+     D   CCY3                  7      9                                                       CLE141
+     D   CCY4                 10     12                                                       CLE141
+     D   CCY5                 13     15                                                       CLE141
+     D   CCY6                 16     18                                                       CLE141
+     D   CCY7                 19     21                                                       CLE141
+     D   CCY8                 22     24                                                       CLE141
+     D   CCY9                 25     27                                                       CLE141
+     D   CCY0                 28     30                                                       CLE141
+     D   LOC1                 31     33                                                       CLE141
+     D   LOC2                 34     36                                                       CLE141
+     D   LOC3                 37     39                                                       CLE141
+     D   LOC4                 40     42                                                       CLE141
+     D   LOC5                 43     45                                                       CLE141
+     D   LOC6                 46     48                                                       CLE141
+     D   LOC7                 49     51                                                       CLE141
+     D   LOC8                 52     54                                                       CLE141
+     D   LOC9                 55     57                                                       CLE141
+     D   LOC0                 58     60                                                       CLE141
+                                                                                              CLE141
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -574,6 +599,7 @@
      D PNewSpread      S             11P 7                                                    CRE073
      D PFinalRate      S             11P 7                                                  AR847249
      D DDFRCOOK        S              1                                                     MD028338
+     D RetCode         S              7                                                       CLE141
                                                                                               CRE073
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
@@ -7574,6 +7600,32 @@
      C                   MOVEL     DDNBRAB       WNBRAW
      C                   ENDIF
      C                   ENDIF
+     C                   EVAL      PHolInd = *Blanks                                          CLE141
+                                                                                              CLE141
+      ** Move the Business Day Convention values to Data Area                                 CLE141
+                                                                                              CLE141
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   EVAL      CCY1 = C1PR                                                CLE141
+     C                   EVAL      CCY2 = C2PR                                                CLE141
+     C                   EVAL      CCY3 = C3PR                                                CLE141
+     C                   EVAL      CCY4 = C4PR                                                CLE141
+     C                   EVAL      CCY5 = C5PR                                                CLE141
+     C                   EVAL      CCY6 = C6PR                                                CLE141
+     C                   EVAL      CCY7 = C7PR                                                CLE141
+     C                   EVAL      CCY8 = C8PR                                                CLE141
+     C                   EVAL      CCY9 = C9PR                                                CLE141
+     C                   EVAL      CCY0 = C0PR                                                CLE141
+     C                   EVAL      LOC1 = L1PR                                                CLE141
+     C                   EVAL      LOC2 = L2PR                                                CLE141
+     C                   EVAL      LOC3 = L3PR                                                CLE141
+     C                   EVAL      LOC4 = L4PR                                                CLE141
+     C                   EVAL      LOC5 = L5PR                                                CLE141
+     C                   EVAL      LOC6 = L6PR                                                CLE141
+     C                   EVAL      LOC7 = L7PR                                                CLE141
+     C                   EVAL      LOC8 = L8PR                                                CLE141
+     C                   EVAL      LOC9 = L9PR                                                CLE141
+     C                   EVAL      LOC0 = L0PR                                                CLE141
+     C                   ENDIF                                                                CLE141
       *
       **  If New Next Rollover date entered, send
       **  warning message if holiday in Loan currency.
@@ -7593,7 +7645,21 @@
      C                   ENDIF
       *
      C                   MOVE      CCY           PCurrency
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *Blanks       RetCode                                      CLE141
+     C                   PARM                    LoanBDC                                      CLE141
+     C                   PARM                    PDateIn                                      CLE141
+     C                   IF        RetCode <> *Blanks                                         CLE141
+     C                   EVAL      WIdx = WIdx + 1                                            CLE141
+     C                   EVAL      WFldNamArr(WIdx) = 'DDNRODB'                               CLE141
+     C**********         EVAL      WMsgIDArr(WIdx) = '5048509'                       CLE141 MD039017
+     C                   EVAL      WMsgIDArr(WIdx) = '5048563'                              MD039017
+     C                   MOVE      'W'           DDNrodOK                                     CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ELSE                                                                 CLE141
      C                   EXSR      ZCHKH
+     C                   ENDIF                                                                CLE141
       *
      C     PHolInd       IFEQ      'H'
      C                   ADD       1             WIdx
@@ -7627,7 +7693,21 @@
      C                   ENDIF
       *
      C                   MOVE      CCY           PCurrency
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *Blanks       RetCode                                      CLE141
+     C                   PARM                    LoanBDC                                      CLE141
+     C                   PARM                    PDateIn                                      CLE141
+     C                   IF        RetCode <> *Blanks                                         CLE141
+     C                   EVAL      WIdx = WIdx + 1                                            CLE141
+     C                   EVAL      WFldNamArr(WIdx) = 'DDRLDTB'                               CLE141
+     C**********         EVAL      WMsgIDArr(WIdx) = '5048509'                       CLE141 MD039017
+     C                   EVAL      WMsgIDArr(WIdx) = '5048564'                              MD039017
+     C                   MOVE      'W'           DDNrodOK                                     CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ELSE                                                                 CLE141
      C                   EXSR      ZCHKH
+     C                   ENDIF                                                                CLE141
       *
      C     PHolInd       IFEQ      'H'
      C                   ADD       1             WIdx
@@ -9196,7 +9276,20 @@
      C                   ELSE                                                                 CRE073
      C                   MOVE      'N'           CRE073                                       CRE073
      C                   ENDIF                                                                CRE073
-      *                                                                                       CAS019
+                                                                                              CLE141
+      ** Determine if CLE141 is installed                                                     CLE141
+                                                                                              CLE141
+     C                   MOVE      'N'           CLE141            1                          CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       PRTCD                                        CLE141
+     C                   PARM      '*VERIFY '    POPTN                                        CLE141
+     C                   PARM      'CLE141'      PSARD                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+      *                                                                                       CLE141
+     C     PRTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVE      'Y'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
+      *
       **  Key list for LELOAML0
       *
      C     WLOAM         KLIST

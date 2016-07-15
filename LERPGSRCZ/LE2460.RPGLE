@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 01Mar16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions - Phase 2                      *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -177,6 +180,35 @@
       *
       ** Externally described DS for Historic Base rate
      D SDBSHS        E DS                  EXTNAME(SDBSHSPD)
+                                                                                              CLE141
+      ** Externally described DS for Switchable Feature Details                               CLE141
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE141
+                                                                                              CLE141
+      ** DS for BDC Currencies for Rollover and Rate Fixing                                   CLE141
+     D DSCCYPR         DS                                                                     CLE141
+     D  L0C1PR                                                                                CLE141
+     D  L0C2PR                                                                                CLE141
+     D  L0C3PR                                                                                CLE141
+     D  L0C4PR                                                                                CLE141
+     D  L0C5PR                                                                                CLE141
+     D  L0C6PR                                                                                CLE141
+     D  L0C7PR                                                                                CLE141
+     D  L0C8PR                                                                                CLE141
+     D  L0C9PR                                                                                CLE141
+     D  L0C0PR                                                                                CLE141
+                                                                                              CLE141
+      ** DS for BDC Locations for Rollover and Rate Fixing                                    CLE141
+     D DSLOCPR         DS                                                                     CLE141
+     D  L0L1PR                                                                                CLE141
+     D  L0L2PR                                                                                CLE141
+     D  L0L3PR                                                                                CLE141
+     D  L0L4PR                                                                                CLE141
+     D  L0L5PR                                                                                CLE141
+     D  L0L6PR                                                                                CLE141
+     D  L0L7PR                                                                                CLE141
+     D  L0L8PR                                                                                CLE141
+     D  L0L9PR                                                                                CLE141
+     D  L0L0PR                                                                                CLE141
 
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
@@ -191,12 +223,14 @@
      D WBaseRate       S             11P 7
      D WSpreadInd      S              1
      D WSpread         S             11P 7
+     D CLE141          S              1                                                       CLE141
 
       ** Parameter definition
      D PRtnCde         S              7
      D POption         S              7
      D PCYCD           S              3
      D PBase           S              2
+     D PSard           S              6                                                       CLE141
 
       ** Parameter definition of standard modules
      D PZInpDay        S              5P 0
@@ -204,6 +238,9 @@
      D PZOutDay        S              5P 0
      D PZCcy           S              3
      D PZLocation      S              3
+     D PZCurr          S             30                                                       CLE141
+     D PZLocn          S             30                                                       CLE141
+     D PZMode          S              1                                                       CLE141
 
       *****************************************************************
       /EJECT
@@ -325,12 +362,22 @@
       ** Working day which is the loan rollover rate fixing days
       ** forward from the run date.
      C                   MOVE      L0RFDY        PZDaysFwd
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   CALL      'LEZBDYRF'                                                 CLE141
+     C                   PARM      BJRDNB        PZInpDay                                     CLE141
+     C                   PARM                    PZDaysFwd                                    CLE141
+     C                   PARM      DSCCYPR       PZCurr                                       CLE141
+     C                   PARM      DSLOCPR       PZLocn                                       CLE141
+     C                   PARM      'F'           PZMode                                       CLE141
+     C                   PARM      *ZEROS        PZOutDay                                     CLE141
+     C                   ELSE                                                                 CLE141
      C                   CALLB     'ZFWDT'
      C                   PARM      BJRDNB        PZInpDay
      C                   PARM                    PZDaysFwd
      C                   PARM      *ZERO         PZOutDay
      C                   PARM      WWorkCcy      PZCcy
      C                   PARM      *BLANKS       PZLocation
+     C                   ENDIF                                                                CLE141
      C                   IF        (L0RLDT <> 0)
      C                             AND (L0RLDT <= PZOutDay)
      C                   EXSR      SRFixRate
@@ -371,12 +418,22 @@
       ** Working day which is the loan rollover rate fixing days
       ** back from the rollover date
      C                   MOVE      L0RFDY        PDaysBck
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   CALL      'LEZBDYRF'                                                 CLE141
+     C                   PARM      L0RLDT        PInpOutDay                                   CLE141
+     C                   PARM                    PDaysBck                                     CLE141
+     C                   PARM      DSCCYPR       PZCurr                                       CLE141
+     C                   PARM      DSLOCPR       PZLocn                                       CLE141
+     C                   PARM      'B'           PZMode                                       CLE141
+     C                   PARM      *ZEROS        PDayNbr                                      CLE141
+     C                   ELSE                                                                 CLE141
      C                   CALLB     'ZBKDT'
      C                   PARM      L0RLDT        PInpOutDay        5 0
      C                   PARM      WWorkCcy      PCYCD
      C                   PARM      *BLANKS       PZLocation
      C                   PARM                    PDaysBck          2 0
      C                   PARM                    PDayNbr           5 0
+     C                   ENDIF                                                                CLE141
       *                                                                                       235907
       ** Use the new base rate if the value date of the new rate is                           235907
       ** before the fixing date                                                               235907
@@ -527,6 +584,21 @@
      C                   EXSR      SRAudit
      C                   ENDIF
       *
+      ** Determine if CLE141 is installed                                                     CLE141
+      *                                                                                       CLE141
+     C                   MOVE      'N'           CLE141                                       CLE141
+     C                   CALL      'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANK        PRtnCde                                      CLE141
+     C                   PARM      '*VERIFY'     POption                                      CLE141
+     C                   PARM      'CLE141'      PSard                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+                                                                                              CLE141
+     C     PRtnCde       IFEQ      *BLANK                                                     CLE141
+     C                   MOVE      'Y'           CLE141                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   MOVE      'N'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
      C                   ENDSR
       *****************************************************************
       /EJECT

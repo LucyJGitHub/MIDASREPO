@@ -11,8 +11,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD025521           Date 19Aug14               *
+      *  Last Amend No. MD039016           Date 26May16               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD025521           Date 19Aug14               *
       *                 AR804863           Date 10Dec12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
@@ -40,6 +42,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039016 - Different event codes for BDC validation in       *
+      *             various Lending APIs                              *
+      *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  MD025521 - Recompile due to changes on LECLI2PD.             *
@@ -84,7 +89,7 @@
       ** +--------------------------------------+
       *****************************************************************
       *
- 
+
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LECLIPEV01
       *
@@ -108,10 +113,10 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       *
       ** Program Status Data Structure
       ** =============================
@@ -153,7 +158,7 @@
       *
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
- 
+
       *
       ** +--------------------------------------+
       ** Ê Arrays and Data Structures           Ê
@@ -202,15 +207,16 @@
       ***  New Loan in Screen Format - Screen 2
       *
      D NwLnScnFmt7   E DS                  EXTNAME(LECLI7PD)                                  CLE141
+     D  CurLocPI              61    120                                                       CLE141
       ** New Loan in Screen Format - Business Day Conv                                        CLE141
- 
+
      D OKFlag1DS     E DS                  EXTNAME(LEECLI1PD)
       ***  Flags to indicate whether transaction fields are valid
       *
      D OKFlag2DS     E DS                  EXTNAME(LEECLI2PD)
       ***  Flags to indicate whether transaction fields are valid
       *
- 
+
      D Idx             S              3P 0
       ** Index for arrays of error message ids etc
       *
@@ -218,7 +224,7 @@
      D WIdx            S              3P 0                                                   BUG4351
       ***  Index for arrays of of warning message ids etc
       *
- 
+
      D  TransData      DS           500
       ***  Shared data
       *
@@ -414,6 +420,10 @@
       ** +--------------------------------------+
       *
      D PACCD           S             10A                                                      CGL029
+     D CLE141          S              1A                                                      CLE141
+     D BDCHolInd       S              7A                                                      CLE141
+     D LoanBDC         S             60A                                                      CLE141
+     D DayNo           S              5  0                                                    CLE141
       *
       ** +--------------------------------------+
       ** Ê Rename fields                        Ê
@@ -432,7 +442,7 @@
       ** Ê =====================================  Ê
       ** +----------------------------------------+
       /COPY WNCPYSRC,LECLIPEV02
- 
+
       *
       *****************************************************************
       /EJECT
@@ -443,13 +453,13 @@
       ** Ê                                                                Ê
       ** +----------------------------------------------------------------+
       *
- 
+
       /COPY WNCPYSRC,LECLIPVE03
- 
+
       *
       ***  Extra Validation after Extended Settlement
       *    ==========================================
- 
+
       *
       ***  Reset variables updated by each module
       *
@@ -620,7 +630,7 @@
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -628,7 +638,7 @@
       *  SRHOLY - Validate Holidays                                   *
       *****************************************************************
      C     SRHOLY        BEGSR
- 
+
       *
       ** Holiday validations if loan currency is valid
       ** Test loan currency holiday for settlements 01, 07 and 08
@@ -747,6 +757,10 @@
      C                   MOVE      BJSLCD        ZLOC
      C                   ENDIF
       *
+      ***Use*core*holiday*validation*when*CLE141*is*OFF*or*************               CLE141 CLE141A
+      ***settlement*type*not*equal*to*01,*07*or*08*********************               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         IF        CLE141 = 'N' or *IN97 = '0'                        CLE141 CLE141A
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -774,6 +788,28 @@
      C                   ENDIF
      C**********         ENDIF                                                               BUG4351
      C                   ENDIF
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
+      ** If CLE141 is ON, validate holiday with Business Day Convention                       CLE141
+      ** for interest and principal payments                                                  CLE141
+                                                                                              CLE141
+     C**********         IF        CLE141 = 'Y'                                       CLE141 CLE141A
+     C**********         IF        WMDST = 1 or WMDST = 7 or                          CLE141 CLE141A
+     C**********                   WMDST = 8                                          CLE141 CLE141A
+     C                   IF        CLE141 = 'Y' and CurLocPI <> *BLANKS                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *BLANKS       BDCHolInd                                    CLE141
+     C                   PARM      CurLocPI      LoanBDC                                      CLE141
+     C                   PARM      WSVMD         DayNo                                        CLE141
+     C                   IF        BDCHolInd = 'HOLIDAY'                                      CLE141
+     C                   EVAL      DDMDATOK = 'W'                                             CLE141
+     C                   EVAL      WId = WId + 1                                              CLE141
+     C                   EVAL      WFldNmXAr(WId) = 'DDMDAT'                                  CLE141
+     C                   EVAL      WMsgIDXar(WId) = '5048508'                                 CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ENDIF                                                                CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C                   ENDIF
       *
       ** Test interest payment date for holiday
@@ -815,6 +851,10 @@
      C                   MOVE      BJSLCD        ZLOC
      C                   ENDIF
       *
+      ***Use*core*holiday*validation*when*CLE141*is*OFF*or*************               CLE141 CLE141A
+      ***settlement*type*not*equal*to*01,*07*or*08*********************               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         IF        CLE141 = 'N' or *IN97 = '0'                        CLE141 CLE141A
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -841,6 +881,29 @@
      C                   ENDIF
      C**********         ENDIF                                                               BUG4351
      C                   ENDIF
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
+      ** If CLE141 is ON, validate holiday with Business Day Convention                       CLE141
+      ** for interest and principal payments                                                  CLE141
+                                                                                              CLE141
+     C**********         IF        CLE141 = 'Y'                                       CLE141 CLE141A
+     C**********         IF        WMDST = 1 or WMDST = 7 or                          CLE141 CLE141A
+     C**********                   WMDST = 8                                          CLE141 CLE141A
+     C                   IF        CLE141 = 'Y' and CurLocPI <> *BLANKS                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *BLANKS       BDCHolInd                                    CLE141
+     C                   PARM      CurLocPI      LoanBDC                                      CLE141
+     C                   PARM      WSVID         DayNo                                        CLE141
+     C                   IF        BDCHolInd = 'HOLIDAY'                                      CLE141
+     C                   EVAL      DDNIDTOK = 'W'                                             CLE141
+     C                   EVAL      WId = WId + 1                                              CLE141
+     C                   EVAL      WFldNmXAr(WId) = 'DDNIDT'                                  CLE141
+     C**********         EVAL      WMsgIDXar(WId) = '5048508'                        CLE141 MD039016
+     C                   EVAL      WMsgIDXar(WId) = '5048559'                               MD039016
+     C                   ENDIF                                                                CLE141
+     C                   ENDIF                                                                CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C                   ENDIF
       *
       ** Test repayment date for holiday
@@ -882,6 +945,10 @@
      C                   MOVE      BJSLCD        ZLOC
      C                   ENDIF
       *
+      ***Use*core*holiday*validation*when*CLE141*is*OFF*or*************               CLE141 CLE141A
+      ***settlement*type*not*equal*to*01,*07*or*08*********************               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         IF        CLE141 = 'N' or *IN97 = '0'                        CLE141 CLE141A
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -908,6 +975,29 @@
      C                   ENDIF
      C**********         ENDIF                                                               BUG4351
      C                   ENDIF
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
+      ** If CLE141 is ON, validate holiday with Business Day Convention                       CLE141
+      ** for interest and principal payments                                                  CLE141
+                                                                                              CLE141
+     C**********         IF        CLE141 = 'Y'                                       CLE141 CLE141A
+     C**********         IF        WMDST = 1 or WMDST = 7 or                          CLE141 CLE141A
+     C**********                   WMDST = 8                                          CLE141 CLE141A
+     C                   IF        CLE141 = 'Y' and CurLocPI <> *BLANKS                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *BLANKS       BDCHolInd                                    CLE141
+     C                   PARM      CurLocPI      LoanBDC                                      CLE141
+     C                   PARM      WSVRP         DayNo                                        CLE141
+     C                   IF        BDCHolInd = 'HOLIDAY'                                      CLE141
+     C                   EVAL      DDNRPDOK = 'W'                                             CLE141
+     C                   EVAL      WId = WId + 1                                              CLE141
+     C                   EVAL      WFldNmXAr(WId) = 'DDNRPD'                                  CLE141
+     C**********         EVAL      WMsgIDXar(WId) = '5048508'                        CLE141 MD039016
+     C                   EVAL      WMsgIDXar(WId) = '5048560'                               MD039016
+     C                   ENDIF                                                                CLE141
+     C                   ENDIF                                                                CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C                   ENDIF
       *
      C                   ENDIF
@@ -1231,6 +1321,18 @@ E004 C                   ENDIF
      C     @RTCD         IFEQ      *BLANKS                                                    CLE031
      C                   MOVE      'Y'           CLE031                                       CLE031
      C                   ENDIF                                                                CLE031
+                                                                                              CLE141
+      ** Determine if CLE141 is installed                                                     CLE141
+                                                                                              CLE141
+     C                   MOVE      'N'           CLE141                                       CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       @RTCD                                        CLE141
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVE      'Y'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
       *
       ***  Program, module and procedure names for database error processing.
       ***  =================================================================

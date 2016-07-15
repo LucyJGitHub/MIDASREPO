@@ -11,8 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD039016           Date 26May16               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 MD038457           Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CLE139             Date 06Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -29,6 +33,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039016 - Different event codes for BDC validation in       *
+      *             various Lending APIs                              *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  MD038457 - When initial settlement type is 08 and no         *
+      *             amendments on settlement type system did not      *
+      *             generate warning message related to holidays      *
+      *  CLE141 - Currency and Location Business Day Convention       *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -53,6 +64,8 @@
       *
       * Hook to enable non-core files to be included
       /COPY WNCPYSRC,LEFEEMEV01
+     FCLOANL4   IF   E           K DISK    INFSR(*PSSR)                                       CLE141
+     F                                     PREFIX(pd_)                                        CLE141
       *
       *****************************************************************
       ** +--------------------------------------+
@@ -74,10 +87,10 @@
       **    RunBefore  1A (for the PSSR)
       *
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       *
       ** Program Status Data Structure
       ** =============================
@@ -119,7 +132,7 @@
       *
      D XArrayMax       C                   CONST(40)
       ***  The maximum size of the appended error arrays
- 
+
       *
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
@@ -144,6 +157,10 @@
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
       ***  Array of warning message data.
       *
+     D Kpd_LNRF        S                   INZ LIKE(pd_LNRF)                                  CLE141
+     D Kpd_RECI        S                   INZ LIKE(pd_RECI)                                  CLE141
+     D WFSTTL          S                   INZ LIKE(FLRSTM)                                   CLE141
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ***  External DS for bank details
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
@@ -160,10 +177,10 @@
       *
      D CrFeFilFmt    E DS                  EXTNAME(LEFEED)
       ***  Current Fee in File Format
- 
+
      D NwFeScnFmt    E DS                  EXTNAME(LEFEEMPD)
       ***  New Fee in Screen Format
- 
+
      D ValidFeem     E DS                  EXTNAME(LEVFEEMPD)
      D QQOURS1       E                     EXTFLD(QQOURS)                                     CGL029
       ***  New Fee in file format
@@ -173,24 +190,24 @@
      D  VFPay                377    921                                                       CGL029
      D  VFRecEx             1076   1093                                                       CGL029
      D  VFPayEx             1094   1111                                                       CGL029
- 
+
      D F_REC         E DS                  EXTNAME(SDESFRPD)
       * File Receive instructions
      D***FLREC**                1     69                                                      CGL029
      D  FLREC                  1     75                                                       CGL029
- 
+
      D F_PAY         E DS                  EXTNAME(SDESFPPD)
       * File Payment instructions
      D***FLPAY**                1    559                                                      CGL029
      D  FLPAY                  1    565                                                       CGL029
- 
+
      D F_FRI         E DS                  EXTNAME(SDESFFPD)
       * File Fra/irs instructions
- 
+
       *
      D OKFee         E DS                  EXTNAME(LEEFEEMPD)
       ***  Error indicators Screen
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -198,13 +215,18 @@
       *
      D RespMode        S              1A
       ** Response Mode, received as a parameter from the common header
- 
+
      D Idx             S              3P 0
       ** Index for arrays of error message ids etc
- 
+
       *
      D WId             S              3P 0
       ***  Index for arrays of of warning message ids etc
+
+     D CLE141          S              1A                                                      CLE141
+     D CurLocArr       S              3    DIM(20)                                            CLE141
+     D CurLocDS        S             60                                                      CLE141A
+     D RetCode         S              7A                                                      CLE141
       *
       *
       ** +--------------------------------------+
@@ -224,7 +246,7 @@
       ** ¦ =====================================  ¦
       ** +----------------------------------------+
       /COPY WNCPYSRC,LEFEEMEV02
- 
+
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -234,17 +256,49 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
       *
- 
+
       /COPY WNCPYSRC,LEFEEMVE03
- 
+
       *
       ***  Extra Validation after Extended Settlement
       *    ==========================================
- 
+
       *
       ***  Reset variables updated by each module
       *
      C                   EXSR      RESETERRS
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     VFLOAN        ANDNE     *blanks                                                   CLE141A
+     C                   Eval      Kpd_RECI = 'D'                                            CLE141A
+     C                   Eval      Kpd_LNRF = VFLOAN                                         CLE141A
+     C     KCLOANL4      CHAIN     CLOANL4                                                   CLE141A
+     C                   IF        %FOUND(CLOANL4)                                           CLE141A
+      ** Set the value for Business Day Convention Fields                                    CLE141A
+     C                   EVAL      CurLocArr(1) = PD_C1PI                                    CLE141A
+     C                   EVAL      CurLocArr(2) = PD_C2PI                                    CLE141A
+     C                   EVAL      CurLocArr(3) = PD_C3PI                                    CLE141A
+     C                   EVAL      CurLocArr(4) = PD_C4PI                                    CLE141A
+     C                   EVAL      CurLocArr(5) = PD_C5PI                                    CLE141A
+     C                   EVAL      CurLocArr(6) = PD_C6PI                                    CLE141A
+     C                   EVAL      CurLocArr(7) = PD_C7PI                                    CLE141A
+     C                   EVAL      CurLocArr(8) = PD_C8PI                                    CLE141A
+     C                   EVAL      CurLocArr(9) = PD_C9PI                                    CLE141A
+     C                   EVAL      CurLocArr(10) = PD_C0PI                                   CLE141A
+     C                   EVAL      CurLocArr(11) = PD_L1PI                                   CLE141A
+     C                   EVAL      CurLocArr(12) = PD_L2PI                                   CLE141A
+     C                   EVAL      CurLocArr(13) = PD_L3PI                                   CLE141A
+     C                   EVAL      CurLocArr(14) = PD_L4PI                                   CLE141A
+     C                   EVAL      CurLocArr(15) = PD_L5PI                                   CLE141A
+     C                   EVAL      CurLocArr(16) = PD_L6PI                                   CLE141A
+     C                   EVAL      CurLocArr(17) = PD_L7PI                                   CLE141A
+     C                   EVAL      CurLocArr(18) = PD_L8PI                                   CLE141A
+     C                   EVAL      CurLocArr(19) = PD_L9PI                                   CLE141A
+     C                   EVAL      CurLocArr(20) = PD_L0PI                                   CLE141A
+     C                   MOVEA     CURLOCARR     CURLOCDS                                    CLE141A
+
+     C                   ENDIF                                                               CLE141A
+     C                   ENDIF                                                               CLE141A
       *
      C     CEU004        IFEQ      'Y'
      C     CLE031        OREQ      'Y'                                                        CLE031
@@ -257,6 +311,17 @@
      C                   MOVE      FLPSCY        WSCCY
      C                   ENDIF
      C                   ENDIF
+
+      ** use the receipt settlement method from sceen on                                      CLE141
+      ** checking if the date should be validated based on business day convention            CLE141
+
+     C     VFPTFI        IFEQ      *blanks                                                    CLE141
+     C                   EVAl      WFSTTL = FLRSTM                                            CLE141
+     C                   ELSE                                                                 CLE141
+     C                   EVAl      WFSTTL = FLPSTM                                            CLE141
+     C                   ENDIF                                                                CLE141
+     C                   Eval      DDEPON = VFPYON                                            CLE141
+
       *
       ** If settlement is start date and method is either 01 07 or 08,
       ** then check date for a holiday in both local and fee ccy.
@@ -265,9 +330,15 @@
      C     DDEPON        IFEQ      'S'
      C     DDEPON        OREQ      ' '
      C                   Z-ADD     VFPSTD        ZDAYNO
-     C     FESTTL        IFEQ      01
-     C     FESTTL        OREQ      07
-     C     FESTTL        OREQ      08
+
+     C*****FESTTL        IFEQ      01                                                         CLE141
+     C*****FESTTL        OREQ      07                                                         CLE141
+     C*****FESTTL        OREQ      08                                                         CLE141
+
+     C     WFSTTL        IFEQ      01                                                         CLE141
+     C     WFSTTL        OREQ      07                                                         CLE141
+     C     WFSTTL        OREQ      08                                                         CLE141
+     C
       *
       ** Fee Ccy check
       *
@@ -275,10 +346,29 @@
      C     WSCCY         ANDNE     *BLANKS
      C                   MOVE      WSCCY         ZCCY
      C                   ELSE
-     C                   MOVE      DDECUR        ZCCY              3
+     C**********         MOVE      DDECUR        ZCCY              3                         CLE141A
+     C                   MOVE      VFFCCY        ZCCY              3                         CLE141A
      C                   ENDIF
      C                   MOVE      '*BLANKS'     ZLOC              3
- 
+
+     C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
+     C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
+
+     C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
+     C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
+     C**********         PARM                    CurLocArr                            CLE141 CLE141A
+     C**********         PARM                    ZDAYNO                               CLE141 CLE141A
+
+     C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
+     C**********         EVAL      DDEPSDOK = 'W'                                     CLE141 CLE141A
+     C**********         EVAL      WId = WId + 1                                      CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
+     C**********         EVAL      WFldNmXAr(WId) = 'DDEPSD'                          CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+
+     C**********         ELSE                                                         CLE141 CLE141A
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY              3
@@ -298,12 +388,15 @@
      C                   ENDIF
      C                   ENDIF
       *
+                                                                                              CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
      C                   ELSE
       *
       ** Local Ccy check
       *
      C                   MOVE      BJLCCY        ZCCY
- 
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    ZCCY
@@ -319,6 +412,25 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     VFLOAN        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDEPSDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDEPSD'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048565'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF
      C                   ENDIF
       *
@@ -326,19 +438,45 @@
       ** then check date for a holiday in both local and fee ccy.
       *
      C     DDEPEDOK      IFEQ      'Y'
+     C     DDEPEDOK      OREQ      'W'                                                      MD038457
      C     DDEPON        IFEQ      'E'
      C                   Z-ADD     VFPEND        ZDAYNO
-     C     FESTTL        IFEQ      01
-     C     FESTTL        OREQ      07
-     C     FESTTL        OREQ      08
+
+     C*****FESTTL        IFEQ      01                                                         CLE141
+     C*****FESTTL        OREQ      07                                                         CLE141
+     C*****FESTTL        OREQ      08                                                         CLE141
+
+     C     WFSTTL        IFEQ      01                                                         CLE141
+     C     WFSTTL        OREQ      07                                                         CLE141
+     C     WFSTTL        OREQ      08                                                         CLE141
       *
      C     CEU004        IFEQ      'Y'
      C     WSCCY         ANDNE     *BLANKS
      C                   MOVE      WSCCY         ZCCY
      C                   ELSE
-     C                   MOVE      DDECUR        ZCCY
+     C**********         MOVE      DDECUR        ZCCY                                        CLE141A
+     C                   MOVE      VFFCCY        ZCCY                                        CLE141A
      C                   ENDIF
-      *
+
+     C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
+     C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
+
+     C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
+     C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
+     C**********         PARM                    CurLocArr                            CLE141 CLE141A
+     C**********         PARM                    ZDAYNO                               CLE141 CLE141A
+
+     C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
+     C**********         EVAL      DDEPSDOK = 'W'                                    CLE141 MD038457
+     C**********         EVAL      DDEPEDOK = 'W'                                   MD038457 CLE141A
+     C**********         EVAL      WId = WId + 1                                      CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
+     C**********         EVAL      WFldNmXAr(WId) = 'DDEPED'                          CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+
+     C**********         ELSE                                                         CLE141 CLE141A
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
@@ -357,6 +495,9 @@
      C                   MOVEL     'LER0031'     WMsgIdXAr(WId)
      C                   ENDIF
      C                   ENDIF
+                                                                                              CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
       *
       ** Fee Ccy check
       *
@@ -381,6 +522,25 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     VFLOAN        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDEPEDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDEPED'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048566'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF
       *
      C                   ENDIF
@@ -391,13 +551,37 @@
      C     DDNPYDOK      IFEQ      'Y'
      C     DDEPON        IFEQ      'N'
      C                   Z-ADD     VFNPYD        ZDAYNO
- 
-     C     FESTTL        IFEQ      01
-     C     FESTTL        OREQ      07
-     C     FESTTL        OREQ      08
+
+     C*****FESTTL        IFEQ      01                                                         CLE141
+     C*****FESTTL        OREQ      07                                                         CLE141
+     C*****FESTTL        OREQ      08                                                         CLE141
+
+     C     WFSTTL        IFEQ      01                                                         CLE141
+     C     WFSTTL        OREQ      07                                                         CLE141
+     C     WFSTTL        OREQ      08                                                         CLE141
       *
-     C                   MOVE      DDECUR        ZCCY              3
-      *
+     C**********         MOVE      DDECUR        ZCCY              3                         CLE141A
+     C                   MOVE      VFFCCY        ZCCY                                        CLE141A
+
+     C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
+     C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
+
+     C**********         CALLB     'LEVBDYLE'                                         CLE141 CLE141A
+     C**********         PARM      *BLANKS       RetCode                              CLE141 CLE141A
+     C**********         PARM                    CurLocArr                            CLE141 CLE141A
+     C**********         PARM                    ZDAYNO                               CLE141 CLE141A
+
+     C*****RetCode       IFEQ      'HOLIDAY'                                          CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr = '5048508'                             CLE141 MD038457
+     C**********         EVAL      DDEPSDOK = 'W'                                    CLE141 MD038457
+     C**********         EVAL      DDNPYDOK = 'W'                                   MD038457 CLE141A
+     C**********         EVAL      WId = WId + 1                                      CLE141 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       MD038457 CLE141A
+     C**********         EVAL      WFldNmXAr(WId) = 'DDNPYD'                          CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+
+     C**********         ELSE                                                         CLE141 CLE141A
+
      C                   CALLB     'ZCHKH'
      C                   PARM                    ZDAYNO
      C                   PARM                    ZCCY
@@ -411,6 +595,9 @@
      C                   MOVEL     'DDNPYD'      WFldNmXAr(WId)
      C                   MOVEL     'LER0229'     WMsgIdXAr(WId)
      C                   ENDIF
+                                                                                              CLE141
+     C**********         ENDIF                                                        CLE141 CLE141A
+                                                                                              CLE141
       ** Fee Ccy check
       *
      C                   ELSE
@@ -434,6 +621,25 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     VFLOAN        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDNPYDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDNPYD'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048567'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF
      C                   ENDIF
       *
@@ -483,6 +689,7 @@
      C                   MOVEL     *BLANK        WFldNmXAr
      C                   MOVEL     *BLANK        WMsgIDXAr
      C                   MOVEL     *BLANK        WMsgDtXAr
+     C                   EVAL      WId = *Zero                                             MD038457
       *
      C                   ENDSR
       *****************************************************************
@@ -555,7 +762,7 @@
       *
       *  FRA/IRS instructions
      C                   PARM                    F_FRI
- 
+
       *
       ***  Field OK flags (DS) from/to caller
      C                   PARM                    OKFee
@@ -575,7 +782,7 @@
       *
       ***  Array index (3P0) from/to caller
      C                   PARM                    WId
- 
+
       ***  Move program name into *LDA field.
       *
      C     *LOCK         IN        LDA
@@ -646,6 +853,50 @@ E004 C                   ENDIF
      C                   CALLB     'ZARTVJOBA'
      C                   PARM                    @RTCD
      C                   PARM                    PMODE             1
+                                                                                              CLE141
+      ** Check if CLE141 - Business day Convention is on                                      CLE141
+                                                                                              CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       @RTCD                                        CLE141
+     C                   PARM      '*VERIFY '    @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVEL     'Y'           CLE141                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   MOVEL     'N'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
+
+     C*****CLE141        IFEQ      'Y'                                                CLE141 CLE141A
+     C*****VFLOAN        ANDNE     *blanks                                            CLE141 CLE141A
+     C**********         Eval      Kpd_RECI = 'D'                                     CLE141 CLE141A
+     C**********         Eval      Kpd_LNRF = VFLOAN                                  CLE141 CLE141A
+     C*****KCLOANL4      CHAIN     CLOANL4                                            CLE141 CLE141A
+     C**********         IF        %FOUND(CLOANL4)                                    CLE141 CLE141A
+      ***Set*the value for Business Day Convention Fields                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(1) = PD_C1PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(2) = PD_C2PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(3) = PD_C3PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(4) = PD_C4PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(5) = PD_C5PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(6) = PD_C6PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(7) = PD_C7PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(8) = PD_C8PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(9) = PD_C9PI                             CLE141 CLE141A
+     C**********         EVAL      CurLocArr(10) = PD_C0PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(11) = PD_L1PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(12) = PD_L2PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(13) = PD_L3PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(14) = PD_L4PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(15) = PD_L5PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(16) = PD_L6PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(17) = PD_L7PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(18) = PD_L8PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(19) = PD_L9PI                            CLE141 CLE141A
+     C**********         EVAL      CurLocArr(20) = PD_L0PI                            CLE141 CLE141A
+
+     C**********         ENDIF                                                        CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
       *
       ***  Program, module and procedure names for database error processing.
       ***  =================================================================
@@ -654,6 +905,10 @@ E004 C                   ENDIF
       *
       /COPY WNCPYSRC,LEFEEMEV08
       *
+     C     KCLOANL4      KLIST                                                                CLE141
+     C                   KFLD                    Kpd_RECI                                     CLE141
+     C                   KFLD                    Kpd_LNRF                                     CLE141
+
      C                   ENDSR
       *****************************************************************
       /EJECT

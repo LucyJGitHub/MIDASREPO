@@ -12,8 +12,10 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 01Mar16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD031736           Date 02Mar15               *
       *                 MD021302           Date 29Jan15               *
       *                 MD020134A          Date 29Jan15               *
       *                 CGL165             Date 17Mar15               *
@@ -363,6 +365,9 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions - Phase 2                      *
       *  CLE141 - Currency and Location Business Day Convention       *
       *  MD031736 - Update DLRC with latest value date recorded on    *
       *             rates file.                                       *
@@ -2773,6 +2778,10 @@ L118 I                             P   72   77 7RTSPL
       *                                                                                       CLE134
      I                               1862 1864  XRFI                                          CLE134
      I                               1865 1874 0XRFN                                          CLE134
+     I                               1906 1935  CCYPR                                         CLE141
+     I                               1936 1965  LOCPR                                         CLE141
+     I                               1966 1995  CCYPI                                         CLE141
+     I                               1996 2025  LOCPI                                         CLE141
 0194 I**
 0195 I**   /FIELDS TO DEFINE WHOLE RECORD
 0196 I**
@@ -2812,6 +2821,7 @@ L118 I                             P   72   77 7RTSPL
      I**********                           15611776 LOTA3S                           BUG23094 CRE073
      I                               1561 1829  LOTA3S
      I                               1830 1905  LOTA4                                         CLE134
+     I                               1906 2025  LOTA5                                         CLE141
 0270 I**                                                                  S01117
 0271 I**   CATCH ALL                                                      S01117
 0272 I**                                                                  S01117
@@ -5204,6 +5214,21 @@ L118 I                             P   72   77 7RTSPL
      C                   GOTO      ENDDBE
      C                   ENDIF
      C                   ENDIF
+                                                                                              CLE141
+      ** Determine if CLE141 is installed                                                     CLE141
+                                                                                              CLE141
+     C                   MOVE      'N'           CLE141            1                          CLE141
+     C                   CALL      'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANK        @RTCD                                        CLE141
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANK                                                     CLE141
+     C                   MOVE      'Y'           CLE141                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   MOVE      'N'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
       *
      C**********         MOVE      'N'           CFC006            1              AR1097176 MD020563
      C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
@@ -12990,6 +13015,10 @@ L118 I                             P   72   77 7RTSPL
      C                   EXSR      SETLOC                                                      S0119
      C                   MOVE      W@STBL        ZLOC                                          S0119
      C                   END                                                                   S0119
+                                                                                              CLE141
+      ** Save the Base Date                                                                   CLE141
+                                                                                              CLE141
+     C                   Z-ADD     ZDAYNO        WBSDT             5 0                        CLE141
      C*                                                                   S01195
      C*****                EXSR FREQB                             S01195  S01392
      C** For CLE005, use ZFRQB3 to allow next interest date to            CLE005
@@ -13010,6 +13039,36 @@ L118 I                             P   72   77 7RTSPL
      C***********AMTP      ANDEQ'RE'                               154221 159924
      C***********REPT      ANDEQ3                                  154221 159924
      C                   EXSR      ZFRQB3                                                      CLE00
+                                                                                              CLE141
+      ***If*CLE141*is*ON*and*Settlement*Type*01,*07*or*08,*determine***               CLE141 CLE141A
+      ***the*next*interest*date*considering*Business*Day*Convention****               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         IF        CLE141 = 'Y' and (MDST = 01 or                     CLE141 CLE141A
+     C**********                   MDST = 07 or MDST = 08)                            CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         IF        WPDDI = 'A'                                        CLE141 CLE141A
+     C**********         Z-ADD     ZDAYNO        ZDYNBR                               CLE141 CLE141A
+     C**********         ELSE                                                         CLE141 CLE141A
+     C**********         CALL      'LEZBDYCD'                                         CLE141 CLE141A
+     C**********         PARM                    ZDAYNO                               CLE141 CLE141A
+     C**********         PARM      CCYPI         PCURR            30                  CLE141 CLE141A
+     C**********         PARM      LOCPI         PLOCN            30                  CLE141 CLE141A
+     C**********         PARM      WPDDI         PPAYC             1                  CLE141 CLE141A
+     C**********         PARM      BJDFIN        PDFIN             1                  CLE141 CLE141A
+     C**********         PARM      *ZEROS        PAJDT             5 0                CLE141 CLE141A
+     C**********         Z-ADD     PAJDT         ZDYNBR                               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+      ***Do*not*return*adjusted*date*if*it*is*equal*to*or*earlier*than*               CLE141 CLE141A
+      ***previous*date*(only*happens*for*'previous'*date*calculations);               CLE141 CLE141A
+      ***instead*use*the*base*date*************************************               CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C*****WBSDT         IFGE      ZDYNBR                                             CLE141 CLE141A
+     C**********         Z-ADD     ZDAYNO        ZDYNBR                               CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+     C**********         ENDIF                                                        CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
+     C**********         ELSE                                                         CLE141 CLE141A
+      *****************************************************************               CLE141 CLE141A
      C                   Z-ADD     *ZERO         ZNRDYS                                        CLE00
      C     ZLOC          IFEQ      *BLANKS                                                  MD023320
      C                   MOVE      SYSL          ZLOC
@@ -13021,6 +13080,36 @@ L118 I                             P   72   77 7RTSPL
      C**********         MOVE      CCY           ZCCY                                      MD023320A
      C                   MOVE      LCCY          ZCCY                                      MD023320A
      C                   ENDIF                                                              MD023320
+                                                                                             CLE141A
+      ** If CLE141 is ON, determine the next date considering                                CLE141A
+      ** Business Day Convention                                                             CLE141A
+                                                                                             CLE141A
+     C                   IF        CLE141 = 'Y'                                              CLE141A
+                                                                                             CLE141A
+     C                   IF        WPDDI = 'A'                                               CLE141A
+     C                   Z-ADD     ZDAYNO        ZDYNBR                                      CLE141A
+     C                   ELSE                                                                CLE141A
+     C                   CALL      'LEZBDYCD'                                                CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+     C                   PARM      CCYPI         PCURR            30                         CLE141A
+     C                   PARM      LOCPI         PLOCN            30                         CLE141A
+     C                   PARM      WPDDI         PPAYC             1                         CLE141A
+     C                   PARM      BJDFIN        PDFIN             1                         CLE141A
+     C                   PARM      ZCCY          PCCY              3                         CLE141A
+     C                   PARM      ZLOC          PLOC              3                         CLE141A
+     C                   PARM      *ZEROS        PAJDT             5 0                       CLE141A
+     C                   Z-ADD     PAJDT         ZDYNBR                                      CLE141A
+                                                                                             CLE141A
+      ** Do not return adjusted date if it is equal to or earlier than                       CLE141A
+      ** previous date (only happens for 'previous' date calculations);                      CLE141A
+      ** instead use the base date                                                           CLE141A
+                                                                                             CLE141A
+     C     WBSDT         IFGE      ZDYNBR                                                    CLE141A
+     C                   Z-ADD     ZDAYNO        ZDYNBR                                      CLE141A
+     C                   ENDIF                                                               CLE141A
+     C                   ENDIF                                                               CLE141A
+                                                                                             CLE141A
+     C                   ELSE                                                                CLE141A
      C                   SELECT                                                                CLE00
      C***********PDDI      WHEQ 'A'                                CLE005 133913
      C     WPDDI         WHENEQ    'A'                                                         13391
@@ -13057,11 +13146,54 @@ L118 I                             P   72   77 7RTSPL
      C                   ENDIF                                                                 14408
      C                   ENDSL                                                                 CLE00
       *                                                                   CLE005
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
      C                   ELSE                                                                  CLE00
      C/COPY WNCPYSRC,LE0450C001
+                                                                                              CLE141
+      ** If CLE141 is ON, determine the next date considering                                 CLE141
+      ** Business Day Convention                                                              CLE141
+                                                                                              CLE141
+     C**********         IF        (CLE141 = 'Y' and                                  CLE141 CLE141A
+     C**********                   (AMTP ='IN' or AMTP ='PD' or AMTP ='RE') and       CLE141 CLE141A
+     C**********                   (MDST = 01 or MDST = 07 or MDST = 08)) or          CLE141 CLE141A
+     C**********                   (CLE141 = 'Y' and                                  CLE141 CLE141A
+     C**********                   (AMTP = 'RO' or AMTP = 'MC'))                      CLE141 CLE141A
+     C                   IF        CLE141 = 'Y'                                              CLE141A
+                                                                                              CLE141
+     C                   EXSR      ZFRQB3                                                     CLE141
+     C                   IF        AMTP = 'IN' or AMTP = 'PD' or                              CLE141
+     C                             AMTP = 'RE'                                                CLE141
+     C                   MOVEL     CCYPI         PCURR                                        CLE141
+     C                   MOVEL     LOCPI         PLOCN                                        CLE141
+     C                   MOVEL     ZCCY          PCCY                                        CLE141A
+     C                   MOVEL     ZLOC          PLOC                                        CLE141A
+     C                   ELSE                                                                 CLE141
+     C                   MOVEL     CCYPR         PCURR                                        CLE141
+     C                   MOVEL     LOCPR         PLOCN                                        CLE141
+     C                   MOVEL     *BLANKS       PCCY                                        CLE141A
+     C                   MOVEL     *BLANKS       PLOC                                        CLE141A
+     C                   ENDIF                                                                CLE141
+     C                   CALL      'LEZBDYCD'                                                 CLE141
+     C                   PARM                    ZDAYNO                                       CLE141
+     C                   PARM                    PCURR                                        CLE141
+     C                   PARM                    PLOCN                                        CLE141
+     C                   PARM      *BLANKS       PPAYC                                        CLE141
+     C                   PARM      BJDFIN        PDFIN                                        CLE141
+     C                   PARM                    PCCY                                        CLE141A
+     C                   PARM                    PLOC                                        CLE141A
+     C                   PARM      *ZEROS        PAJDT                                        CLE141
+     C                   Z-ADD     PAJDT         ZDYNBR                                       CLE141
+     C                   IF        AMTP = 'RO' or AMTP = 'MC'                                 CLE141
+     C                   Z-ADD     ZDYNBR        ZDAYNO                                       CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
+     C                   ELSE                                                                 CLE141
      C                   EXSR      ZFREQB                                                      S0119
 0707 C                   Z-ADD     *ZERO         ZNRDYS                                        S0119
 1867 C                   EXSR      ZFWDT                                                       S0119
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
 C    C                   ENDIF                                                                 CLE00
       *                                                                   CLE005
      C/COPY WNCPYSRC,LE0450C002
@@ -19381,6 +19513,7 @@ C    C                   ENDIF                                                  
      O**********               LOTA3   1782                                          BUG22966 CRE073
      O                       LOTA3             1829
      O                       LOTA4             1905                                           CLE134
+     O                       LOTA5             2025                                           CLE141
 3401 O                       RECIL                1
      O                       PTYP                11                             S01270
      O                       LTYP                22                             S01270
@@ -20198,6 +20331,7 @@ C    C                   ENDIF                                                  
      O**********               LOTA3S  1773                                            CLE042 CER020
      O                       LOTA3S            1776
      O                       LOTA4             1881                                           CLE134
+     O                       LOTA5             2001                                           CLE141
      O                       FSRPL             1098P                            CAC001
      O                       FSGNL             1099                             CAC001
      O                       FPRCL             1103                             CAC001

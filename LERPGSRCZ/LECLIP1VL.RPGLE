@@ -775,6 +775,7 @@
       ***  Incoming Transaction - 4th screen                                                  CLE134
                                                                                               CLE141
      D TranInScr7    E DS                  EXTNAME(LECLI7PD)                                  CLE141
+     D  CurLocPR               1     60                                                       CLE141
      D  TrCurPR                1     30                                                       CLE141
      D  TrLocPR               31     60                                                       CLE141
      D  TrCurPI               61     90                                                       CLE141
@@ -1048,6 +1049,9 @@
      D LCUR            S              3A                                                      CLE141
      D LoanITYPE       S              4A                                                      CLE141
      D OKFlgBDYCL      S              1A                                                      CLE141
+     D BDCHolInd       S              7A                                                      CLE141
+     D LoanBDC         S             60A                                                      CLE141
+     D DayNo           S              5  0                                                    CLE141
                                                                                               CLE141
       ** Index for arrays of error message ids etc                                            CLE141
      D Ix              S                   LIKE(Idx)                                          CLE141
@@ -5692,6 +5696,8 @@ B001 C     ZERR          IFNE      *BLANKS
       *
      C     DDRLDTOK      IFNE      'N'
      C     DDRLDT        ANDNE     *BLANKS
+                                                                                              CLE141
+     C                   IF        CLE141 = 'N'                                               CLE141
      C                   Z-ADD     WSVRD         ZDAYNO
      C                   MOVE      DDCURR        ZCCY
      C                   MOVE      WLCCD         ZLOC
@@ -5713,6 +5719,25 @@ B001 C     ZERR          IFNE      *BLANKS
      C                   MOVEL     'LEL0075'     WMsgIDXAr(WId)
      C**********         ENDIF                                                               BUG4351
      C                   ENDIF
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
+      ** If CLE141 is ON, validate holiday with Business Day Convention                       CLE141
+      ** for rollover and rate fixing                                                         CLE141
+                                                                                              CLE141
+     C                   IF        CLE141 = 'Y' and                                           CLE141
+     C                             OKFlgBDYCL <> 'N'                                          CLE141
+     C                   CALLB     'LEVBDYLE'                                                 CLE141
+     C                   PARM      *BLANKS       BDCHolInd                                    CLE141
+     C                   PARM      CurLocPR      LoanBDC                                      CLE141
+     C                   PARM      WSVRD         DayNo                                        CLE141
+     C                   IF        BDCHolInd = 'HOLIDAY'                                      CLE141
+     C                   EVAL      DDRLDTOK = 'W'                                             CLE141
+     C                   EVAL      WId = WId + 1                                              CLE141
+     C                   EVAL      WFldNmXAr(WId) = 'DDRLDT'                                  CLE141
+     C                   EVAL      WMsgIDXar(WId) = '5048509'                                 CLE141
+     C                   ENDIF                                                                CLE141
+     C                   ENDIF                                                                CLE141
+                                                                                              CLE141
      C                   ENDIF
       *
       ***  For parts sold, determine if facility of original loan

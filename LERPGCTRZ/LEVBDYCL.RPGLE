@@ -15,10 +15,15 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2016            *
       *                                                               *
-      *  Last Amend No. CLE141  *CREATE    Date 08Feb16               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. MD038370           Date 22Apr16               *
+      *                 CLE141  *CREATE    Date 08Feb16               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  MD038370 - System allowed same currency/location combination *
+      *             Ensure that ccy/loc combination is unique         *
       *  CLE141 - Currency and Location Business Day Convention       *
       *                                                               *
       *****************************************************************
@@ -85,6 +90,10 @@
 
      D Dssdy         E DS                  EXTNAME(DSSDY)
 
+     D LoanBDC         DS                                                                    CLE141A
+     D  Currency               1     30                                                      CLE141A
+     D  Location              31     60                                                      CLE141A
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
@@ -94,6 +103,7 @@
      D WIdx            S              2P 0
      D Fidx            S              2P 0
 
+     D ArrIdx          S              2P 0                                                  MD038370
      D ArrIdxC         S              2  0
      D ArrIdxL         S              2  0
 
@@ -111,13 +121,15 @@
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
 
-      ** Default the values for business day convention to the loan currency
-      ** if left blank
-
-     C                   IF        PCUR = *blanks and PLOC = *blanks
-     C                   Eval      CCYArr(1) = LCUR
-     C                   MOVEA     CCYArr        PCUR
-     C                   Else
+      ***Default*the*values*for*business*day*convention*to*the*loan*currency                 CLE141A
+      ***if*left*blank******************************************************                 CLE141A
+      **********************************************************************                 CLE141A
+     C**********         IF        PCUR = *blanks and PLOC = *blanks                         CLE141A
+     C**********         Eval      CCYArr(1) = LCUR                                          CLE141A
+     C**********         MOVEA     CCYArr        PCUR                                        CLE141A
+     C**********         Else                                                                CLE141A
+                                                                                             CLE141A
+     C                   IF        LoanBDC <> *BLANKS                                        CLE141A
 
       ** Proceed with Validations
 
@@ -164,7 +176,7 @@
      C                   Parm                    PMsgId            7
      C                   Parm      CcyArr(WCtr)  PCurr             3
      C     SDCurr        Parm      SDCurr        Dssdy
-     C                   Endif
+     C**********         Endif                                                               CLE141A
 
       ** Issue Error Message Currency Invalid
 
@@ -175,6 +187,7 @@
      C                   Eval      FldError = 'CCY'
      C                   Eval      Fidx = Fidx + 1
      C                   Exsr      SrFldn
+     C                   Endif                                                               CLE141A
 
      C                   Endif
 
@@ -253,33 +266,38 @@
 
      C                   Dow       WCtr <= 10
 
-     C                   Eval      ArrIdxC  = %LOOKUP(CCYArr(WCtr) :CCYArrV)
-     C                   Eval      ArrIdxL  = %LOOKUP(LOCArr(WCtr) :LOCArrV)
+     C**********         Eval      ArrIdxC  = %LOOKUP(CCYArr(WCtr) :CCYArrV)                MD038370
+     C**********         Eval      ArrIdxL  = %LOOKUP(LOCArr(WCtr) :LOCArrV)                MD038370
 
      C                   If        ( CCYArr(WCtr) <> *blanks and
      C                               LOCArr(WCtr) <> *blanks) or
      C                               CCYArr(Wctr) <> *blanks
 
-      ** If the Index Retrieved from Currency Array and Location Array is the same
-      ** Current Combination is already existing.
-
-     C                   If        (ArrIdxC <> 0 and ArrIdxL <> 0) or
-     C                             (ArrIdxC <> 0)
-
-     C                   Eval      ArrLKPC = WCtr
-
-     C                   Dow       ArrIdxC <> 0 and
-     C                             ArrLKPC <= WCtr
-
-     C                   Eval      ArrLKPL = 1
-
-     C                   Dow       ArrIdxL <> 0   and
-     C                             ArrLKPL <= WCtr
-
-     C                   IF        ArrIdxC = ArrIdxL
+      ***If*the*Index*Retrieved*from*Currency*Array*and*Location*Array*is*the*same          MD038370
+      ***Current*Combination*is*already*existing.*********************************          MD038370
+      ****************************************************************************          MD038370
+     C**********         If        (ArrIdxC <> 0 and ArrIdxL <> 0) or                       MD038370
+     C**********                   (ArrIdxC <> 0)                                           MD038370
+      **********                                                                            MD038370
+     C**********         Eval      ArrLKPC = WCtr                                           MD038370
+      **********                                                                            MD038370
+     C**********         Dow       ArrIdxC <> 0 and                                         MD038370
+     C**********                   ArrLKPC <= WCtr                                          MD038370
+      **********                                                                            MD038370
+     C**********         Eval      ArrLKPL = 1                                              MD038370
+      **********                                                                            MD038370
+     C**********         Dow       ArrIdxL <> 0   and                                       MD038370
+     C**********                   ArrLKPL <= WCtr                                          MD038370
+      **********                                                                            MD038370
+                                                                                            MD038370
+     C                   EVAL      ArrIdx = 1                                               MD038370
+     C                   DOW       ArrIdx < WCtr                                            MD038370
 
       ** Issue Error Message Currency/Location Combination not unique
 
+     C**********         IF        ArrIdxC = ArrIdxL                                        MD038370
+     C                   IF        CCYArr(WCtr) = CCYArrV(ArrIdx) and                       MD038370
+     C                             LOCArr(WCtr) = LOCArrV(ArrIdx)                           MD038370
      C                   Eval      Idx = Idx + 1
      C                   Eval      OKFlagDS1(WCtr) = 'N'
      C                   Eval      MsgIdArr(idx) = '5048504'
@@ -295,22 +313,24 @@
      C                   Leave
      C                   Endif
 
+     C                   EVAL      ArrIdx = ArrIdx + 1                                      MD038370
+     C                   ENDDO                                                              MD038370
 
-     C                   Eval      ArrIdxL = %LOOKUP
-     C                             (LOCArr(WCtr) : LOCArrV : ArrLKPL)
-     C                   Eval      ArrLKPL = ArrLKPL + 1
-
-
-     C                   Enddo
-
-
-     C                   Eval      ArrIdxC = %LOOKUP
-     C                             (CCYArr(WCtr) : CCYArrV : ArrLKPC)
-     C                   Eval      ArrLKPC = ArrLKPC + 1
-
-     C                   Enddo
-
-     C                   Endif
+     C**********         Eval      ArrIdxL = %LOOKUP                                        MD038370
+     C**********                   (LOCArr(WCtr) : LOCArrV : ArrLKPL)                       MD038370
+     C**********         Eval      ArrLKPL = ArrLKPL + 1                                    MD038370
+      **********                                                                            MD038370
+      **********                                                                            MD038370
+     C**********         Enddo                                                              MD038370
+      **********                                                                            MD038370
+      **********                                                                            MD038370
+     C**********         Eval      ArrIdxC = %LOOKUP                                        MD038370
+     C**********                   (CCYArr(WCtr) : CCYArrV : ArrLKPC)                       MD038370
+     C**********         Eval      ArrLKPC = ArrLKPC + 1                                    MD038370
+      **********                                                                            MD038370
+     C**********         Enddo                                                              MD038370
+      **********                                                                            MD038370
+     C**********         Endif                                                              MD038370
 
       ** Location Code Cannot be specified without Currency Code
 
@@ -491,6 +511,8 @@
      C                   Eval      OKFlagDs1 = *All'Y'
      C                   Eval      OKFlagDs2 = *All'Y'
      C                   Eval      Idx = 0
+     C                   EVAL      Currency = PCUR                                           CLE141A
+     C                   EVAL      Location = PLOC                                           CLE141A
 
      C                   Endsr
       *****************************************************************

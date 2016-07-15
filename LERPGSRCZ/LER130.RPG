@@ -19,8 +19,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CLE164             Date 28Nov14               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CLE164             Date 28Nov14               *
       *                 MD030334           Date 27Oct14               *
       *                 MD025212           Date 10May14               *
       *                 MD023863           Date 06May14               *
@@ -182,8 +183,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           (Recompile)                                         *
+      *           for LE Transactions                                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD030334 - Added checking on account details before output to*
       *             PDCL file.  Patterned after AR217563 on LER135.   *
@@ -1539,6 +1541,28 @@
      I                                       10  110FCFNUM                                    CGL020
      I                                       12  12 FRCTP                                     CGL020
       *                                                                                       CGL020
+     IACCY        DS                             30                                           CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+     IALOC        DS                             30                                           CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
       *
      I/COPY WNCPYSRC,LER130I001
      I/COPY ZSRSRC,ZHASHZ2
@@ -6259,6 +6283,19 @@
      C                     ELSE                                                               CAS016
      C                     MOVE 'N'       CAS016                                              CAS016
      C                     ENDIF                                                              CAS016
+      *                                                                                       CLE141
+      ** Determine if CLE141 ins installed                                                    CLE141
+      *                                                                                       CLE141
+     C                     MOVEL'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   WRTCD                                               CLE141
+     C                     PARM '*VERIFY 'WOPTN                                               CLE141
+     C                     PARM 'CLE141'  WSARD                                               CLE141
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
+     C           WRTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVEL'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
      C/COPY WNCPYSRC,LEH01260
       *                                                                                       CAS009
      C           CAS009    IFEQ 'Y'                                                           CAS009
@@ -6626,6 +6663,19 @@
      C                     PARM           WCKEY  10                       155672
      C                     PARM           WKYSTS  7                       155672
      C           SDCUST    PARM SDCUST    DSSDY                           155672
+      *                                                                                       CLE141
+      ** Parameter list for program LEZBDYCD                                                  CLE141
+      *                                                                                       CLE141
+     C           BDCHK     PLIST                                                              CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           ACCY                                                CLE141
+     C                     PARM           ALOC                                                CLE141
+     C                     PARM           PAYIND  1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           CCYLL   3                                          CLE141A
+     C                     PARM *BLANKS   LOCLL   3                                          CLE141A
+     C                     PARM *ZEROS    ZADJDT  50                                          CLE141
+      *                                                                                       CLE141
       *
       ** Reset array
      C                     Z-ADD0         X       30
@@ -6690,10 +6740,28 @@
      C                     Z-ADDFENPYD    ZDAYNO  50                                          CLE031
      C                     Z-ADDFEDYIM    ZMDAY   20                                          CLE031
      C                     MOVE BJLCCY    ZCCY    3                                           CLE031
-     C                     MOVE *BLANKS   ZZERR   7                                           CLE031
+     C**********           MOVE *BLANKS   ZZERR   7                                    CLE031 CLE141
+     C                     MOVE *BLANKS   ZZERR@                                              CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** FESTTL    ANDEQ1                                                     CLE141 CLE141A
+     C           FELOAN    ANDNE*BLANKS                                                       CLE141
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** FESTTL    ANDEQ7                                                     CLE141 CLE141A
+     C********** FELOAN    ANDNE*BLANKS                                               CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** FESTTL    ANDEQ8                                                     CLE141 CLE141A
+     C********** FELOAN    ANDNE*BLANKS                                               CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C                     MOVELZCCY      CCYLL                                              CLE141A
+     C                     MOVEL*BLANKS   PAYIND                                              CLE141
+     C                     CALL 'LEZBDYCD'BDCHK                                               CLE141
+     C                     MOVELZADJDT    ZDAYNO                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB                                                        CLE031
+     C                     ENDIF                                                              CLE141
       *                                                                                       CLE031
-     C           ZZERR     IFNE *BLANK                                                        CLE031
+     C********** ZZERR     IFNE *BLANK                                                 CLE031 CLE141
+     C           ZZERR@    IFNE *BLANK                                                        CLE141
      C           *LOCK     IN   LDA                                                           CLE031
      C                     MOVEL'LER130'  DBPGM                                               CLE031
      C                     MOVEL'ZFREQB'  DBFILE           ************                       CLE031
@@ -7311,6 +7379,7 @@
      C/COPY ZSRSRC,ZDATE9Z3                                                                   CAS009
       /TITLE SR/ZDAT10                                                                        CAS009
      C/COPY ZSRSRC,ZDAT10Z2                                                                   CAS009
+     C/COPY ZSRSRC,ZFRQB3                                                                     CLE141
      C/COPY WNCPYSRC,LER130CCP4                                           S01408
       ****************************************************************
 **  CPY@

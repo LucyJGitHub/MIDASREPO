@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR897086           Date 10Mar15               *
       *                 MD021819           Date 25Feb15               *
@@ -221,8 +222,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           (Recompile)                                         *
+      *           for Lending Transactions                            *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  LLN022 - BOE Upgrade to MidasPlus                            *
@@ -668,7 +670,8 @@
      F***CLOAN**   IP  F    1773  7AI     2 DISK                                       CLE042 CER020
      F***CLOAN** IP  F    1782  7AI     2 DISK                                         CER020 CRE073
      F***CLOAN** IP  F    1829  7AI     2 DISK                                         CRE073 CLE134
-     FCLOAN   IP  F    1874  7AI     2 DISK                                                   CLE134
+     F***CLOAN** IP  F    1874  7AI     2 DISK                                         CLE134 CLE141
+     FCLOAN   IP  F    2025  7AI     2 DISK                                                   CLE141
      F*                                                                   S01408
      F/COPY WNCPYSRC,LE0480FFP2                                           S01408
      F*                                                                   S01408
@@ -734,7 +737,8 @@
      F            CLOANCLF                          KRENAMECLONCLF                          MD021605
      F            CLOANCKF                          KRENAMECLONCKF                          MD021605
      F            CLOANZ1F                          KIGNORE                                 MD021605
-     FLELWNEPDO   F    1905            DISK                                                 MD021605
+     F***LELWNEPDO   F    1905            DISK                                       MD021605 CLE141
+     FLELWNEPDO   F    2025            DISK                                                   CLE141
      FLELWNEPKO   F    1319            DISK                                                 MD021605
      FLELWNEZ1O   F     400            DISK                                                 MD021605
      F/COPY WNCPYSRC,LE0480FFP1                                           S01408
@@ -1134,7 +1138,12 @@
      I                                     18621864 XRFI                                      CLE134
      I                                     186518740XRFN                                      CLE134
       *                                                                                       CLE134
-     I                                        11874 LONL                                    MD021605
+     I                                     19061935 PRCUR                                     CLE141
+     I                                     19361965 PRLOC                                     CLE141
+     I                                     19661995 PICUR                                     CLE141
+     I                                     19962025 PILOC                                     CLE141
+     I**********                              11874 LONL                             MD021605 CLE141
+     I                                        12025 LONL                                      CLE141
 0205 I*
 0206 I*    CUSTOMER LENDING LOANS FILE - DETAIL RECORD 2
 0207 I*
@@ -2778,6 +2787,21 @@
      C           W0RTCD    IFEQ *BLANKS                                                       CLE134
      C                     MOVE 'Y'       CLE134                                              CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                       CLE141
+      ** Determine if CLE141 Business Day Convention is installed                             CLE141
+      *                                                                                       CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   W0RTCD                                              CLE141
+     C                     PARM '*VERIFY' W0OPTN                                              CLE141
+     C                     PARM 'CLE141'  W0SARD                                              CLE141
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
+     C                     MOVE 'N'       CLE141  1                                           CLE141
+      *                                                                                       CLE141
+      ** If feature is on, set up SAR work flag                                               CLE141
+      *                                                                                       CLE141
+     C           W0RTCD    IFEQ *BLANKS                                                       CLE141
+     C                     MOVE 'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
       *                                                                                       CLE134
      C           KSPOTD    KLIST                                                              CAS008
      C                     KFLD           WFYLD                                               CAS008
@@ -5609,6 +5633,25 @@
      C                     EXSR MATLOC                                                        244961
      C                     ENDIF                                                              244961
      C                     MOVE W@MDSL    ZLOC                                                244961
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PTDI      PPDDI   1                                           CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                              244961
      C           PTDI      WHEQ 'P'                                                           244961
      C                     EXSR ZBKDT                                                         244961
@@ -5638,6 +5681,7 @@
      C                     EXSR ZBKDT                                                         244961
      C                     ENDIF                                                              244961
      C                     ENDSL                                                              244961
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    EVDATE                                              244961
      C                     ENDIF                                                              244961
 1375 C**
@@ -5781,7 +5825,12 @@
       ** For CLE005, use ZFRQB3 to allow next interest date to            144089
       ** fall on a holiday                                                144089
      C           CLE005    IFEQ 'N'                                       144089
+     C           CLE141    IFEQ 'N'                                                           CLE141
+     C********** MDST      ORNE 01                                                    CLE141 CLE141A
+     C********** MDST      ANDNE07                                                    CLE141 CLE141A
+     C********** MDST      ANDNE08                                                    CLE141 CLE141A
      C                     EXSR ZFREQB                            S01195  S01392
+     C                     ENDIF                                                              CLE141
      C                     ELSE                                           144089
      C                     Z-ADDWWINTR    ZDAYNO                                             BUG9241
      C                     EXSR ZFRQB3                                    144089
@@ -5799,6 +5848,26 @@
      C                     Z-ADD*ZERO     ZNRDYS                          S01195
      C                     Z-ADDZDAYNO    WWINTR                                             BUG9241
      C           CLE005    IFEQ 'Y'                                       144089
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PDDI      IFEQ 'A'                                                           CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PDDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY    3                                          CLE141A
+     C                     PARM ZLOC      PLOC    3                                          CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          144089
      C           PDDI      WHEQ 'P'                                       144089
      C                     EXSR ZBKDT                                     144089
@@ -5831,8 +5900,28 @@
      C                     EXSR ZBKDT                                     144089
      C                     ENDIF                                          144089
      C                     ENDSL                                          144089
+     C                     ENDIF                                                              CLE141
      C                     ELSE                                           144089
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+      *                                                                                       CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PDDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFWDT                                     S01195
+     C                     ENDIF                                                              CLE141
      C                     ENDIF                                          144089
 1417 C                     Z-ADDZDAYNO    INTBD            INT.BASE DATE
 1418 C                     Z-ADDZDYNBR    VINTR            INTEREST DATE
@@ -5922,6 +6011,25 @@
      C                     EXSR MATLOC                                                        227082
      C                     ENDIF                                                              227082
      C                     MOVE W@MDSL    ZLOC                                                227082
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PTDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                              223215
      C           PTDI      WHEQ 'P'                                                           223215
      C                     EXSR ZBKDT                                                         223215
@@ -5951,6 +6059,7 @@
      C                     EXSR ZBKDT                                                         223215
      C                     ENDIF                                                              223215
      C                     ENDSL                                                              223215
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    EVDATE                                              223215
      C                     ENDIF                                                              223215
       *                                                                                       CLE028
@@ -6370,6 +6479,29 @@
      C                     EXSR ZFRQB3                                    154221
      C                     Z-ADD*ZERO     ZNRDYS                          154221
      C                     Z-ADDZDAYNO    WWREP                                              BUG9241
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PDDI      IFEQ 'A'                                                           CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PDDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PDDI      WHEQ 'A'                                       154221
      C                     Z-ADDZDAYNO    ZDYNBR                          154221
@@ -6401,6 +6533,7 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDAYNO    REPBD            REPAY BASE DATE154221
      C                     Z-ADDZDYNBR    VREPAY           REPAYMENT DATE 154221
       *                                                                   154221
@@ -6409,6 +6542,28 @@
 1516 C***********          EXSR ZFREQB                                    S01195
      C*****                EXSR FREQB                                     S01195
      C/COPY WNCPYSRC,LE0480C024
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     Z-ADDWWREP     ZDAYNO                                              CLE141
+     C                     EXSR ZFRQB3                                                        CLE141
+      *                                                                                       CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM *BLANKS   PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB                            S01195  S01392
      C                     Z-ADDZDAYNO    WWREP                                              BUG9241
 1517 C   99                SETON                     U7U8  **DATABASE 18**
@@ -6418,6 +6573,7 @@
 1521 C***********          EXSR ZDATE5                                    S01195
      C                     Z-ADD*ZERO     ZNRDYS                          S01195
      C                     EXSR ZFWDT                                     S01195
+     C                     ENDIF                                                              CLE141
 1522 C                     Z-ADDZDAYNO    REPBD            REPAY BASE DATE
 1523 C                     Z-ADDZDYNBR    VREPAY           REPAYMENT DATE
      C                     ENDIF                                          154221
@@ -7098,9 +7254,43 @@
      C                     MOVE CCY       ZCCY                                                229938
      C                     ENDIF                                                              229938
      C           CLE005    IFEQ 'N'                                                           229938
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C                     EXSR ZFRQB3                                                        CLE141
+      *                                                                                       CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PRCUR                                               CLE141
+     C                     PARM           PRLOC                                               CLE141
+     C                     PARM *BLANKS   PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM *BLANKS   PCCY                                               CLE141A
+     C                     PARM *BLANKS   PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     Z-ADDZDYNBR    ZDAYNO                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB                                                        229938
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
      C                     ELSE                                                               229938
      C                     EXSR ZFRQB3                                                        229938
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PRCUR                                               CLE141
+     C                     PARM           PRLOC                                               CLE141
+     C                     PARM *BLANKS   PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM *BLANKS   PCCY                                               CLE141A
+     C                     PARM *BLANKS   PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     Z-ADDZDYNBR    ZDAYNO                                              CLE141
+     C                     ENDIF                                                              CLE141
      C                     ENDIF                                                              229938
      C                     Z-ADDZDAYNO    WNXRO                                               229938
      C                     ENDIF                                                              229938
@@ -7618,6 +7808,25 @@
      C                     EXSR MATLOC                                                        249975
      C                     ENDIF                                                              249975
      C                     MOVE W@MDSL    ZLOC                                                249975
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PTDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                              249975
      C           PTDI      WHEQ 'P'                                                           249975
      C                     EXSR ZBKDT                                                         249975
@@ -7647,6 +7856,7 @@
      C                     EXSR ZBKDT                                                         249975
      C                     ENDIF                                                              249975
      C                     ENDSL                                                              249975
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    EVDATE                                              249975
      C                     ENDIF                                                              249975
 1604 C**
@@ -7684,6 +7894,26 @@
       *                                                                                       237466
      C                     ENDIF                                                              237466
      C                     MOVE W@MDSL    ZLOC                                                237466
+      *                                                                                       CLE141
+      ** Call Business Day Convention for Lending Transaction                                 CLE141
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           PICUR                                               CLE141
+     C                     PARM           PILOC                                               CLE141
+     C                     PARM PTDI      PPDDI                                               CLE141
+     C                     PARM           DATF                                                CLE141
+     C                     PARM ZCCY      PCCY                                               CLE141A
+     C                     PARM ZLOC      PLOC                                               CLE141A
+     C                     PARM           ZDYNBR                                              CLE141
+     C                     Z-ADDZDYNBR    ZMDAT                                               CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                              237466
      C           PTDI      WHEQ 'P'                                                           237466
      C                     EXSR ZBKDT                                                         237466
@@ -7721,6 +7951,7 @@
      C                     OTHER                                                              237466
      C                     Z-ADDEVDATE    ZMDAT                                               237466
      C                     ENDSL                                                              237466
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZMDAT     EVDATE                                              237466
       *                                                                   208750
       ** If this is a call loan which does not have a maturity date,      208750
@@ -12161,7 +12392,8 @@
 2721 O**********               HSHWN2    14P                                               AR1078776
 2722 O**********               HSHDC2    16P                                               AR1078776
      OLELWNEPDD        05                                                                   MD021605
-     O                         LONL    1874                                                 MD021605
+     O**********               LONL    1874                                          MD021605 CLE141
+     O                         LONL    2025                                                   CLE141
      O***LELWNEPKD        06                                                       MD021605 MD031481
      OLELWNEPKD        14                                                                   MD031481
      O                         LONK    1319                                                 MD021605

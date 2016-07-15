@@ -17,8 +17,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD000091           Date 09May13               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CLE141             Date 08Feb16               *
+      *  Prev Amend No. MD000091           Date 09May13               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
       *                 CLE143             Date 06Dec10               *
@@ -47,6 +48,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           (Recompile)                                         *
       *  MD000091 - Event Codes Substitution                          *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
@@ -225,7 +228,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of of error message ids etc
      D Ix              S              3P 0
                                                                                              BUG3760
@@ -265,13 +268,13 @@
      D PSysVal10       S             20A                                                      240968
      D PCurSet10       S            200A                                                      240968
      D CLE056          S              1A                                                      242751
- 
+
      D wLoanAlpha      S              1A                                                      CLE148
      D PLNRF           S              6A                                                      CLE148
      D PValid          S              6A                                                      CLE148
      D PChkDigit       S              1A                                                      CLE148
      D PData           S              2A                                                      CLE148
- 
+
       **                                                                                    MD000091
      D BChar           DS                                                                   MD000091
      D   BLen                  1      2B 0                                                  MD000091
@@ -281,7 +284,7 @@
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       * Rename input fields (must be included in DS LnCKFilFmt)
      ICLOANCKF
      I              RECI                        KRECI
@@ -296,17 +299,17 @@
      I              AFRT                        KAFRT
      I              REPA                        KREPA
      I              TMST                        KTMST
- 
+
       *****************************************************************
       /EJECT
- 
+
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
       ** ¦ Initial processing is performed automatically: the *inzsr is   ¦
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Check whether user is a web browser user, if so overwrite              CAP084
      C                   CALL      'SFC000026'                                  CAP084
      C                   PARM      *BLANKS       USER             10            CAP084
@@ -945,7 +948,7 @@
      C                   CLEAR                   LnCKFilFmt
      C                   MOVEL     'Y'           OKACTN
      C                   MOVEL     'Y'           OKLNRF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

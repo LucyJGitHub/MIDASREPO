@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. 231618             Date 19Aug14               *
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 01Mar16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 231618             Date 19Aug14               *
       *                 AR830785           Date 07May13               *
       *                 AR1091806          Date 27Feb13               *
       *                 AR811339A          Date 11Aug11               *
@@ -178,6 +180,9 @@
 0011 F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention for   *
+      *           Lending Transactions - Phase 2                      *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  231618 - Participant Facility By Primary Facility  - Open    *
@@ -486,7 +491,8 @@
      F*CLOAN***IF**F****1756  7AI     2 DISK                                           CLE036 CLE042
      F***CLOAN   IF  F    1773  7AI     2 DISK                                         CLE042 CER020
      F***CLOAN** IF  F    1782  7AI     2 DISK                                         CER020 CLE134
-     FCLOAN   IF  F    1874  7AI     2 DISK                                                   CLE134
+     F***CLOAN** IF  F    1874  7AI     2 DISK                                         CLE134 CLE141
+     FCLOAN   IF  F    2025  7AI     2 DISK                                                   CLE141
 0018 F*CLINT***IF**F     256  7AI     2 DISK                              S01194
 0019 F***LOAMS***IF  F     320 14AI     2 DISK                            S01518
 0019 F***LOAMS***IF**F     949 14AI     2 DISK                     S01518 CAC001
@@ -1012,6 +1018,10 @@
      I                                     18621864 XRFI                                      CLE134
      I                                     186518740XRFN                                      CLE134
       *                                                                                       CLE134
+     I                                     19061935 CCYPR                                     CLE141
+     I                                     19361965 LOCPR                                     CLE141
+     I                                     19661995 CCYPI                                     CLE141
+     I                                     19962025 LOCPI                                     CLE141
 0190 I*
 0191 I*    CUSTOMER LENDING LOANS FILE - DETAIL RECORD 2
 0192 I*
@@ -1655,6 +1665,19 @@
      C                     MOVE 'Y'       CAS009                                              CAS009
      C                     MOVE *ON       *IN94                                               CAS009
      C                     ENDIF                                                              CAS009
+      *                                                                                       CLE141
+      ** Determine if CLE141 is switched ON                                                   CLE141
+      *                                                                                       CLE141
+     C                     MOVE 'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   PRTCD                                               CLE141
+     C                     PARM '*VERIFY' POPTN                                               CLE141
+     C                     PARM 'CLE141'  PSARD                                               CLE141
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
+      *                                                                                       CLE141
+     C           PRTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVE 'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
       *                                                                   CAC001
       **  If Analytical Accounting is on, enable F19                      CAC001
       **  or Revenue Analysis is installed, enable F19                    CDE002
@@ -5477,7 +5500,39 @@
      C                     Z-ADDRLDY      ZMDAY                                             AR583389
      C                     ENDIF                                                            AR583389
       *                                                                                     AR583389
+     C                     Z-ADDZDAYNO    WBSDT   50                                          CLE141
      C                     EXSR ZFRQB3                                                      AR583389
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PDDI      IFEQ 'A'                                                           CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM CCYPI     PCURR  30                                           CLE141
+     C                     PARM LOCPI     PLOCN  30                                           CLE141
+     C                     PARM PDDI      PPAYC   1                                           CLE141
+     C                     PARM BJDFIN    PDFIN   1                                           CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+      *                                                                                       CLE141
+      ** Do not return adjusted date if it is equal to or earlier than                        CLE141
+      ** previous date (only happens for 'previous' date calculations);                       CLE141
+      ** instead use the base date                                                            CLE141
+      *                                                                                       CLE141
+     C           WBSDT     IFGE ZDYNBR                                                        CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C                     ELSE                                                               CLE141
      C                     Z-ADD*ZEROS    ZNRDYS                                            AR583389
      C                     SELEC                                                            AR583389
      C           PDDI      WHEQ 'P'                                                         AR583389
@@ -5519,6 +5574,9 @@
       *                                                                                     AR583389
      C                     ENDIF                                                            AR583389
      C                     ENDSL                                                            AR583389
+      *                                                                                       CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
      C                     Z-ADDZDYNBR    WENDI   50                                        AR583389
       *                                                                                     AR583389
       ** Also, when interest is not capitalised, compute for the date                       AR583389
@@ -5526,6 +5584,38 @@
       *                                                                                     AR583389
      C           INTC      IFNE 'Y'                                                         AR583389
      C                     Z-ADDZDYNBR    ZDAYNO                                            AR583389
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C           PTDI      IFEQ *BLANK                                                        CLE141
+     C                     MOVEL'M'       PPAYC                                               CLE141
+     C                     ELSE                                                               CLE141
+     C                     MOVELPTDI      PPAYC                                               CLE141
+     C                     ENDIF                                                              CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM CCYPI     PCURR                                               CLE141
+     C                     PARM LOCPI     PLOCN                                               CLE141
+     C                     PARM           PPAYC                                               CLE141
+     C                     PARM BJDFIN    PDFIN                                               CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+      *                                                                                       CLE141
+      ** Do not return adjusted date if it is equal to or earlier than                        CLE141
+      ** previous date (only happens for 'previous' date calculations);                       CLE141
+      ** instead use the base date                                                            CLE141
+      *                                                                                       CLE141
+     C           WBSDT     IFGE ZDYNBR                                                        CLE141
+     C                     Z-ADDZDAYNO    ZDYNBR                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *                                                                                       CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                            AR583389
      C           PTDI      WHEQ 'P'                                                         AR583389
      C                     EXSR ZBKDT                                                       AR583389
@@ -5565,6 +5655,8 @@
      C                     ENDIF                                                            AR583389
      C                     ENDSL                                                            AR583389
      C                     ENDIF                                                            AR583389
+      *                                                                                       CLE141
+     C                     ENDIF                                                              CLE141
       *                                                                                     AR583389
      C                     Z-ADDZDYNBR    WENDI                                             AR583389
       *                                                                                     AR583389

@@ -38,7 +38,7 @@
       *---------------------------------------------------------------*
       *                                                               *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           (Recompile)                                         *
+      *           for LE Transactions                                 *
       *  MD031736 - Use rate fixing days on loan for rate fixing at   *
       *             Start Date.                                       *
       *  AR988331 - Apply Rate Fixing process to a future valued Loan *
@@ -152,6 +152,29 @@
 
      D WRUN            S              1
      D WBaseRate       S             11P 7
+     D SCSARD        E DS                  EXTNAME(SCSARDPD)                                  CLE141
+     D ArrCCY          DS                                                                     CLE141
+     D  L0C1PR                                                                                CLE141
+     D  L0C2PR                                                                                CLE141
+     D  L0C3PR                                                                                CLE141
+     D  L0C4PR                                                                                CLE141
+     D  L0C5PR                                                                                CLE141
+     D  L0C6PR                                                                                CLE141
+     D  L0C7PR                                                                                CLE141
+     D  L0C8PR                                                                                CLE141
+     D  L0C9PR                                                                                CLE141
+     D  L0C0PR                                                                                CLE141
+     D ArrLOC          DS                                                                     CLE141
+     D  L0L1PR                                                                                CLE141
+     D  L0L2PR                                                                                CLE141
+     D  L0L3PR                                                                                CLE141
+     D  L0L4PR                                                                                CLE141
+     D  L0L5PR                                                                                CLE141
+     D  L0L6PR                                                                                CLE141
+     D  L0L7PR                                                                                CLE141
+     D  L0L8PR                                                                                CLE141
+     D  L0L9PR                                                                                CLE141
+     D  L0L0PR                                                                                CLE141
       *                                                                                     AR988331
       ** Datastructure to hold input parameter for AOSVALR0.                                AR988331
       *                                                                                     AR988331
@@ -250,12 +273,22 @@
      C                   Else                                                               MD031736
      C                   Z-add     0             PDaysBck                                   MD031736
      C                   Endif                                                              MD031736
+     C                   IF        CLE141 = 'Y'                                               CLE141
+     C                   CALL      'LEZBDYRF'                                                 CLE141
+     C                   PARM      L0VDAT        PInpOutDay                                   CLE141
+     C                   PARM                    PDaysBck                                     CLE141
+     C                   PARM                    ArrCCY                                       CLE141
+     C                   PARM                    ArrLOC                                       CLE141
+     C                   PARM      'B'           PMODE             1                          CLE141
+     C                   PARM      *Zeros        PDayNbr                                      CLE141
+     C                   ELSE                                                                 CLE141
      C                   CALLB     'ZBKDT'
      C                   PARM      L0VDAT        PInpOutDay        5 0
      C                   PARM      L0CCY         PCYCD             3
      C                   PARM      *BLANKS       PLocation         3
      C                   PARM                    PDaysBck          2 0
      C                   PARM                    PDayNbr           5 0
+     C                   ENDIF                                                                CLE141
       *
       ** If rate to be used is today's rate, do not look on history file
      C                   IF        PDayNbr >= BAVDNR
@@ -440,6 +473,19 @@
      C                   MOVEL     SVal2         UseFixingDay      1                        MD031736
      C                   ENDIF                                                              AR988331
       *
+      ** Determine if CLE141 is switched ON                                                   CLE141
+      ** and initialize BDC work fields                                                       CLE141
+                                                                                              CLE141
+     C                   MOVE      'N'           CLE141            1                          CLE141
+     C                   CALLB     'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       PRtnCde                                      CLE141
+     C                   PARM      '*VERIFY '    POption                                      CLE141
+     C                   PARM      'CLE141'      PSARD             6                          CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+      *                                                                                       CLE141
+     C                   IF        PRtnCde = *Blanks                                          CLE141
+     C                   EVAL      CLE141 = 'Y'                                               CLE141
+     C                   ENDIF                                                                CLE141
      C                   ENDSR
       *****************************************************************
       /EJECT

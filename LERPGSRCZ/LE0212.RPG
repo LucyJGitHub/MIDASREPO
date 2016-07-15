@@ -22,8 +22,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD031378           Date 23Jun15               *
-      *  Prev Amend No. AR1071639          Date 12Mar15               *
+      *  Last Amend No. MD039187           Date 03Jun16               *
+      *  Prev Amend No. MD038831           Date 19May16               *
+      *                 CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD031378           Date 23Jun15               *
+      *                 AR1071639          Date 12Mar15               *
       *                 AR1049090          Date 25Feb15               *
       *                 MD031977           Date 22Jan15               *
       *                 MD031067           Date 19Nov14               *
@@ -249,6 +253,15 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039187 - System does not adjust Next Repayment Date based  *
+      *             on PTDI if original NPD falls on holiday. Include *
+      *             settlement check on computing next payment date.  *
+      *  MD038831 - Incorrect interest payment computation when       *
+      *            the repayment date is adjusted to the next working *
+      *            date when holiday                                  *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           for LE Transactions                                 *
       *  MD031378 - LE unexpected daily 'Rollover Rate' events        *
       *             generated for a fixed rate loan with daily        *
       *             RO freq even no new RO rates were input for the   *
@@ -1066,6 +1079,32 @@
      I                                    P   1   70ORTI
      I                                        1   7 WORTI
      I                                        6   6 MADDI
+      *                                                                                       CLE141
+      ** Business Day Convention Fields                                                       CLE141
+      *                                                                                       CLE141
+     ICCYPI       DS                                                                          CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+     ILOCPI       DS                                                                          CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
+      *                                                                                       CLE141
      I/COPY WNCPYSRC,LEH01088
       *
      ISDBSRT    E DSSDBSRTPD                                              184903
@@ -5932,6 +5971,17 @@
      C                     MOVE *BLANK    WSAME                           154221
      C                     ENDIF                                          154221
       *                                                                   154221
+      ***Use*External*Settlement*Indicator*set*to*Y*when************                  CLE141 CLE141A
+      ***settlement*01,*07*or*08************************************                  CLE141 CLE141A
+      **************************************************************                  CLE141 CLE141A
+     C********** CLE141    IFEQ 'Y'                                                   CLE141 CLE141A
+     C**********           MOVEL'N'       ESETIN  1                                   CLE141 CLE141A
+     C********** MDST      IFEQ 01                                                    CLE141 CLE141A
+     C********** MDST      OREQ 07                                                    CLE141 CLE141A
+     C********** MDST      OREQ 08                                                    CLE141 CLE141A
+     C**********           MOVEL'Y'       ESETIN                                      CLE141 CLE141A
+     C**********           ENDIF                                                      CLE141 CLE141A
+     C**********           ENDIF                                                      CLE141 CLE141A
       *
       ** Calculate for next interest date until rollover date or
       ** maturity date, if previous interest date processed
@@ -5958,11 +6008,15 @@
       *                                                                                     MD023475
       ** Use loan currency for maturity settlement 01, 07 and 08.                           MD023475
       *                                                                                     MD023475
+     C**********           MOVEL'N'       ESETIN  1                                   CLE141 CLE141A
      C           MDST      IFEQ 01                                                          MD023475
      C           MDST      OREQ 07                                                          MD023475
      C           MDST      OREQ 08                                                          MD023475
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC
+     C********** CLE141    IFEQ 'Y'                                                   CLE141 CLE141A
+     C**********           MOVEL'Y'       ESETIN                                      CLE141 CLE141A
+     C**********           ENDIF                                                      CLE141 CLE141A
      C                     ELSE                                                             MD023475
       *                                                                                     MD023475
       ** For all other settlement types, use Local Currency & Location                      MD023475
@@ -6004,6 +6058,20 @@
      C                     Z-ADDZDAYNO    WNEXTO  50                                         249835B
      C                     Z-ADDZDAYNO    WINDNO                          154221
      C                     Z-ADD*ZEROS    ZNRDYS
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PDDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC
      C           PDDI      WHEQ 'P'
      C                     EXSR ZBKDT
@@ -6044,6 +6112,7 @@
       *                                                                                      BUG9052
      C                     ENDIF                                          144089
      C                     ENDSL
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDI
       *
       ** Also, when interest is not capitalised, compute for the date
@@ -6051,6 +6120,24 @@
       *
      C           SCAPI     IFEQ ' NO'
      C                     Z-ADDZDYNBR    ZDAYNO
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C           PTDI      IFEQ *BLANK                                                        CLE141
+     C                     MOVEL'M'       PPAYC                                               CLE141
+     C                     ELSE                                                               CLE141
+     C                     MOVELPTDI      PPAYC                                               CLE141
+     C                     ENDIF                                                              CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM           PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC
      C           PTDI      WHEQ 'P'
      C                     EXSR ZBKDT
@@ -6088,6 +6175,8 @@
       *                                                                                      BUG9052
      C                     ENDIF                                          154221
      C                     ENDSL
+      *                                                                                       CLE141
+     C                     ENDIF                                                              CLE141
       *                                                                   150965
      C                     Z-ADDZDYNBR    WENDI                           150965
       *                                                                   150965
@@ -6101,9 +6190,24 @@
       ** should fall on a working day
       *
      C                     ELSE
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM           PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB
      C                     Z-ADD*ZEROS    ZNRDYS
      C                     EXSR ZFWDT
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDI   50
      C                     ENDIF
       *
@@ -6136,12 +6240,26 @@
      C                     Z-ADDNIDT      ZDYNBR                          154221
      C           SCAPI     IFEQ ' NO'                                     154221
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
      C           PTDI      WHEQ 'N'                                       154221
      C                     EXSR ZFWDT                                     154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
       *                                                                   154221
      C                     Z-ADDZDYNBR    NIDT                            154221
       *                                                                   154221
@@ -6200,6 +6318,20 @@
      C                     Z-ADDZDAYNO    W#NEXR  50                      154221
      C                     Z-ADDZDAYNO    WRPDNO                          154221
      C                     Z-ADD*ZEROS    ZNRDYS
+      *                                                                                       CLE141
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PDDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PDDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -6231,6 +6363,8 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+      *
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDR                           154221
       *                                                                   154221
       ** Also, when interest is not capitalised, compute for the date     154221
@@ -6238,6 +6372,19 @@
       *                                                                   154221
      C           SCAPI     IFEQ ' NO'                                     154221
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -6266,6 +6413,7 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDR                           154221
       *                                                                   154221
       *                                                                   154221
@@ -6275,9 +6423,24 @@
       ** should fall on a working day                                     154221
       *                                                                   154221
      C                     ELSE                                           154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM *BLANKS   PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB                                    154221
      C                     Z-ADD*ZEROS    ZNRDYS                          154221
      C                     EXSR ZFWDT
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDR   50                      154221
      C                     ENDIF                                          154221
      C/COPY WNCPYSRC,LEH00898
@@ -6310,12 +6473,26 @@
      C                     Z-ADDNRPD      ZDYNBR                          154221
      C           SCAPI     IFEQ ' NO'                                     154221
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
      C           PTDI      WHEQ 'N'                                       154221
      C                     EXSR ZFWDT                                     154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
       *                                                                   154221
      C                     Z-ADDZDYNBR    NRPD                            154221
       *                                                                   154221
@@ -6409,10 +6586,37 @@
      C           SCAPI     IFEQ ' NO'                                     154221
       *                                                                   154221
      C***********          MOVE CCY       ZCCY                     154221 157635
+      *                                                                                     MD039187
+      ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
+      *                                                                                     MD039187
+     C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 07                                                          MD039187
+     C           MDST      OREQ 08                                                          MD039187
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC                            154221
+     C                     ELSE
+      *                                                                                     MD039187
+      ** For all other settlement types, use Local Currency & Location                      MD039187
+      *                                                                                     MD039187
+     C                     MOVE BJLCCY    ZCCY                                              MD039187
+     C                     MOVE BJSLCD    ZLOC                                              MD039187
+     C                     ENDIF                                                            MD039187
+      *                                                                                     MD039187
      C                     Z-ADD*ZEROS    ZNRDYS                          154221
       *                                                                   154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -6441,6 +6645,7 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDI                           154221
      C                     ENDIF                                          154221
       *                                                                   154221
@@ -6574,10 +6779,36 @@
      C           SCAPI     IFEQ ' NO'                                     154221
       *                                                                   154221
      C***********          MOVE CCY       ZCCY                     154221 157635
+      *                                                                                     MD039187
+      ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
+      *                                                                                     MD039187
+     C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 07                                                          MD039187
+     C           MDST      OREQ 08                                                          MD039187
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC                            154221
+      *                                                                                     MD039187
+      ** For all other settlement types, use Local Currency & Location                      MD039187
+      *                                                                                     MD039187
+     C                     MOVE BJLCCY    ZCCY                                              MD039187
+     C                     MOVE BJSLCD    ZLOC                                              MD039187
+     C                     ENDIF                                                            MD039187
+      *                                                                                     MD039187
      C                     Z-ADD*ZEROS    ZNRDYS                          154221
       *                                                                   154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** ESETIN    ANDEQ'Y'                                                   CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -6606,13 +6837,15 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDR                           154221
      C                     ENDIF                                          154221
       *                                                                   154221
      C           PDDI      IFNE 'A'                                       154221
      C***********          Z-ADDNRPD      ZIEND                           154221
      C**********           Z-ADDWENDR     ZIEND                                        154221 190760
-     C                     Z-ADDNRPD      ZIEND                                               190760
+     C**********           Z-ADDNRPD      ZIEND                                      190760 MD038831
+     C                     Z-ADDWENDR     ZIEND                                             MD038831
      C                     ELSE                                           154221
      C                     Z-ADDW#NEXR    ZIEND                           154221
      C                     ENDIF                                          154221
@@ -7199,10 +7432,41 @@
      C           SCAPI     IFEQ ' NO'                                     154221
       *                                                                   154221
      C***********          MOVE CCY       ZCCY                     154221 157635
+      *                                                                                     MD039187
+      ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
+      *                                                                                     MD039187
+     C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 07                                                          MD039187
+     C           MDST      OREQ 08                                                          MD039187
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC                            154221
+     C                     ELSE
+      *                                                                                     MD039187
+      ** For all other settlement types, use Local Currency & Location                      MD039187
+      *                                                                                     MD039187
+     C                     MOVE BJLCCY    ZCCY                                              MD039187
+     C                     MOVE BJSLCD    ZLOC                                              MD039187
+     C                     ENDIF                                                            MD039187
+      *                                                                                     MD039187
      C                     Z-ADD*ZEROS    ZNRDYS                          154221
       *                                                                   154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -7232,6 +7496,7 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
      C                     EXSR ZDATE2                                    154221
      C                     MOVE ZADATE    SINDT                           154221
@@ -7268,10 +7533,40 @@
      C           SCAPI     IFEQ ' NO'                                     154221
       *                                                                   154221
      C***********          MOVE CCY       ZCCY                     154221 157635
+      *                                                                                     MD039187
+      ** Use loan currency for maturity settlement 01, 07 and 08.                           MD039187
+      *                                                                                     MD039187
+     C           MDST      IFEQ 01                                                          MD039187
+     C           MDST      OREQ 07                                                          MD039187
+     C           MDST      OREQ 08                                                          MD039187
      C                     MOVE CCYCL     ZCCY                            157635
      C                     MOVE WNLOC     ZLOC                            154221
+      *                                                                                     MD039187
+      ** For all other settlement types, use Local Currency & Location                      MD039187
+      *                                                                                     MD039187
+     C                     MOVE BJLCCY    ZCCY                                              MD039187
+     C                     MOVE BJSLCD    ZLOC                                              MD039187
+     C                     ENDIF                                                            MD039187
+      *                                                                                     MD039187
      C                     Z-ADD*ZEROS    ZNRDYS                          154221
       *                                                                   154221
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                          154221
      C           PTDI      WHEQ 'P'                                       154221
      C                     EXSR ZBKDT                                     154221
@@ -7301,6 +7596,7 @@
      C                     EXSR ZBKDT                                     154221
      C                     ENDIF                                          154221
      C                     ENDSL                                          154221
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    ZDAYNO                          154221
      C                     EXSR ZDATE2                                    154221
      C                     MOVE ZADATE    SINDT                           154221
@@ -8080,7 +8376,8 @@
      C                     PARM *BLANKS   @PNOI   1
      C           SDNOST    PARM SDNOST    DSFDY
      C           @RTCD     IFEQ *BLANKS
-     C                     MOVE A7NOSN    WNLOC   2
+     C**********           MOVE A7NOSN    WNLOC   2                                          CLE141A
+     C                     MOVE A7NOSN    WNLOC   3                                          CLE141A
      C                     ELSE
      C                     MOVEL@KEYB     WK5     5
      C                     MOVE @KEYE     WK5
@@ -8614,6 +8911,21 @@
      C                     ENDIF                                                              CLE134
       *                                                                                       CLE134
      C                     ENDIF                                                              CLE134
+      *
+      ** Check if CLE141 is installed
+      *
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANK    @RTCD                                               CLE141
+     C                     PARM '*VERIFY' @OPTN                                               CLE141
+     C                     PARM 'CLE141'  WSARD                                               CLE141
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
+      *                                                                                       CLE141
+     C           @RTCD     IFEQ *BLANK                                                        CLE141
+     C                     MOVE 'Y'       CLE141  1                                           CLE141
+     C                     ELSE                                                               CLE141
+     C                     MOVE 'N'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
+      *
      C/COPY WNCPYSRC,LE0212C005
       *                                                                   181312
       ** Define data structures RUNDAT and EM linked enquiry
@@ -10072,6 +10384,23 @@
      C                     Z-ADDZDAYNO    W#NEXT  50                                        AR583389
      C                     Z-ADDZDAYNO    WINDNO                                            AR583389
      C                     Z-ADD*ZEROS    ZNRDYS                                            AR583389
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PDDI      PPAYC   1                                           CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                          CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                            AR583389
      C           PDDI      WHEQ 'P'                                                         AR583389
      C                     EXSR ZBKDT                                                       AR583389
@@ -10112,6 +10441,7 @@
       *                                                                                     AR583389
      C                     ENDIF                                                            AR583389
      C                     ENDSL                                                            AR583389
+     C                     ENDIF                                                              CLE141
      C                     Z-ADDZDYNBR    WENDI   50                                        AR583389
       *                                                                                     AR583389
       ** Also, when interest is not capitalised, compute for the date                       AR583389
@@ -10119,6 +10449,23 @@
       *                                                                                     AR583389
      C           SCAPI     IFEQ ' NO'                                                       AR583389
      C                     Z-ADDZDYNBR    ZDAYNO                                            AR583389
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** MDST      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** MDST      ANDEQ08                                                    CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                    CLE141
+     C                     PARM           ZDAYNO                                              CLE141
+     C                     PARM           CCYPI                                               CLE141
+     C                     PARM           LOCPI                                               CLE141
+     C                     PARM PTDI      PPAYC                                               CLE141
+     C                     PARM           BJDFIN                                              CLE141
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT                                               CLE141
+     C                     Z-ADDPAJDT     ZDYNBR                                              CLE141
+     C                     ELSE                                                               CLE141
      C                     SELEC                                                            AR583389
      C           PTDI      WHEQ 'P'                                                         AR583389
      C                     EXSR ZBKDT                                                       AR583389
@@ -10157,6 +10504,7 @@
       *                                                                                     AR583389
      C                     ENDIF                                                            AR583389
      C                     ENDSL                                                            AR583389
+     C                     ENDIF                                                              CLE141
      C                     ENDIF                                                            AR583389
       *                                                                                     AR583389
      C                     Z-ADDWENDI     W#NEXT                                            AR583389

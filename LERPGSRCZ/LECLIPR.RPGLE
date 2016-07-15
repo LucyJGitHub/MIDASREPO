@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD037909           Date 08Mar16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD039248           Date 07Jun16               *
+      *  Prev Amend No. MD037909           Date 08Mar16               *
+      *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 CDL094             Date 01Sep14               *
@@ -57,6 +58,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039248 - Business Day Convention details missing in BDC    *
+      *             tab for authorised loan (Recompile)               *
       *  MD037909 - In the loan mainlist upon enquire, defined BDC of *
       *             an authorised loan blanked out                    *
       *  CLE141 - Currency and Location Business Day Convention for   *

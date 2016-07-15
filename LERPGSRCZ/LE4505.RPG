@@ -10,8 +10,10 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CSW213             Date 03Jun13               *
-      *  Prev Amend No. AR830785           Date 07May13
+      *  Last Amend No. CLE141A            Date 28Apr16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CSW213             Date 03Jun13               *
+      *                 AR830785           Date 07May13
       *                 CLE075BO           Date 06Aug12               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
@@ -57,6 +59,9 @@
      F*                                                               *
      F*****************************************************************
      F*                                                               *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
+      *           for LE Transactions                                 *
       *  CSW213 - SWIFT Changes 2013 (Recompile)                      *
       *  AR830785 - Looping on insert of accrued interest adjustment  *
       *             Extended core fix 263533. (Child: AR830786)       *
@@ -256,6 +261,31 @@
      I                                        1   7 RUNA
      I                                       12  12 DATF
      I                                       13  13 MBIN
+      *                                                                                       CLE141
+      ** CLE141 Business Day Convention                                                       CLE141
+      *                                                                                       CLE141
+     IARCY        DS                             30                                           CLE141
+     I                                        1   3 C1PI                                      CLE141
+     I                                        4   6 C2PI                                      CLE141
+     I                                        7   9 C3PI                                      CLE141
+     I                                       10  12 C4PI                                      CLE141
+     I                                       13  15 C5PI                                      CLE141
+     I                                       16  18 C6PI                                      CLE141
+     I                                       19  21 C7PI                                      CLE141
+     I                                       22  24 C8PI                                      CLE141
+     I                                       25  27 C9PI                                      CLE141
+     I                                       28  30 C0PI                                      CLE141
+     IALOC        DS                             30                                           CLE141
+     I                                        1   3 L1PI                                      CLE141
+     I                                        4   6 L2PI                                      CLE141
+     I                                        7   9 L3PI                                      CLE141
+     I                                       10  12 L4PI                                      CLE141
+     I                                       13  15 L5PI                                      CLE141
+     I                                       16  18 L6PI                                      CLE141
+     I                                       19  21 L7PI                                      CLE141
+     I                                       22  24 L8PI                                      CLE141
+     I                                       25  27 L9PI                                      CLE141
+     I                                       28  30 L0PI                                      CLE141
       *
       **  RUNDAT data area
       *
@@ -544,6 +574,17 @@
      C                     EXSR *PSSR                        Exec SR PSSR CEU004
      C                     ENDIF                            End If        CEU004
      C                     ENDIF                           End If         CEU004
+      *                                                                                       CLE141
+      ** Check if CLE141 is switched on                                                       CLE141
+      *                                                                                       CLE141
+     C                     MOVEL'N'       CLE141  1                                           CLE141
+     C                     CALL 'AOSARDR0'                                                    CLE141
+     C                     PARM *BLANKS   @RTCD                                               CLE141
+     C                     PARM '*VERIFY' @OPTN                                               CLE141
+     C                     PARM 'CLE141'  @SARD                                               CLE141
+     C           @RTCD     IFEQ *BLANKS                                                       CLE141
+     C                     MOVEL'Y'       CLE141                                              CLE141
+     C                     ENDIF                                                              CLE141
       *                                                                                     CLE075BO
       ** Full Cache SDCURRPD                                                                CLE075BO
       *                                                                                     CLE075BO
@@ -805,9 +846,40 @@
       *
      C                     SUB  RAMT      FORBAL
      C*****                EXSR FREQB                                    S01392
+     C           CLE141    IFEQ 'Y'                                                           CLE141
+     C********** SETP      ANDEQ01                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ07                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ08                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ02                                                    CLE141 CLE141A
+     C********** CLE141    OREQ 'Y'                                                   CLE141 CLE141A
+     C********** SETP      ANDEQ12                                                    CLE141 CLE141A
+     C                     EXSR ZFRQB3                                                        CLE141
+     C**********           MOVEL'F'       PMODE                                       CLE141 CLE141A
+     C**********           CALL 'LEZBDYRF'                                            CLE141 CLE141A
+     C**********           PARM           ZDAYNO                                      CLE141 CLE141A
+     C**********           PARM *ZEROS    ZNRDYS                                      CLE141 CLE141A
+     C**********           PARM           ARCY                                        CLE141 CLE141A
+     C**********           PARM           ALOC                                        CLE141 CLE141A
+     C**********           PARM 'F'       PMODE   1                                   CLE141 CLE141A
+     C**********           PARM *ZEROS    ZDYNBR                                      CLE141 CLE141A
+     C                     CALL 'LEZBDYCD'                                                   CLE141A
+     C                     PARM           ZDAYNO                                             CLE141A
+     C                     PARM           ARCY                                               CLE141A
+     C                     PARM           ALOC                                               CLE141A
+     C                     PARM *BLANKS   PPAYC   1                                          CLE141A
+     C                     PARM BJDFIN    PDFIN   1                                          CLE141A
+     C                     PARM           ZCCY                                               CLE141A
+     C                     PARM           ZLOC                                               CLE141A
+     C                     PARM *ZEROS    PAJDT   50                                         CLE141A
+     C                     Z-ADDPAJDT     ZDYNBR                                             CLE141A
+     C                     ELSE                                                               CLE141
      C                     EXSR ZFREQB                                   S01392
      C                     Z-ADD*ZERO     ZNRDYS
      C                     EXSR ZFWDT
+     C                     ENDIF                                                              CLE141
      C                     MOVE ZDYNBR    NEXTDT  50
       *
      C                     END
@@ -1212,6 +1284,7 @@
      C/COPY ZSRSRC,ZFREQBZ2                                               S01392
      C/COPY ZSRSRC,ZDATE1Z2                                               S01392
      C/COPY ZSRSRC,ZDATE2Z4                                               S01392
+     C/COPY ZSRSRC,ZFRQB3                                                                     CLE141
      C********************************************************************
 ** Pwr                                                                    123333
 0000001                                                                   123333

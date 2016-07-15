@@ -11,8 +11,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039613           Date 05Jul16               *
-      *  Prev Amend No. MD036962           Date 26Apr16               *
+      *  Last Amend No. MD039016           Date 26May16               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *
+      *                 MD039613           Date 05Jul16               *
+      *                 MD036962           Date 26Apr16               *
       *                 CLE164             Date 18Aug14               *
       *                 CDL094             Date 01Sep14               *
       *                 MD027024           Date 19Aug14               *
@@ -100,6 +103,10 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039016 - Different event codes for BDC validation in       *
+      *             various Lending APIs                              *
+      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE141 - Currency and Location Business Day Convention       *
       *  MD039613 - Fee Amount field in FEEM validates when Facility  *
       *             Fee is inserted                                   *
       *  MD036962 - Incorrect validation if fee amount left blank     *
@@ -259,7 +266,7 @@
       **   =======                               
       ** +--------------------------------------+
       *****************************************************************
-
+ 
       * Fees Settlement/Adjustment Detail
      FLEFEADL2  IF   E           K DISK    INFSR(*PSSR)
      FLEPDUEL2  IF   E           K DISK    INFSR(*PSSR)                                       CLE134
@@ -281,6 +288,10 @@
      D***ECTP***       S              2    DIM(17) CTDATA PERRCD(17)                   CLE073 CLE134
      D***ECTP***       S              2    DIM(18) CTDATA PERRCD(18)                 CLE134 AR322844
      D ECTP            S              2    DIM(04) CTDATA PERRCD(04)                        AR322844
+
+     D CLE141          S              1A                                                      CLE141
+     D RetCode         S              7A                                                     CLE141A
+
       *
       *****************************************************************
       ** +--------------------------------------+
@@ -300,42 +311,42 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
-
+ 
      D/COPY ZACPYSRC,STD_D_SPEC
-
+ 
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
-
+ 
      D/COPY ZACPYSRC,PSDS
       ** The following /COPY line includes definitions for the above fields
       ** as #ProcPgm, #ProcMod and #ProcName.  They are based on the
       ** corresponding fields in the PSDS /COPY member, so that member
       ** must be included where this one is used.
-
+ 
      D/COPY ZACPYSRC,PROCPARMS
-
+ 
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes the definitions for error and
       ** warning message arrays.
      D/COPY ZACPYSRC,ERR_ARRAYS
       **--------------------------------------------------------------------------------------------
-
+ 
       ** +--------------------------------------+
       **   End of automatically included D-specs 
       **   ===================================== 
       ** +--------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       *****************************************************************
-
+ 
       ** +--------------------------------------+
       **   Manually included D-specs             
       **   =========================             
       ** +--------------------------------------+
-
+ 
       ** +--------------------------------------+
       **   Named constants                       
       **   ===============                       
@@ -356,36 +367,36 @@
      D     WMSGID4     S                   LIKE(#MsgID)                                       CAS019
                                                                                               CAS019
      D MSGDATA         S                   LIKE(#MsgData)                                     CAS019
-
+ 
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(75)
-
+ 
       ** +--------------------------------------+
       **   Arrays and Data Structures            
       **   ==========================            
       ** +--------------------------------------+
-
+ 
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
-
+ 
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
-
+ 
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
-
+ 
       * First DS for Access programs - short data structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
-
+ 
      D                 DS                                                                     242377
      D  WPARM                  1     20                                                       242377
      D  WPARM1                 1      5                                                       242377
@@ -504,20 +515,44 @@
      D  DDMMYY                14     19  0
      D  WFAC3                 20     22  0
      D  WA13                  23     35  0
+
+      ** Data structure to set Business Day Convention                                       CLE141A
+     D CurLocDS        DS            60                                                      CLE141A
+     D   CurLocDS1             1      3                                                      CLE141A
+     D   CurLocDS2             4      6                                                      CLE141A
+     D   CurLocDS3             7      9                                                      CLE141A
+     D   CurLocDS4            10     12                                                      CLE141A
+     D   CurLocDS5            13     15                                                      CLE141A
+     D   CurLocDS6            16     18                                                      CLE141A
+     D   CurLocDS7            19     21                                                      CLE141A
+     D   CurLocDS8            22     24                                                      CLE141A
+     D   CurLocDS9            25     27                                                      CLE141A
+     D   CurLocDS10           28     30                                                      CLE141A
+     D   CurLocDS11           31     33                                                      CLE141A
+     D   CurLocDS12           34     36                                                      CLE141A
+     D   CurLocDS13           37     39                                                      CLE141A
+     D   CurLocDS14           40     42                                                      CLE141A
+     D   CurLocDS15           43     45                                                      CLE141A
+     D   CurLocDS16           46     48                                                      CLE141A
+     D   CurLocDS17           49     51                                                      CLE141A
+     D   CurLocDS18           52     54                                                      CLE141A
+     D   CurLocDS19           55     57                                                      CLE141A
+     D   CurLocDS20           58     60                                                      CLE141A
+                                                                                             CLE141A
       *
       ** +--------------------------------------+
       **   Declared variables                    
       **   ==================                    
       ** +--------------------------------------+
-
+ 
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
      D IdxNew          S              3P 0                                                    CAP084
-
+ 
       ** Index for arrays of warning message ids etc
      D WId             S              3P 0
      D WIdNew          S              3P 0                                                    CAP084
-
+ 
       ** Response Mode, received as a parameter from the common header
      D RespMode        S              1A
      D AIdx            S              3P 0                                                  BUG10955
@@ -611,13 +646,13 @@
       **   End of D-specs                        
       **   ==============                        
       ** +--------------------------------------+
-
+ 
       ** +----------------------------------------+
       **   Hook for non-core D-specs (all types)   
       **   also any I-specs (if necessary)         
       **   =====================================   
       ** +----------------------------------------+
-
+ 
       *****************************************************************
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
@@ -658,6 +693,36 @@
       *                                                                                       237347
      C                   EXSR      RESETERRS
 
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     DDLNRF        ANDNE     *blanks                                                   CLE141A
+     C                   Eval      Kpd_RECI = 'D'                                            CLE141A
+     C                   Eval      Kpd_LNRF = DDLNRF                                         CLE141A
+     C     KCLOANL4      CHAIN     CLOANL4                                                   CLE141A
+     C                   IF        %FOUND(CLOANL4)                                           CLE141A
+      ** Set the value for Business Day Convention Fields                                    CLE141A
+     C                   EVAL      CurLocDS1 = PD_C1PI                                       CLE141A
+     C                   EVAL      CurLocDS2 = PD_C2PI                                       CLE141A
+     C                   EVAL      CurLocDS3 = PD_C3PI                                       CLE141A
+     C                   EVAL      CurLocDS4 = PD_C4PI                                       CLE141A
+     C                   EVAL      CurLocDS5 = PD_C5PI                                       CLE141A
+     C                   EVAL      CurLocDS6 = PD_C6PI                                       CLE141A
+     C                   EVAL      CurLocDS7 = PD_C7PI                                       CLE141A
+     C                   EVAL      CurLocDS8 = PD_C8PI                                       CLE141A
+     C                   EVAL      CurLocDS9 = PD_C9PI                                       CLE141A
+     C                   EVAL      CurLocDS10 = PD_C0PI                                      CLE141A
+     C                   EVAL      CurLocDS11 = PD_L1PI                                      CLE141A
+     C                   EVAL      CurLocDS12 = PD_L2PI                                      CLE141A
+     C                   EVAL      CurLocDS13 = PD_L3PI                                      CLE141A
+     C                   EVAL      CurLocDS14 = PD_L4PI                                      CLE141A
+     C                   EVAL      CurLocDS15 = PD_L5PI                                      CLE141A
+     C                   EVAL      CurLocDS16 = PD_L6PI                                      CLE141A
+     C                   EVAL      CurLocDS17 = PD_L7PI                                      CLE141A
+     C                   EVAL      CurLocDS18 = PD_L8PI                                      CLE141A
+     C                   EVAL      CurLocDS19 = PD_L9PI                                      CLE141A
+     C                   EVAL      CurLocDS20 = PD_L0PI                                      CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
+     C                   ENDIF                                                               CLE141A
       ** Check whether user is a web browser user, if so overwrite
       *
      C                   CALL      'SFC000026'
@@ -1430,6 +1495,9 @@
      C     @@FESTTL      IFEQ      01
      C     @@FESTTL      OREQ      07
      C     @@FESTTL      OREQ      08
+
+     C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
+     C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
       *
       ** Fee Ccy check
      C     CEU004        IFEQ      'Y'
@@ -1458,6 +1526,8 @@
      C                   ENDIF
      C                   ENDIF
       *
+     C**********         ENDIF                                                        CLE141 CLE141A
+
      C                   ELSE
       *
       ** Local Ccy check
@@ -1478,6 +1548,25 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     DDLNRF        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDEPSDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDEPSD'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048565'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF
      C                   ENDIF
      C                   ENDIF
@@ -1624,6 +1713,9 @@
      C     @@FESTTL      OREQ      07
      C     @@FESTTL      OREQ      08
       *
+     C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
+     C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
+
      C     CEU004        IFEQ      'Y'
      C     WSCCY         ANDNE     *BLANKS
      C                   MOVE      WSCCY         ZCCY
@@ -1649,6 +1741,8 @@
      C                   MOVEL     'LER0031'     WMsgIdXAr(WId)
      C                   ENDIF
      C                   ENDIF
+
+     C**********         ENDIF                                                        CLE141 CLE141A
       *
       ** Fee Ccy check
       *
@@ -1673,6 +1767,25 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     DDLNRF        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDEPEDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDEPED'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048566'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF
       *
      C                   ENDIF
@@ -2817,6 +2930,9 @@
      C     @@FESTTL      IFEQ      01                                                         CLE031
      C     @@FESTTL      OREQ      07                                                         CLE031
      C     @@FESTTL      OREQ      08                                                         CLE031
+
+     C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
+     C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
                                                                                               CLE031
      C                   MOVE      DDECUR        ZCCY                                         CLE031
                                                                                               CLE031
@@ -2833,6 +2949,9 @@
      C                   MOVEL     'DDNPYD'      WFldNmXAr(WId)                               CLE031
      C                   MOVEL     'LER0229'     WMsgIdXAr(WId)                               CLE031
      C                   ENDIF                                                                CLE031
+
+     C**********         ENDIF                                                        CLE141 CLE141A
+
      C                   ELSE                                                                 CLE031
                                                                                               CLE031
       ** Local Ccy check                                                                      CLE031
@@ -2854,6 +2973,25 @@
      C                   ENDIF                                                                CLE031
                                                                                               CLE031
      C                   ENDIF                                                                CLE031
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     DDLNRF        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDNPYDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDNPYD'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048567'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF                                                                CLE031
      C                   ENDIF                                                                CLE031
      C                   ENDIF                                                                CLE031
@@ -4322,6 +4460,20 @@
      C                   MOVEL     'N'           CLE073            1                          CLE073
      C                   ENDIF                                                                CLE073
      C/COPY WNCPYSRC,LEH00505
+                                                                                              CLE141
+      ** Check if CLE141 - Business day Convention is on                                      CLE141
+                                                                                              CLE141
+     C                   CALL      'AOSARDR0'                                                 CLE141
+     C                   PARM      *BLANKS       @RTCD                                        CLE141
+     C                   PARM      '*KEY   '     @OPTN                                        CLE141
+     C                   PARM      'CLE141'      @SARD                                        CLE141
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE141
+                                                                                              CLE141
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE141
+     C                   MOVEL     'Y'           CLE141                                       CLE141
+     C                   ELSE                                                                 CLE141
+     C                   MOVEL     'N'           CLE141                                       CLE141
+     C                   ENDIF                                                                CLE141
                                                                                               CLE073
       *
       *  Set up the name of the MSGF from which the message handler will
@@ -4650,6 +4802,9 @@
      C                   IF        @@FESTTL = 01 OR @@FESTTL = 07                             CAS011
      C                             OR @@FESTTL = 08                                           CAS011
                                                                                               CAS011
+     C*****CLE141        IFEQ      'N'                                                CLE141 CLE141A
+     C*****DDLNRF        OREQ      *blanks                                            CLE141 CLE141A
+
      C                   MOVE      DDECUR        ZCCY                                         CAS011
                                                                                               CAS011
      C                   CALLB     'ZCHKH'                                                    CAS011
@@ -4666,6 +4821,9 @@
      C                   MOVEL     'DDNPYD'      WFldNmXAr(WId)                               CAS011
      C                   MOVEL     'LER0229'     WMsgIdXAr(WId)                               CAS011
      C                   ENDIF                                                                CAS011
+
+     C**********         ENDIF                                                        CLE141 CLE141A
+
      C                   ELSE                                                                 CAS011
                                                                                               CAS011
       ** Local Ccy check                                                                      CAS011
@@ -4688,6 +4846,25 @@
      C                   ENDIF                                                                CAS011
                                                                                               CAS011
      C                   ENDIF                                                                CAS011
+      *                                                                                      CLE141A
+     C     CLE141        IFEQ      'Y'                                                       CLE141A
+     C     DDLNRF        ANDNE     *Blanks                                                   CLE141A
+     C     CurLocDS      ANDNE     *Blanks                                                   CLE141A
+      *                                                                                      CLE141A
+     C                   CALLB     'LEVBDYLE'                                                CLE141A
+     C                   PARM      *BLANKS       RetCode                                     CLE141A
+     C                   PARM                    CurLocDS                                    CLE141A
+     C                   PARM                    ZDAYNO                                      CLE141A
+      *                                                                                      CLE141A
+     C     RetCode       IFEQ      'HOLIDAY'                                                 CLE141A
+     C                   EVAL      DDNPYDOK = 'W'                                            CLE141A
+     C                   EVAL      WId = WId + 1                                             CLE141A
+     C                   EVAL      WFldNmXAr(WId) = 'DDNPYD'                                 CLE141A
+     C**********         EVAL      WMsgIDXAr(WId) = '5048508'                       CLE141A MD039016
+     C                   EVAL      WMsgIDXAr(WId) = '5048567'                               MD039016
+     C                   ENDIF                                                               CLE141A
+      *                                                                                      CLE141A
+     C                   ENDIF                                                               CLE141A
      C                   ENDIF                                                                CAS011
      C                   ENDIF                                                                CAS011
      C                   ENDIF                                                                CAS011

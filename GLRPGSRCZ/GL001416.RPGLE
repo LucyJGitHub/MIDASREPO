@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD036398           Date 02Nov15               *
-      *  Prev Amend No. MD034442           Date 14Jul15               *
+      *  Last Amend No. MD039029           Date 13Jul16               *
+      *  Prev Amend No. MD036398           Date 02Nov15               *
+      *                 MD034442           Date 14Jul15               *
       *                 MD032299           Date 23Mar15               *
       *                 MD027587           Date 19Jun14               *
       *                 CRE075             Date 06Dec10               *
@@ -42,6 +43,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039029 - No MT942 generated even if there are shadow       *
+      *             postings, for e.g. from Batch Postings, because   *
+      *             no record is being written to GLPOSTPD.           *
       *  MD036398 - MT942 not sent. Use NTRAN instead of NTRAN1.      *
       *  MD034442 - Include Nostor Transfer.                          *
       *             Include IC  movements from Dealing and Lending.   *
@@ -492,7 +496,8 @@ e4   C                   ENDIF                                                  
 e3   C                   ENDIF                                                              MD032299
 e2   C                   ENDIF                                                              MD032299
 x1   C                   Other                                                              MD032299
-     C                   EVAL      PRCGLPN = 'N'                                            MD032299
+     C**********         EVAL      PRCGLPN = 'N'                                   MD032299 MD039029
+     C                   EVAL      PRCGLPN = 'Y'                                            MD039029
      C                   EVAL      PRCRSMN = 'Y'                                            MD032299
 e1   C                   Endsl                                                              MD032299
 

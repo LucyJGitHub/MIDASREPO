@@ -10,11 +10,16 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2012           */
 /*                                                                   */
-/*       Last Amend No. AR1097218          Date 05Apr13              */
-/*       Prev Amend No. CGL142  *CREATE    Date 06Aug12              */
+/*       Last Amend No. MD038448           Date 13Jul16              */
+/*       Prev Amend No. AR1097218          Date 05Apr13              */
+/*                      CGL142  *CREATE    Date 06Aug12              */
 /*                                                                   */
 /*-------------------------------------------------------------------*/
 /*                                                                   */
+/*       MD038448 - Stamp Tax postings not in CLEARPD.               */
+/*                  Add new component GLC0600006 00010 for correct   */
+/*                  update of the ledger balance with Stamp Tax      */
+/*                  postings.                                        */
 /*       AR1097218 - GLC0720 seq 10001 failed Out of Balance         */
 /*       CGL142 - Tactical COB changes GL                            */
 /*                                                                   */
@@ -58,10 +63,16 @@
                           SHARE(*YES) SEQONLY(*YES 500)
              ENDDO                                                                     /*AR1097218*/
              ELSE       CMD(DO)                                                        /*AR1097218*/
+             IF         COND(&POSTNUM = '7') THEN(DO)                                   /*MD038448*/
+             OVRDBF     FILE(ACPO1) TOFILE(GLGESTL3) OVRSCOPE(*JOB) +
+                          SHARE(*YES) SEQONLY(*YES 500)                                 /*MD038448*/
+             ENDDO                                                                      /*MD038448*/
+             ELSE       CMD(DO)                                                         /*MD038448*/
              CHGVAR     VAR(&ACPO) VALUE('ACPO' *CAT &POSTNUM)                         /*AR1097218*/
              OVRDBF     FILE(ACPO1) TOFILE(&ACPO) OVRSCOPE(*JOB) +
                           SHARE(*YES) SEQONLY(*YES 500)                                /*AR1097218*/
              ENDDO                                                                     /*AR1097218*/
+             ENDDO                                                                      /*MD038448*/
              CALL       PGM(GL0600006)
              DLTOVR     FILE(ACPO1) LVL(*JOB)
              DLTOVR     FILE(ZACCNTAB) LVL(*JOB)

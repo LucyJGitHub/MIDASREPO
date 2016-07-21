@@ -12,8 +12,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD034990           Date 25May16               *      
-      *  Prev Amend No. MD032185           Date 02Jun15               *
+      *  Last Amend No. MD039280           Date 27Jul16               *
+      *  Prev Amend No. MD034990           Date 25May16               *      
+      *                 MD032185           Date 02Jun15               *
       *                 AR676495A          Date 02Jun15               *
       *                 AR676495           Date 02Jun15               *
       *                 CRE105             Date 17Mar15               *
@@ -216,6 +217,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD039280 - RE AC Int. Capitalised tax to alternate AC in     *
+      *             another ccy, amount not converted.                *
       *  MD034990 - Postings not posted against account sequence of   *
       *             the retail account.                               *      
       *  MD032185 -  Job GLC0340 00003 (Midas GL Daily journal - post *
@@ -14990,6 +14993,10 @@
      C                     Z-ADD@CACOD    ACOD                                              AR851468
      C                     Z-ADD@CACSQ    ACSQ                                              AR851468
      C                     MOVE @CACNO    ACNO                                              AR851468
+     C                     Z-ADDWTAOC     WAMTCO 150                                        MD039280
+     C           BCCY      IFNE CCY                                                         MD039280
+     C                     EXSR CVTAMT                                                      MD039280
+     C                     ENDIF                                                            MD039280
      C                     ENDIF                                                            AR851468
       *                                                                                       235917
       ***PACR1*is the gross credit amount to be posted.                                CGL031 232543
@@ -15013,7 +15020,11 @@
      C                     Z-ADDCNCID     VALD                                             BUG23097A
      C                     Z-ADDCNCID     HISD                                             BUG23097A
      C**********           Z-ADDBRTAM2    WPSTA                                        CGL031 232543
+     C           BCCY      IFNE CCY                                                         MD039280
+     C                     Z-ADDWPSTAA    WPSTA                                             MD039280
+     C                     ELSE                                                             MD039280
      C                     Z-ADDWTAOC     WPSTA                                               232543
+     C                     ENDIF                                                            MD039280
      C                     Z-ADD*ZERO     RRNM                                                CGL031
      C                     EXSR SUBNAR                                                        CGL031
       ** Main Tax                                                                          BUG23163A
@@ -15204,6 +15215,12 @@
      C                     Z-ADD@CACOD    ACOD                                              AR851468
      C                     Z-ADD@CACSQ    ACSQ                                              AR851468
      C                     MOVE @CACNO    ACNO                                              AR851468
+     C                     Z-ADDWKSTXO    WAMTCO                                            MD039280
+     C           BCCY      IFNE CCY                                                         MD039280
+     C                     EXSR CVTAMT                                                      MD039280
+     C                     Z-ADDWPSTAA    WKSTXO                                            MD039280
+     C                     MOVELWKSTXO    WPSTA                                             MD039280
+     C                     ENDIF                                                            MD039280
      C                     ENDIF                                                            AR851468
      C                     MOVELRUND      PSTD                                                CER048
      C**********           MOVELSHISD     VALD                                      CER048 BUG23097A
@@ -15365,6 +15382,12 @@
      C                     Z-ADD@CACOD    ACOD                                              AR851468
      C                     Z-ADD@CACSQ    ACSQ                                              AR851468
      C                     MOVE @CACNO    ACNO                                              AR851468
+     C                     Z-ADDWKTTXO    WAMTCO                                            MD039280
+     C           BCCY      IFNE CCY                                                         MD039280
+     C                     EXSR CVTAMT                                                      MD039280
+     C                     Z-ADDWPSTAA    WKTTXO                                            MD039280
+     C                     MOVELWKTTXO    WPSTA                                             MD039280
+     C                     ENDIF                                                            MD039280
      C                     ENDIF                                                            AR851468
      C                     MOVELRUND      PSTD                                                CER054
      C                     Z-ADDCNCID     VALD                                              BUG25530
@@ -15502,6 +15525,80 @@
      C                     ENDIF                                                           BUG23097A
       *                                                                                       CGL031
      C                     ENDSR                                                              CGL031
+      *****************************************************************                     MD039280
+      /EJECT                                                                                MD039280
+      *****************************************************************                     MD039280
+      *                                                               *                     MD039280
+      *  CVTAMT - Convert amount for Alternate AC not equal to        *                     MD039280
+      *           Main retail AC currency.                            *                     MD039280
+      *                                                               *                     MD039280
+      *****************************************************************                     MD039280
+     C           CVTAMT    BEGSR                                                            MD039280
+      *                                                                                     MD039280
+      ** Save account of alternate.                                                         MD039280
+      *                                                                                     MD039280
+     C                     MOVE CCY       ALCCY                                             MD039280
+     C                     MOVE BRCA      ALBRCA                                            MD039280
+     C                     MOVE CNUM      ALCNUM                                            MD039280
+     C                     Z-ADDACOD      ALACOD                                            MD039280
+     C                     Z-ADDACSQ      ALACSQ                                            MD039280
+      *                                                                                     MD039280
+      ** Check if alternate currency exist.                                                 MD039280
+      *                                                                                     MD039280
+     C                     Z-ADDCUCCYA    A                                                 MD039280
+     C           ALCCY     LOKUPACUR,A                   17                                 MD039280
+      *                                                                                     MD039280
+     C           *IN17     IFEQ '1'                                                         MD039280
+     C           A         OCUR SDCURR                                                      MD039280
+     C                     ELSE                                                             MD039280
+     C           1         OCUR SDCURR                                                      MD039280
+     C                     CALL 'AOCURRR0'                                                  MD039280
+     C                     PARM '*MSG   ' @RTCD                                             MD039280
+     C                     PARM '*KEY   ' @OPTN                                             MD039280
+     C                     PARM ALCCY     @CYCD   3                                         MD039280
+     C           SDCURR    PARM SDCURR    DSSDY                                             MD039280
+     C           @RTCD     IFNE *BLANK                                                      MD039280
+     C           *LOCK     IN   LDA                                                         MD039280
+     C                     MOVEL'SDCURRPD'DBFILE           ***************                  MD039280
+     C                     MOVEL@CYCD     DBKEY            * DB ERROR 014*                  MD039280
+     C                     Z-ADD014       DBASE            ***************                  MD039280
+     C                     OUT  LDA                                                         MD039280
+     C                     EXSR *PSSR                                                       MD039280
+     C                     END                                                              MD039280
+     C                     ENDIF                                                            MD039280
+      *                                                                                     MD039280
+      ** Save parm for cross currency.                                                      MD039280
+      *                                                                                     MD039280
+     C                     Z-ADDCDP       WACDP                                             MD039280
+     C                     Z-ADDSPOT      WASPOT                                            MD039280
+     C                     MOVE MDIN      WAMDIN                                            MD039280
+     C                     MOVE TACC      WATACC                                            MD039280
+      *                                                                                     MD039280
+     C                     MOVE WATACC    KACOD  10                                         MD039280
+      *                                                                                     MD039280
+     C                     ADD  1         RCSQ                                              MD039280
+     C                     MOVE KACOD     KEYACD                                            MD039280
+     C                     Z-ADD145       WDBASE                                            MD039280
+     C                     EXSR ACDCCH                                                      MD039280
+      *                                                                                     MD039280
+     C                     MOVE A5ACTY    WATACT                                            MD039280
+      *                                                                                     MD039280
+      *                                                                                     MD039280
+      ** Calculate the alternate currency equivalent amount.                                MD039280
+      *                                                                                     MD039280
+     C                     MOVE BCCY      ZCCYI                                             MD039280
+     C                     Z-ADDWOSPOT    ZRATEF                                            MD039280
+     C                     MOVE WOCDP     ZCDPI                                             MD039280
+     C                     MOVE WOMDIN    ZMDINF                                            MD039280
+     C                     MOVE ALCCY     ZCCYO                                             MD039280
+     C                     Z-ADDWASPOT    ZRATET                                            MD039280
+     C                     MOVE WACDP     ZCDPO                                             MD039280
+     C                     MOVE WAMDIN    ZMDINT                                            MD039280
+     C                     Z-ADDWAMTCO    ZAMTCI                                            MD039280
+     C                     EXSR #CCYCN                                                      MD039280
+     C                     Z-ADDZAMTCO    WPSTAA                                            MD039280
+      *                                                                                     MD039280
+     C                     ENDSR                                                            MD039280
       *****************************************************************                       CGL031
       /EJECT                                                                                  CGL031
       *****************************************************************                       CGL031

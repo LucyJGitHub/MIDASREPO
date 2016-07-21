@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2011            *
       *                                                               *
-      *  Last Amend No. MD020167           Date 23Apr13               *
-      *  Prev Amend No. AR1092057          Date 28Feb13               *
+      *  Last Amend No. MD039545           Date 20Jul16               *
+      *  Prev Amend No. MD020167           Date 23Apr13               *
+      *                 AR1092057          Date 28Feb13               *
       *                 AR1089839          Date 20Feb13               *
       *                 CCB023             Date 06Aug12               *
       *                 AR1040629          Date 16Oct12               *
@@ -22,6 +23,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039545 - MIDASSTS - Decimal Data Error                     *
       *  MD020167 - New fields DCUATH not available in LFs (Recompile)*
       *  AR1092057 - GO000112 Error encountered before starting GN EN *
       *              zone COB                                         *
@@ -170,6 +172,7 @@
      C**********         OPEN      GPSEWIPL                                                AR1040629
      C******LOVAL        SETLL     GPSEWIPL                                                AR1040629
      C**********         READ      GPSEWIPL                               01               AR1040629
+     C                   EVAL      CountN = 0                                               MD039545
      C                   OPEN      GPDPMVL0                                                AR1040629
      C     *LOVAL        SETLL     GPDPMVL0                                                AR1040629
      C                   READ      GPDPMVL0                               01               AR1040629

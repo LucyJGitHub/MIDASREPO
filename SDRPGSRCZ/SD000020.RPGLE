@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 BUG22529           Date 10Feb09               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -56,12 +58,12 @@
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *
       ** Customer Details Database
       *
@@ -79,45 +81,45 @@
       ** Branch Details Database by Internal Customer
       *
      FSDBRCHL5  IF   E           K DISK    INFSR(*PSSR)
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structure. They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       *
       ** PMode Constants
       *
      D ALL             C                   CONST('A')
      D CHANGED         C                   CONST('C')
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       *
       ** Customer Details Data Structure
       *
@@ -198,12 +200,12 @@
       ** Long Access Object Data Structure
       *
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *
       ** Program Parameter
       *
@@ -230,18 +232,18 @@
       ** Customer Details Database Key
       *
      D KCustNo         S              6
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
      C                   READ      SDCUSTPD
       *
      C                   DOW       NOT %EOF(SDCUSTPD)
@@ -716,18 +718,18 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------------------------------+
       ** ¦ Program, module, and procedure        ¦
       ** ¦ names for DB error processing         ¦
       ** ¦ =============================         ¦
       ** +---------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the DB error processing routines.
      C/COPY ZACPYSRC,PSSR_ILE
       **---------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

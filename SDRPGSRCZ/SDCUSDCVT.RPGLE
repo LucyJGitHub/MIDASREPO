@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER070             Date 25Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD030956           Date 09Oct14               *
       *                 MD027492           Date 12Jun14               *
       *                 CGL132             Date 01May13               *
@@ -60,6 +61,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
@@ -106,13 +108,13 @@
       *  CAP034 - Conversion of Midas inputs to modular API structure *
       *                                                               *
       *****************************************************************
- 
+
      FSDBRCHL5  IF   E           K DISK                                                       CSD079
       ** RSQ : Midas SD Branch codes by customer number                                       CSD079
                                                                                               CSD079
      FSDCURRL1  IF   E           K DISK                                                       CSD079
       ** Midas SD Midas SD Currency codes retrieval                                           CSD079
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -124,53 +126,53 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
      D/COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       * Customer - File Formats
      D CustFilFmt    E DS                  EXTNAME(SDCUSTPD)
      D/COPY WNCPYSRC,SDH00692
- 
+
       * Customer Ex - File Format                                                             CGL132
      D CuXcFilFmt    E DS                  EXTNAME(SDCUSTXC)                                  CGL132
                                                                                               CGL132
       * Base Rate Tax details - File Format
      D BrTxFilFmt    E DS                  EXTNAME(SDCBRTPD)
- 
+
       * Private Banking Details - File Format
      D PrivFilFmt    E DS                  EXTNAME(SDPBDSPD)
      D                                     PREFIX(A_)
@@ -295,33 +297,33 @@
      D CT_DDACTN     E                     EXTFLD(DDACTN)                                  AR1086546
      D CT_DDCUST     E                     EXTFLD(DDCUST)                                  AR1086546
      D CT_DDNTCP     E                     EXTFLD(DDNTCP)                                  AR1086546
- 
- 
+
+
       ** Array used to move right Swift Id.
      D ROU             S              1    DIM(12)
- 
+
       ** Array used to left-align countervalue.
      D                 DS                                                       E20653
      D  CTR                    1     21                                         E20653
      D                                     DIM(21)                              COUNTERVALUE     E20
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
       ** EXTERNAL DS FOR BANK DETAILS
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       ** EXTERNAL DS FOR MIDAS MODULES DETAILS
- 
+
      D SDPORT        E DS                  EXTNAME(SDPORTPD)
       ** EXTERNAL DS FOR Portfolio Management DETAILS
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
      D SCA_LCD       E                     EXTFLD(LCD)
       ** EXTERNAL DS FOR SAR DETAILS
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
      D***CuSW13*       E DS                  EXTNAME(SDSW13PD)                       CFT050 MD022463
@@ -329,7 +331,7 @@
      D***S13DDCITY    E                     EXTFLD(DDCITY)                           CFT050 MD022463
       ** Customer dtls Bank directory plus details                                            CFT050
      D/COPY WNCPYSRC,SDCUSDND01
- 
+
       ** Midas SD Currency codes                                                              CSD079
      D SDCURR        E DS                  EXTNAME(SDCURRPD)                                  CSD079
                                                                                               CSD079
@@ -341,7 +343,7 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D CGP001          S              1A                                                      CGP001
                                                                                               CGP001
      D CFX001          S              1                                                       CFX001
@@ -392,8 +394,8 @@
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
- 
+
+
       **************************************************************
       /EJECT
      C**************************************************************
@@ -429,7 +431,7 @@
      C                   EXSR      SCN_BRTX
      C                   END
      C                   ENDIF
- 
+
       ** SET PRIVATE BANKING SCREEN FIELDS
       *
      C     BGN4ST        IFEQ      'Y'
@@ -442,7 +444,7 @@
      C                   IF        CSW024 = 'Y' and BGMSDL = 'Y'                              CSW024
      C                   EXSR      SCN_MT3X                                                   CSW024
      C                   ENDIF                                                                CSW024
- 
+
      C                   IF        CSD079 = 'Y'                                               CSD079
                                                                                               CSD079
       ** Set Marketing Information Screen Fields                                              CSD079
@@ -547,34 +549,34 @@
       ** SCN_PRIM - SET PRIMARY SCREEN FIELDS
       *****************************************************************
      C     SCN_PRIM      BEGSR
- 
+
       *  Customer Number
      C                   MOVE      BBCUST        DDCUSN
- 
+
       *  Customer Name & Adresse 1
      C                   MOVE      BBCNA1        DDCNA1
- 
+
       *  Customer Shortname
      C                   MOVE      BBCSSN        DDCSSN
- 
+
       *  Customer Name & Adresse 2
      C                   MOVE      BBCNA2        DDCNA2
- 
+
       *  DRS Customer Shortname
      C                   MOVE      BBDRCS        DDDRCS
- 
+
       *  Location Code
      C                   MOVE      BBLCCD        DDLCCD
- 
+
       *  Customer Name & Adresse 3
      C                   MOVE      BBCNA3        DDCNA3
- 
+
       *  Customer Name & Adresse 4
      C                   MOVE      BBCNA4        DDCNA4
- 
+
       *  Customer Report Name
      C                   MOVEL     BBCRNM        DDCRNM
- 
+
       ** Global Customer ID                                                                   CGP001
                                                                                               CGP001
      C                   IF        CGP001 = 'Y'                                               CGP001
@@ -594,28 +596,28 @@
      C                   MOVEL     ZDATE         DDDEDT                                       CSD025
      C                   ENDIF                                                                CSD025
      C                   ENDIF                                                                CSD025
- 
+
       *  Designated In Currency
      C                   MOVEL     BBDINC        DDDINC
- 
+
       *  Parent Indicator
      C                   MOVE      BBPAIN        DDPAIN
- 
+
       *  Parent Customer Number
      C                   MOVE      BBPCNB        DDPCNB
- 
+
       *  Account Officer Code
      C                   MOVE      BBACOC        DDACOC
- 
+
       *  Customer Alpha Sort Code
      C                   MOVE      BBCASC        DDCASC
- 
+
       *  Branch Indicator
      C                   MOVE      BBBSIN        DDBSIN
- 
+
       *  Country of Citizenship
      C                   MOVE      BBCNCZ        DDCNCZ
- 
+
       *  Alternative Country of Citizenship                                                  CGL132
      C                   MOVE      XCACCZ        DDACCZ                                      CGL132
                                                                                              CGL132
@@ -638,10 +640,10 @@
                                                                                              CGL132
       *  Country of Domicile
      C                   MOVE      BBCOLC        DDCOLC
- 
+
       *  Bank/Non-Bank Indicator
      C                   MOVE      BBBNBI        DDBNBI
- 
+
       *  Suspended Date
      C     BBSSDT        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDSDAL
@@ -651,10 +653,10 @@
      C                   MOVEL     *BLANKS       DDSDAL
      C                   MOVEL     ZDATE         DDSDAL
      C                   ENDIF
- 
+
       *  Local Institution Code
      C                   MOVE      BBLINC        DDLINC
- 
+
       *  Date of first Contact
      C     BBDOIC        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDFCAL
@@ -664,37 +666,37 @@
      C                   MOVEL     *BLANKS       DDFCAL
      C                   MOVEL     ZDATE         DDFCAL
      C                   ENDIF
- 
+
       *  Local Industry Code
      C                   MOVEL     BBLICD        DDLICD
- 
+
       *  Customer Telephone Number
      C                   MOVEL     BBCTNB        DDCTNB
- 
+
       *  Taxable Indicator
      C                   MOVE      BBTAIN        DDTAIN
- 
+
       *  Reuter Identifier
      C                   MOVE      BBREID        DDREID
- 
+
       *  Branch code
      C                   MOVE      BBBRCD        DDBRCD
- 
+
       *  Customer type
      C                   MOVE      BBCSTY        DDCSTY
- 
+
       *  Allow Deletion in COB
      C                   MOVE      BBCDEL        DDCDEL
- 
+
       *  Risk Weighting Code
      C                   MOVE      BBRWCD        DDRWCD
- 
+
       *  M.A. Analysis by Associated Customer
      C                   MOVE      BBMCAC        DDMCAC
- 
+
       *  Retail Customer Group
      C                   MOVEL     BBCGRP        DDCGRP
- 
+
       *  Margin Type
      C     BBMGTP        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDMTSC
@@ -705,7 +707,7 @@
      C                   EXSR      ZEDIT
      C                   MOVE      ZFIELD        DDMTSC
      C                   ENDIF
- 
+
       *  Private Banking Customer
      C                   MOVEL     BBPRBA        DDPRBA
                                                                                               CLE025
@@ -719,7 +721,7 @@
      C                   EVAL      DDMSTF = BBMSTF                                            CLE025
      C                   EVAL      DDIOPC = BBIOPC                                            CLE025
      C                   ENDIF                                                                CLE025
- 
+
                                                                                               CSW207
      C                   IF        CSW207 = 'Y' OR BGN4ST = 'Y'                               CSW207
       ** Investor Capacity Indicator                                                          CSW207
@@ -769,7 +771,7 @@
       *
       *  SWIFT Financial Instruction
      C                   MOVEL     BBSWFI        DDSWFI
- 
+
       *  Chips ID
      C     BBCHID        IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DDCIDA
@@ -835,7 +837,7 @@
      C**********         MOVE      ZFIELD        DDFWCA                                       211543
      C                   MOVE      BBFWCD        DDFWCA                                       211543
      C                   ENDIF
- 
+
       *  Stop Statement Download
      C                   MOVE      BBSSDL        DDSSDL
                                                                                               CDL008
@@ -856,7 +858,7 @@
      C                   ENDIF                                                                CDL008
      C                   ENDIF                                                                CDL008
      C/COPY WNCPYSRC,SDCUSDNC01
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -864,129 +866,129 @@
       ** SCN_MSRT - SET MESSAGE ROUTING SCREEN FIELDS
       *****************************************************************
      C     SCN_MSRT      BEGSR
- 
+
       *  Message Types Not Generated No 01
      C                   MOVEL     BBNG01        DDNG01
- 
+
       *  Message Types Not Generated No 02
      C                   MOVEL     BBNG02        DDNG02
- 
+
       *  Message Types Not Generated No 03
      C                   MOVEL     BBNG03        DDNG03
- 
+
       *  Message Types Not Generated No 04
      C                   MOVEL     BBNG04        DDNG04
- 
+
       *  Message Types Not Generated No 05
      C                   MOVEL     BBNG05        DDNG05
- 
+
       *  Message Types Not Generated No 06
      C                   MOVEL     BBNG06        DDNG06
- 
+
       *  Message Types Not Generated No 07
      C                   MOVEL     BBNG07        DDNG07
- 
+
       *  Message Types Not Generated No 08
      C                   MOVEL     BBNG08        DDNG08
- 
+
       *  Message Types Not Generated No 09
      C                   MOVEL     BBNG09        DDNG09
- 
+
       *  Message Types Not Generated No 10
      C                   MOVEL     BBNG10        DDNG10
- 
+
       *  Message Types Not Generated No 11
      C                   MOVEL     BBNG11        DDNG11
- 
+
       *  Message Types Not Generated No 12
      C                   MOVEL     BBNG12        DDNG12
- 
+
       *  Message Types Not Generated No 13
      C                   MOVEL     BBNG13        DDNG13
- 
+
       *  Message Types Not Generated No 14
      C                   MOVEL     BBNG14        DDNG14
- 
+
       *  Message Types Not Generated No 15
      C                   MOVEL     BBNG15        DDNG15
- 
- 
+
+
       *
       ** Default Status Released 01
      C                   MOVEL     BBDS01        DDDS01
- 
+
       ** Default Status Released 02
      C                   MOVEL     BBDS02        DDDS02
- 
+
       ** Default Status Released 03
      C                   MOVEL     BBDS03        DDDS03
- 
+
       ** Default Status Released 04
      C                   MOVEL     BBDS04        DDDS04
- 
+
       ** Default Status Released 05
      C                   MOVEL     BBDS05        DDDS05
- 
+
       ** Default Status Released 06
      C                   MOVEL     BBDS06        DDDS06
- 
+
       ** Default Status Released 07
      C                   MOVEL     BBDS07        DDDS07
- 
+
       ** Default Status Released 08
      C                   MOVEL     BBDS08        DDDS08
- 
+
       ** Default Status Released 09
      C                   MOVEL     BBDS09        DDDS09
- 
+
       ** Default Status Released 10
      C                   MOVEL     BBDS10        DDDS10
- 
+
       ** Default Status Released 11
      C                   MOVEL     BBDS11        DDDS11
- 
+
       ** Default Status Released 12
      C                   MOVEL     BBDS12        DDDS12
- 
+
       ** Default Status Released 13
      C                   MOVEL     BBDS13        DDDS13
- 
+
       ** Default Status Released 14
      C                   MOVEL     BBDS14        DDDS14
- 
+
       ** Default Status Released 15
      C                   MOVEL     BBDS15        DDDS15
- 
- 
+
+
       *
       ** Default Network for MT1nn
      C                   MOVEL     BBDNW1        DDDNW1
- 
+
       ** Default Network for MT2nn
      C                   MOVEL     BBDNW2        DDDNW2
- 
+
       ** Default Network for MT3nn
      C                   MOVEL     BBDNW3        DDDNW3
- 
+
       ** Default Network for MT4nn
      C                   MOVEL     BBDNW4        DDDNW4
- 
+
       ** Default Network for MT5nn
      C                   MOVEL     BBDNW5        DDDNW5
- 
+
       ** Default Network for MT6nn
      C                   MOVEL     BBDNW6        DDDNW6
- 
+
       ** Default Network for MT7nn
      C                   MOVEL     BBDNW7        DDDNW7
- 
+
       ** Default Network for MT8nn
      C                   MOVEL     BBDNW8        DDDNW8
- 
+
       ** Default Network for MT9nn
      C                   MOVEL     BBDNW9        DDDNW9
- 
- 
+
+
      C                   ENDSR
                                                                                               CGL132
       *****************************************************************                       CGL132
@@ -1856,225 +1858,225 @@
       ** SCN_BRTX - SET BASE RATE TAX SCREEN FIELDS
       *****************************************************************
      C     SCN_BRTX      BEGSR
- 
+
       *  1st Party Name
       *  Holder 1 title
      C                   MOVE      H1TITL        DD1TTL
- 
+
       **  Holder 1 name
      C                   MOVE      H1NAME        DD1NAM
- 
+
       **  Holder 1 initials
      C                   MOVE      H1INIT        DD1INI
- 
+
       **  Holder 1 BRT liable
      C                   MOVE      H1BRTL        DD1BRT
- 
+
       **  Holder 1 address 1
      C                   MOVE      H1ADR1        DD1AD1
- 
+
       **  Holder 1 National Insurance No
      C                   MOVE      H1NINO        DD1NIN
- 
+
       **  Holder 1 address 2
      C                   MOVE      H1ADR2        DD1AD2
- 
+
       **  Holder 1 Date of Birth
      C     H1DOB         IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DD1DOB
      C                   ELSE
      C                   MOVEL     H1DOB         DD1DOB
      C                   ENDIF
- 
+
       **  Holder 1 address 3
      C                   MOVE      H1ADR3        DD1AD3
- 
+
       **  Holder 1 Postcode 1
      C                   MOVE      H1PCD1        DD1PC1
- 
+
       **  Holder 1 Postcode 2
      C                   MOVE      H1PCD2        DD1PC2
- 
+
       **  Holder 1 Status  (Is this a new participant?)
       **  Default to 'N'
      C*JCA*              MOVE      ' '           DD1STS
      C                   MOVE      'N'           DD1STS
- 
+
       ** 2nd Party Name
       *  Holder 2 title
      C                   MOVE      H2TITL        DD2TTL
- 
+
       **  Holder 2 name
      C                   MOVE      H2NAME        DD2NAM
- 
+
       **  Holder 2 initials
      C                   MOVE      H2INIT        DD2INI
- 
+
       **  Holder 2 BRT liable
      C                   MOVE      H2BRTL        DD2BRT
- 
+
       **  Holder 2 address 1
      C                   MOVE      H2ADR1        DD2AD1
- 
+
       **  Holder 2 National Insurance No
      C                   MOVE      H2NINO        DD2NIN
- 
+
       **  Holder 2 address 2
      C                   MOVE      H2ADR2        DD2AD2
- 
+
       **  Holder 2 Date of Birth
      C     H2DOB         IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DD2DOB
      C                   ELSE
      C                   MOVEL     H2DOB         DD2DOB
      C                   ENDIF
- 
+
       **  Holder 2 address 3
      C                   MOVE      H2ADR3        DD2AD3
- 
+
       **  Holder 2 Postcode 1
      C                   MOVE      H2PCD1        DD2PC1
- 
+
       **  Holder 2 Postcode 2
      C                   MOVE      H2PCD2        DD2PC2
- 
+
       **  Holder 2 Status  (Is this a new participant?)
       **  Default to 'N'
      C*JCA*              MOVE      ' '           DD2STS
      C                   MOVE      'N'           DD2STS
- 
+
       ** 3rd Party Name
       *  Holder 3 title
      C                   MOVE      H3TITL        DD3TTL
- 
+
       **  Holder 3 name
      C                   MOVE      H3NAME        DD3NAM
- 
+
       **  Holder 3 initials
      C                   MOVE      H3INIT        DD3INI
- 
+
       **  Holder 3 BRT liable
      C                   MOVE      H3BRTL        DD3BRT
- 
+
       **  Holder 3 address 1
      C                   MOVE      H3ADR1        DD3AD1
- 
+
       **  Holder 3 National Insurance No
      C                   MOVE      H3NINO        DD3NIN
- 
+
       **  Holder 3 address 2
      C                   MOVE      H3ADR2        DD3AD2
- 
+
       **  Holder 3 Date of Birth
      C     H3DOB         IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DD3DOB
      C                   ELSE
      C                   MOVEL     H3DOB         DD3DOB
      C                   ENDIF
- 
+
       **  Holder 3 address 3
      C                   MOVE      H3ADR3        DD3AD3
- 
+
       **  Holder 3 Postcode 1
      C                   MOVE      H3PCD1        DD3PC1
- 
+
       **  Holder 3 Postcode 2
      C                   MOVE      H3PCD2        DD3PC2
- 
+
       **  Holder 3 Status  (Is this a new participant?)
       **  Default to 'N'
      C*JCA*              MOVE      ' '           DD3STS
      C                   MOVE      'N'           DD3STS
- 
+
       ** 4th Party Name
       *  Holder 4 title
      C                   MOVE      H4TITL        DD4TTL
- 
+
       **  Holder 4 name
      C                   MOVE      H4NAME        DD4NAM
- 
+
       **  Holder 4 initials
      C                   MOVE      H4INIT        DD4INI
- 
+
       **  Holder 4 BRT liable
      C                   MOVE      H4BRTL        DD4BRT
- 
+
       **  Holder 4 address 1
      C                   MOVE      H4ADR1        DD4AD1
- 
+
       **  Holder 4 National Insurance No
      C                   MOVE      H4NINO        DD4NIN
- 
+
       **  Holder 4 address 2
      C                   MOVE      H4ADR2        DD4AD2
- 
+
       **  Holder 4 Date of Birth
      C     H4DOB         IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DD4DOB
      C                   ELSE
      C                   MOVEL     H4DOB         DD4DOB
      C                   ENDIF
- 
+
       **  Holder 4 address 3
      C                   MOVE      H4ADR3        DD4AD3
- 
+
       **  Holder 4 Postcode 1
      C                   MOVE      H4PCD1        DD4PC1
- 
+
       **  Holder 4 Postcode 2
      C                   MOVE      H4PCD2        DD4PC2
- 
+
       **  Holder 4 Status  (Is this a new participant?)
       **  Default to 'N'
      C*JCA*              MOVE      ' '           DD4STS
      C                   MOVE      'N'           DD4STS
- 
+
       ** 5th Party Name
       *  Holder 5 title
      C                   MOVE      H5TITL        DD5TTL
- 
+
       **  Holder 5 name
      C                   MOVE      H5NAME        DD5NAM
- 
+
       **  Holder 5 initials
      C                   MOVE      H5INIT        DD5INI
- 
+
       **  Holder 5 BRT liable
      C                   MOVE      H5BRTL        DD5BRT
- 
+
       **  Holder 5 address 1
      C                   MOVE      H5ADR1        DD5AD1
- 
+
       **  Holder 5 National Insurance No
      C                   MOVE      H5NINO        DD5NIN
- 
+
       **  Holder 5 address 2
      C                   MOVE      H5ADR2        DD5AD2
- 
+
       **  Holder 5 Date of Birth
      C     H5DOB         IFEQ      *ZERO
      C                   MOVEL     *BLANKS       DD5DOB
      C                   ELSE
      C                   MOVEL     H5DOB         DD5DOB
      C                   ENDIF
- 
+
       **  Holder 5 address 3
      C                   MOVE      H5ADR3        DD5AD3
- 
+
       **  Holder 5 Postcode 1
      C                   MOVE      H5PCD1        DD5PC1
- 
+
       **  Holder 5 Postcode 2
      C                   MOVE      H5PCD2        DD5PC2
- 
+
       **  Holder 5 Status  (Is this a new participant?)
       **  Default to 'N'
      C*JCA*              MOVE      ' '           DD5STS
      C                   MOVE      'N'           DD5STS
- 
+
       **  Tax Indicator
      C                   MOVEL     TAXIND        DDTXIN
- 
+
       **  Post 5/4/01 R105                                                                    CRE007
      C                   MOVE      PSTR          DDPSTR                                       CRE007
                                                                                               CRE007
@@ -2083,7 +2085,7 @@
      C     H3NAME        IFNE      *BLANK
      C                   MOVEL     'Y'           DDFPAR
      C                   END
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2114,7 +2116,7 @@
       *
       *  Requested PB Customer
      C                   MOVEL     A_PBREPB      A_DDREPB
- 
+
       *  Private Banking Start Date
      C     A_PBPBST      IFEQ      *ZERO
      C                   MOVEL     *BLANKS       A_DDPBST
@@ -2124,7 +2126,7 @@
      C                   MOVEL     *BLANKS       A_DDPBST
      C                   MOVEL     ZDATE         A_DDPBST
      C                   ENDIF
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2169,13 +2171,13 @@
       *                                                               *
       *****************************************************************
      C     ZDATE2        BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO            5 0
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE             6 0
      C                   PARM                    ZADATE            7
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2185,11 +2187,11 @@
       *                                                               *
       *****************************************************************
      C     ZEDIT         BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD           16
      C                   PARM                    ZADEC             1 0
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2274,7 +2276,7 @@
      C                   MOVEL     *BLANK        TranInCtnm                                AR1086546
      C                   MOVEL     ##ACTN        DDACTN
      C/COPY WNCPYSRC,SDH00694
- 
+
       *
      C                   ENDSR
       *****************************************************************                       CSD079
@@ -2645,6 +2647,9 @@
                                                                                               CER070
       ** Risk Classification / BISTRA                                                         CER070
      C                   EVAL      DDRIGR = E5RIGR                                            CER070
+                                                                                              CER071
+      ** Legal Form                                                                           CER071
+     C                   EVAL      DDRECH = E5RECH                                            CER071
       *                                                                                       CLE134
       ** Past Due Processing                                                                  CLE134
       *                                                                                       CLE134
@@ -2661,7 +2666,7 @@
      C                   EVAL      DDTNC4 = E5TNC4                                            CGL132
      C                   EVAL      DDTIN5 = E5TIN5                                            CGL132
      C                   EVAL      DDTNC5 = E5TNC5                                            CGL132
- 
+
      C                   ENDSR                                                                CSD079
                                                                                               CSD079
       *****************************************************************                       CSD079
@@ -3838,7 +3843,7 @@
      C                   PARM                    CuCUXC                                       CGL132
      C                   PARM                    CuFATC                                       CGL132
      C/COPY WNCPYSRC,SDCUSDNC02
- 
+
       *
       *
       ** Initialize program name
@@ -4069,7 +4074,7 @@
      C                   EVAL      DBASE  = 912                                               CSD079
      C                   EXSR      *PSSR                                                      CSD079
      C                   ENDIF                                                                CSD079
- 
+
      C                   IF        PRTCD = *BLANKS                                            CSD079
      C                   EVAL      ULX004 = 'Y'                                               CSD079
      C                   ELSE                                                                 CSD079

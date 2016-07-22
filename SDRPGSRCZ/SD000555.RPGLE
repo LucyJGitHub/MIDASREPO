@@ -12,12 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2013            *
       *                                                               *
-      *  Last Amend No. MD026905A          Date 24Jun14               *
-      *  Prev Amend No. MD026905           Date 15Jun14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD026905A          Date 24Jun14               *
+      *                 MD026905           Date 15Jun14               *
       *                 CGL132   *CREATE   Date 01May13               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD026905A - Make the program re-runnable (Reopen)            *
       *  MD026905 - Make the program re-runnable                      *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
@@ -26,13 +28,13 @@
       *****************************************************************
       **
      FSDCUSTL0  IF   E           K DISK
- 
+
       **
      FSDACUSL0  UF A E           K DISK
- 
+
       ** Withholding Tax Customer Details
      FSDWTCSPD  IF   E             DISK
- 
+
       ** Customer Details Extension C
      F***SDCUSTXC  IF A E             DISK                                                  MD026905
      FSDCUSXL0  UF A E           K DISK                                                     MD026905
@@ -40,21 +42,21 @@
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** FIRST DS FOR ACCESS PROGRAMS, SHORT DATA STRUCTURE
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** SECOND DS FOR ACCESS PROGRAMS, LONG DATA STRUCTURE
- 
+
       ** External DS for Bank Details ICD retrieval
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
      D SDSVAL        E DS                  EXTNAME(SDSVALPD)
- 
+
      D CMDXC           S             75    DIM(1) CTDATA PERRCD(1)
- 
+
       ** Data structure for AOSVALR0 string
      D P@VL01          DS           200
      D WCtryOfTax              1      2
@@ -63,16 +65,16 @@
       ** and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PRetCode        S              7    INZ(*Blanks)
      D POption         S              7    INZ(*Blanks)
      D Recursive       S              1    INZ('N')
- 
+
      D CtryOfTaxSVal   S              2    INZ(*Blanks)
      D WCustNo         S              6    INZ(*Blanks)
      D WCustTIN        S             25    INZ(*Blanks)
@@ -94,7 +96,7 @@
       *
      C                   READ      SDWTCSPD
      C                   DOW       %EOF = '0'
- 
+
      C                   IF        WHCRTT = CtryOfTaxSVal
      C                             and WHRECI = 'D'
      C                   EVAL      WCustNo = WHCSNO
@@ -103,7 +105,7 @@
      C                   EVAL      WCustNo = *BLANKS
      C                   EVAL      WCustTin = *BLANKS
      C                   ENDIF
- 
+
      C                   READ      SDWTCSPD
      C                   ENDDO
       *
@@ -148,7 +150,7 @@
       *                                                                                     MD026905
      C                   READ      @BBREBG
      C                   ENDDO
- 
+
      C     InitExtFilE   ENDSR
       *
       *******************************************************************
@@ -161,7 +163,7 @@
      C                   IF        %FOUND = '0'
      C                   GOTO      UpdCustDetE
      C                   ENDIF
- 
+
      C     WCustNo       CHAIN     @ACUSL0
      C                   IF        %FOUND = '0'
      C                   EVAL      WCrtUpdFlg = '0'
@@ -186,12 +188,12 @@
      C                   EVAL      WCrtUpdFlg = '1'
      C                   EVAL      E5TYLC = 'A'
      C                   ENDIF
- 
+
      C                   IF        BBCOLC = CtryOfTaxSVal
      C                             and E5TINO = *BLANKS
      C                   EVAL      E5TINO = WCustTin
      C                   ELSE
- 
+
      C                   SELECT
      C                   WHEN      %trim(E5TIN2) = *BLANKS
      C                   EVAL      E5TIN2 = WCustTin
@@ -207,21 +209,21 @@
      C                   EVAL      E5TNC5 = CtryOfTaxSVal
      C                   ENDSL
      C                   ENDIF
- 
+
      C                   EVAL      E5LCD  = BJRDNB
      C                   EVAL      E5TMST = %timestamp()
      C                   EVAL      E5DOLV = 0
      C                   EVAL      E5BRTH = 0
- 
+
      C                   IF        WCrtUpdFlg = '1'
      C                   UPDATE    @ACUSL0
      C                   ELSE
      C                   WRITE     @ACUSL0
      C                   ENDIF
- 
+
      C     Cleanup       TAG                                                                MD026905
      C                   EVAL      SDACUS = *BLANKS
- 
+
      C     UpdCustDetE   ENDSR
       *******************************************************************
       *                                                                 *
@@ -229,7 +231,7 @@
       *                                                                 *
       *******************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Access installation control data
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
@@ -245,7 +247,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRetCode          7
      C                   PARM      WSysVal1      P@OP01           20
@@ -268,7 +270,7 @@
      C                   PARM      *BLANKS       P@VL09          200
      C                   PARM      *BLANKS       P@OP10           20
      C                   PARM      *BLANKS       P@VL10          200
- 
+
      C                   IF        PRetCode  <> *BLANKS
      C                   EVAL      DBFile = 'SDSVALPD'
      C                   EVAL      DBKEy = '*KEY   '
@@ -276,7 +278,7 @@
      C                   EXSR      *PSSR
      C                   ENDIF
      C                   EVAL      CtryOfTaxSVal = WCtryOfTax
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. CGL165             Date 15Feb17               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 CGL165             Date 15Feb17               *
       *                 CER070             Date 24Nov14               *
       *                 CDL096             Date 22Sep14               *
       *                 CDL094             Date 11Jun14               *
@@ -84,6 +85,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           (Recompile)                                         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *

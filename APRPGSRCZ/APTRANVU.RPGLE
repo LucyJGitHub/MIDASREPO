@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. AR316373           Date 03Jun15               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 AR316373           Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR702532           Date 13Jan15               *
       *                 CAP212             Date 15Sep14               *
@@ -197,6 +198,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
       *  AR316373 - BOE @ MPlus - BOE cust dtls are not displayed in  *

@@ -32,8 +32,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD034317           Date 17Jul15               *
-      *  Prev Amend No. MD034876           Date 03Jul15               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD034317           Date 17Jul15               *
+      *                 MD034876           Date 03Jul15               *
       *                 AR684053           Date 03Jun15               *
       *                 AR316373           Date 03Jun15               *
       *                 CER070             Date 24Nov14               *
@@ -130,6 +131,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field                             *
       *  MD034317 - Added CGL132 to the parameter when calling        *
       *             SDCUSD2VL                                         *
       *  MD034876 - BOE Upgrade to FBM2.1 Compatibility Amendments    *
@@ -3581,6 +3583,7 @@
      C                   MOVEL     ADDDABSK      V_ADABSK                                     CER059
      C                   MOVEL     ADDDBEXT      V_ADBEXT                                     CER059
      C                   MOVEL     ADDDRIGR      V_ADRIGR                                     CER070
+     C                   MOVEL     ADDDRECH      V_ADRECH                                     CER071
      C                   ENDIF                                                                CSD079
                                                                                               CSD079
       ** Set Service fees Fields                                                              CSD079

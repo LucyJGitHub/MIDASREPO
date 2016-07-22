@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 BUG25856           Date 04Sep09               *
       *                 BUG25441           Date 12Aug09               *
@@ -25,6 +26,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -122,7 +124,7 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
       *
      C     CustomerNo    KLIST
@@ -133,7 +135,7 @@
       *****************************************************************
       * UpdateFields - Move fields from template file.                *
       *****************************************************************
- 
+
      C     UpdateFields  BEGSR
       *
      C                   EVAL      E5EXTH = BBCEXT

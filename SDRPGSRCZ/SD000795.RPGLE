@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. MD025654A          Date 18Mar14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 MD025654A          Date 18Mar14               *
       *                 MD025654           Date 13Mar14               *
       *                 CLE134             Date 01Aug12               *
       *                 AR746766A          Date 05May11               *
@@ -26,6 +27,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  MD025654A - Exemption threshold enquiry not shown during     *
       *             IC and after COB                                  *

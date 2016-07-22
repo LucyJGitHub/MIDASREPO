@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       *                 BG26993            Date 26Jan10               *
       *                 113339   *CREATE   Date ddmmmyy               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  BG26993 - Delivery of upgraded programs to core.             *

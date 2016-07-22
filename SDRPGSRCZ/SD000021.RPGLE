@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD033670           Date 23Jun15               *
-      *  Prev Amend No. CER070             Date 19Aug14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD033670           Date 23Jun15               *
+      *                 CER070             Date 19Aug14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -38,6 +39,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD033670 - BNI SG Midas to SAM Interface File Duplicate Data *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -57,50 +59,50 @@
       *  CSD017 - Midas Compliance Watch - Anti-Money Laundering      *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       *
       ** AML Corporate Details Import Table
       *
      F***SDCORIPD  IF A E             DISK    INFSR(*PSSR)                                  MD033670
      FSDCORIL0  IF A E           K DISK    INFSR(*PSSR)                                     MD033670
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
      D/COPY ZACPYSRC,STD_D_SPEC
       **---------------------------------------------------------------
- 
+
       **---------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in
       ** the Program Status Data Structure. They have meaningful
       ** names, prefixed by 'PS'.
      D/COPY ZACPYSRC,PSDS
       **---------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** First DS for access programs, short data structure                                  BUG3031
      D DSFDY         E DS                  EXTNAME(DSFDY)                                    BUG3031
                                                                                              BUG3031
@@ -136,17 +138,17 @@
       *
      D AddPrntDet    E DS                  EXTNAME(SDACUSPD)
      D                                     PREFIX(AD:2)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       *
       ** Program Parameter
       *
      D PMode           S              1
- 
+
       **  Switchable Feature                                                                 BUG3031
      D CGP001          S              1A                                                     BUG3031
                                                                                              BUG3031
@@ -160,14 +162,14 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------- Start of Main Processing ------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
       ** ¦ is executed at program activation.                         ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       *
       ** Initialise the relevant Import Table fields.
       *
@@ -223,7 +225,7 @@
      C                   ENDIF                                                              MD033670
       *
      C                   EVAL      *INLR = True
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -287,18 +289,18 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +---------------------------------------+
       ** ¦ Program, module, and procedure        ¦
       ** ¦ names for DB error processing         ¦
       ** ¦ =============================         ¦
       ** +---------------------------------------+
- 
+
       **---------------------------------------------------------------
       ** The following /COPY includes the DB error processing routines.
      C/COPY ZACPYSRC,PSSR_ILE
       **---------------------------------------------------------------
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

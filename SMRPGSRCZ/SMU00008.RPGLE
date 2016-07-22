@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2009            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 B24746A            Date 16Jun09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CER059 - German Feature Upgrade to Delhi                     *
@@ -98,8 +100,8 @@
       * then leave.
      C                   LEAVESR
      C                   ENDIF
- 
- 
+
+
      C                   IF        BBJCU1 > 0                                   B24416
       *
       * Check if joint 1 already exist.
@@ -117,7 +119,7 @@
      C                   EXSR      AddRelat
      C                   ENDIF
      C                   ENDIF                                                  B24416
- 
+
      C                   IF        BBJCU2 > 0                                   B24416
       *
       * Check if joint 2 already exist.

@@ -11,10 +11,12 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2012            *
       *                                                               *
-      *  Last Amend No. MD020205 *CREATE   Date 24Apr13               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD020205 *CREATE   Date 24Apr13               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD020205 - Continuous CoB run time improvement               *
       *                                                               *
       *****************************************************************
@@ -37,21 +39,21 @@
       *                                                               *
       *                                                               *
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** Ê Automatically included D-specs       Ê
       ** Ê ==============================       Ê
       ** +--------------------------------------+
       ** The following /COPY line includes (among others) the LDA
       ** layout and the copyright array definition:
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** The following /COPY line includes all the defined fields in
       ** the PSDS. They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** Ê Declared variables                   Ê
       ** Ê ==================                   Ê
@@ -62,23 +64,23 @@
       *****************************************************************
       * MAIN PROCEDURE                                                *
       *****************************************************************
- 
+
      C/EXEC SQL
      C+ Delete from GZSDACUSPD where
      C+ not exists(select * from
      C+ SDACUSPD where
      C+ E5CUST = GZSDACUSPD.E5CUST)
      C/END-EXEC
- 
+
       * Check for error in SQL execution
- 
+
      C                   IF        SQLCODE <> 0  AND SQLCODE <> 100
      C                   EVAL      DBPGM = 'GO011502'
      C                   EVAL      DBFILE = 'GZSDACUSPD'
      C                   EVAL      DBASE = 003
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      *INLR = *ON
      C                   RETURN
       *****************************************************************
@@ -95,14 +97,14 @@
       *                                                               *
       *****************************************************************
      C     *PSSR         BEGSR
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   DUMP
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
 **  CPY@
 (c) Misys International Banking Systems Ltd. 2012

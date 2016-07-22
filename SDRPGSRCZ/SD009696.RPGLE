@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD029850           Date 30Sep14               *
-      *  Prev Amend No. MD027548           Date 19Jun14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD029850           Date 30Sep14               *
+      *                 MD027548           Date 19Jun14               *
       *                 MD027577A          Date 17Jun14               *
       *                 MD027513           Date 17Jun14               *
       *                 MD027354           Date 06Jun14               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD029850 - SDC009697 COB component run too long              *
       *             Applied fix MD028974, MD028321, MD028949 and      *
       *             MD029018                                          *
@@ -63,18 +65,18 @@
       *  CSD092 - Account Review                                      *
       *                                                               *
       *****************************************************************
- 
+
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDFTCSL1  IF   E           K DISK    INFSR(*PSSR)                                       CGL132
                                                                                               CGL132
      FSDJACCL4  IF   E           K DISK    INFSR(*PSSR)
- 
+
      F***SDCUAHL0  IF   E           K DISK    INFSR(*PSSR)                                  MD026148
      FSDCUAHL1  IF   E           K DISK    INFSR(*PSSR)                                     MD026148
- 
+
      FSDCUSXL1  IF   E           K DISK    INFSR(*PSSR)                                     MD026854
                                                                                             MD026854
      FSDHCIDL0  IF   E           K DISK    INFSR(*PSSR)                                     MD027295
@@ -83,48 +85,48 @@
                                                                                             MD027295
       ** History of Customer Info File
      FSDHCINPD  O    E             DISK
- 
+
       ** History of Customer Info Details File
      FSDHCIDPD  O    E             DISK
                                                                                             MD027295
      FSDHCILPD  O    E             DISK                                                     MD027295
- 
+
       ** =======
       ** D-specs
       ** =======
- 
+
      D WWFLDB          S              5S 0 DIM(20)
      D WWIBO           S              5S 0 DIM(20)
      D WWFLDT          S              1    DIM(20)
      D WWFLDD          S              5S 0 DIM(20)
      D WWFTXT          S             50    DIM(20)
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** First DS for Access Programs, short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
      D WDTMST          DS
      D  WWYr                   1      4
      D  WWMn                   5      6
      D  WWDy                   7      8
- 
+
       /COPY ZACPYSRC,PSDS
- 
+
       /COPY ZACPYSRC,STD_D_SPEC
- 
+
      D WWBEIMC         DS
      D  WWBEIMP                1      3P 0
- 
+
      D WWAFIMC         DS
      D  WWAFIMP                1      3P 0
- 
+
      D WTTMST          DS
      D  WWHH                   1      2
      D  WWMM                   3      4
      D  WWSS                   5      6
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
      D SDFTCS        E DS                  EXTNAME(SDFTCSPD)                                  CGL132
@@ -234,14 +236,14 @@
      D WChar6                         6A   overlay(PackedToChar)                            MD026666
      D WPacked9                       9P 0 overlay(PackedToChar)                            MD026666
                                                                                             MD026666
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D PDESC           S             60    DIM(8) CTDATA PERRCD(1)
- 
+
      D RetCode         S              7A
      D PFileNam        S             10A
      D PCUST           S              6A
@@ -297,16 +299,16 @@
      D WBJACC          S             34A                                                    MD027295
      D WAJACC          S             34A                                                    MD027295
      D WWLLSR          S             10A                                                    MD028949
- 
+
       ** Parameter for Access Object
      D PRtcd           S              7A
      D POptn           S              7A
- 
+
       ** Parameter for ZDATE2
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7A
- 
+
       /EJECT
       ** +--- Start of Main processing -----------------------------------+
       ** ¦                                                                ¦
@@ -314,7 +316,7 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
      C                   EVAL      YFAINFC = *BLANKS                                        MD027513
      C                   EVAL      WWJARC = 'N'                                             MD027295
      C                   EVAL      WBJACC = PBefJACC                                        MD027295
@@ -339,13 +341,13 @@
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    WKTMST
      C                   MOVE      WKTMST        HCTMST
- 
+
      C                   EVAL      WWTMST = *BLANKS
      C                   MOVE      WKTMST        WWTMST
      C                   EVAL      WWHH = %SUBST(WWTMST:12:2)
      C                   EVAL      WWMM = %SUBST(WWTMST:15:2)
      C                   EVAL      WWSS = %SUBST(WWTMST:18:2)
- 
+
      C                   EVAL      HCINFC = ' '                                             MD027295
      C                   IF        PAftFTCS <> *BLANKS                                      MD027295
      C**********         MOVE      PAftFTCS      SDFTCSY                           MD027295 MD028321
@@ -358,7 +360,7 @@
      C**********         EVAL      HCIEXR = 'N'                                             MD028321
      C**********         EVAL      HCLUSR = PSUSER                                          MD026666
      C**********         EVAL      HCLUSR = USRID                                  MD026666 MD028949
- 
+
      C**********         IF        PBefCUST = *BLANKS AND                                   MD027295
      C**********                   PAftCUST <> *BLANKS OR                                   MD027295
      C**********                   PBefACUS = *BLANKS AND                                   MD027295
@@ -384,7 +386,7 @@
      C**********         MOVEL     SDCUST        PBefCUST                                   MD027295
      C**********         ENDIF                                                              MD027295
      C                   ELSE
- 
+
      C                   IF        PBefCUST <> *BLANKS AND
      C                             PAftCUST = *BLANKS OR
      C                             PBefACUS <> *BLANKS AND
@@ -401,18 +403,18 @@
      C                   EVAL      HCACTN = 'A'
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   EVAL      HCDESC = PDESC(7)
- 
+
      C                   IF        PBefJACC <> *BLANKS OR
      C                             PAftJACC <> *BLANKS
      C                   EVAL      HCDESC = PDESC(6)
      C                   ENDIF
- 
+
      C                   IF        PACRV = 'Y'
      C                   EVAL      HCDESC = PDESC(5)
      C                   ENDIF
- 
+
      C                   IF        PELEC = 'Y'                                                CGL132
      C                   EVAL      HCDESC = PDESC(4)                                          CGL132
      C                   ENDIF                                                                CGL132
@@ -480,22 +482,22 @@
      C                   ENDIF                                                                CGL132
                                                                                               CGL132
      C                   EVAL      HCINDT = BJRDNB
- 
+
      C**********         WRITE     SDHCIND0                                                 MD027295
- 
+
      C                   EVAL      HDCUST = HCCUST
      C                   EVAL      HDCDAT = HCCDAT
      C                   EVAL      HDCTIM = HCCTIM
      C                   EVAL      HDTMST = HCTMST
      C                   EVAL      HDINDT = BJRDNB
- 
+
      C                   IF        PBefCUST = *BLANKS AND
      C                             PAftCUST = *BLANKS
      C     PCUST         CHAIN     SDCUSTL1                           9090
      C                   MOVEL     SDCUST        PBefCUST
      C                   MOVEL     SDCUST        PAftCUST
      C                   ENDIF
- 
+
      C                   IF        PBefACUS = *BLANKS AND
      C                             PAftACUS = *BLANKS
      C     PCUST         CHAIN     SDACUSL1                           9090
@@ -513,7 +515,7 @@
      C                   MOVEL     SDFTCS        PAftFTCS                                     CGL132
      C                   ENDIF                                                              MD026854
      C                   ENDIF                                                                CGL132
- 
+
      C                   IF        PBefCUXC = *BLANKS AND                                   MD026854
      C                             PAftCUXC = *BLANKS                                       MD026854
      C     PCUST         CHAIN     SDCUSXL1                           9090                  MD026854
@@ -541,7 +543,7 @@
      C                   RETURN                                                             MD027295
      C                   ENDIF                                                              MD027295
      C                   ENDIF                                                              MD026854
- 
+
      C**********         IF        PAftCUST <> *BLANKS                             MD026854 MD027295
      C**********         EVAL      HDIMAG = PAftCUST                                        MD027295
      C**********         EVAL      HDFILN = 'SDCUSTPD'                                      MD027295
@@ -550,7 +552,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                     MD026854 MD027295
- 
+
      C**********         IF        PBefACUS <> *BLANKS                             MD026854 MD027295
      C                   EVAL      KFILE = 'SDACUSPD'                                       MD027295
      C     KHCIN         CHAIN     SDHCIDL0                                                 MD027295
@@ -563,7 +565,7 @@
      C                   EXSR      SRUpdateImage                                            MD026666
      C                   WRITE     SDHCIDD0
      C                   ENDIF                                                              MD026854
- 
+
      C**********         IF        PAftACUS <> *BLANKS                             MD026854 MD027295
      C**********         EVAL      HDIMAG = PAftACUS                                        MD027295
      C**********         EVAL      HDFILN = 'SDACUSPD'                                      MD027295
@@ -594,7 +596,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                          CGL132 MD027295
      C**********         ENDIF                                                     MD026854 MD027295
- 
+
      C**********         IF        PBefCUXC <> *BLANKS                             MD026854 MD027295
      C                   EVAL      KCUST = HCCUST                                           MD027295
      C                   EVAL      KFILE = 'SDCUSTXC'                                       MD027295
@@ -636,7 +638,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                    MD026957A MD027295
- 
+
      C**********         IF        PAftJACC <> *BLANKS                            MD026957A MD027295
      C**********         EVAL      HDIMAG = PAftJACC                                        MD027295
      C**********         EVAL      HDFILN = 'SDJACCPD'                                      MD027295
@@ -646,7 +648,7 @@
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                    MD026957A MD027295
      C**********         ENDIF                                                              MD027295
- 
+
      C     PCUST         SETLL     SDJACCL4
      C     PCUST         READE     SDJACCL4                               80
      C                   IF        *IN80 = '1'                                              MD027295
@@ -671,9 +673,9 @@
      C                   IF        SDJACC <> PAftJACC                                       MD027295
      C                   MOVEL     SDJACC        PBefJACC
      C                   MOVEL     SDJACC        PAftJACC
- 
+
      C**********         MOVEL     PBefJACC      WCJACC                                     MD027295
- 
+
      C**********         IF        WSJACC <> WCJACC                                         MD027295
      C                   EVAL      HDIMAG = PBefJACC
      C                   IF        SDJACC = PAftJACC                                        MD027295
@@ -694,7 +696,7 @@
      C                             %SUBST(AftImage :PFieldPosn (2)                          MD027295
      C                                             :PFieldLen  (2))                         MD027295
      C                   WRITE     SDHCIDD0
- 
+
      C**********         EVAL      HDIMAG = PAftJACC                                        MD027295
      C**********         EVAL      HDFILN = 'SDJACCPD'                                      MD027295
      C**********         EVAL      HDIMGT = 'A'                                             MD027295
@@ -702,7 +704,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C                   ENDIF
- 
+
      C     PCUST         READE     SDJACCL4                               80
      C                   ENDDO
      C                   ELSE                                                               MD027295
@@ -724,7 +726,7 @@
      C                   WRITE     SDHCIDD0                                                 MD027295
      C                   ENDIF                                                              MD027295
      C                   ENDIF                                                              MD027295
- 
+
      C**********         IF        PBefCUAH <> *BLANKS OR                                   MD027295
      C**********                   PAftCUAH <> *BLANKS                                      MD027295
      C**********         IF        PBefCUAH <> *BLANKS                                      MD027295
@@ -746,7 +748,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                    MD026957A MD027295
- 
+
      C**********         IF        PAftCUAH <> *BLANKS                            MD026957A MD027295
      C**********         EVAL      HDIMAG = PAftCUAH                                        MD027295
      C**********         EVAL      HDFILN = 'SDCUAHPD'                                      MD027295
@@ -756,7 +758,7 @@
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                    MD026957A MD027295
      C**********         ENDIF                                                              MD027295
- 
+
      C*****PCUST         SETLL     SDCUAHL0                                                 MD026148
      C*****PCUST         READE     SDCUAHL0                               80                MD026148
      C     PCUST         SETLL     SDCUAHL1                                                 MD026148
@@ -783,9 +785,9 @@
      C                   IF        SDCUAH <> PAftCUAH                                       MD027548
      C                   MOVEL     SDCUAH        PBefCUAH
      C                   MOVEL     SDCUAH        PAftCUAH
- 
+
      C**********         MOVEL     PBefCUAH      WCCUAH                                     MD027548
- 
+
      C**********         IF        WSCUAH <> WCCUAH                                         MD027295
      C                   EVAL      HDIMAG = PBefCUAH
      C                   IF        SDCUAH = PAftCUAH                                        MD027295
@@ -806,7 +808,7 @@
      C                             %SUBST(AftImage :PFieldPosn (2)                          MD027295
      C                                             :PFieldLen  (2))                         MD027295
      C                   WRITE     SDHCIDD0
- 
+
      C**********         EVAL      HDIMAG = PAftCUAH                                        MD027295
      C**********         EVAL      HDFILN = 'SDCUAHPD'                                      MD027295
      C**********         EVAL      HDIMGT = 'A'                                             MD027295
@@ -814,7 +816,7 @@
      C**********         EXSR      SRUpdateImage                                   MD026666 MD027295
      C**********         WRITE     SDHCIDD0                                                 MD027295
      C**********         ENDIF                                                              MD027295
- 
+
      C*****PCUST         READE     SDCUAHL0                               80                MD026148
      C                   ENDIF                                                              MD027548
      C     PCUST         READE     SDCUAHL1                               80                MD026148
@@ -840,9 +842,9 @@
      C                   ENDIF                                                              MD027295
                                                                                             MD027295
      C                   EXSR      SRProcessDtl2                                            MD027295
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
                                                                                             MD027295
       *****************************************************************                     MD027295
@@ -1166,7 +1168,7 @@
      C                   ENDIF                                                              MD027295
                                                                                             MD027295
      C                   ENDSR                                                              MD027295
- 
+
       *****************************************************************                     MD026666
       /EJECT                                                                                MD026666
       *****************************************************************                     MD026666
@@ -1274,11 +1276,11 @@
       *****************************************************************
       *  *INZSR - Program Initialisation routine                      *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *ENTRY        PLIST
- 
+
      C                   PARM                    PCUST
      C                   PARM                    PBefCUST
      C                   PARM                    PAftCUST
@@ -1298,16 +1300,16 @@
      C     KHCIN         KLIST                                                              MD027295
      C                   KFLD                    KCUST                                      MD027295
      C                   KFLD                    KFILE                                      MD027295
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRtcd <> *BLANK
      C                   EVAL      DBKEY = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -1402,9 +1404,9 @@
      C                   EVAL      Index = Index + 1                                        MD026666
                                                                                             MD026666
      C                   ENDDO                                                              MD026666
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -1415,19 +1417,19 @@
       *          This subroutine DUMPs the program just once.         *
       *                                                               *
       *****************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************

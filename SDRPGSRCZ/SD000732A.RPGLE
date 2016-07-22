@@ -22,8 +22,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2014            *
       *                                                               *
-      *  Last Amend No. MD027498           Date 20Jun14               *
-      *  Prev Amend No. MD027327           Date 03Jun14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. MD027498           Date 20Jun14               *
+      *                 MD027327           Date 03Jun14               *
       *                 MD027355B          Date 06Jun14               *
       *                 MD027355A          Date 06Jun14               *
       *                 MD027355           Date 06Jun14               *
@@ -36,6 +37,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  MD027498 - Inconsistent behaviour of setting New             *
       *             Classification Code in selection criteria to blank*
       *  MD027327 - US Green Card System Value did not Update         *
@@ -77,54 +79,54 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
      FSDCTRYL5  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDFTNHL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT                                           MD027125
- 
+
      FSDFTNHL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(JN:2)
      F                                     RENAME(SDFTNHD0:SDFTNHD1)
- 
+
      FSDFTCSL0  UF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT
- 
+
      FSDFTCSL1  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDFTCSD0:SDFTCSD1)
- 
+
      FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(OP:2)
      F                                     RENAME(@BBREBG:SDCUSTOP)
- 
+
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDCUSXL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDALTNL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDNAHOL0  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDWTCSL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDJACCL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDJACCL2  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(J2:2)
      F                                     RENAME(SDJACCD0:SDJACCD2)
- 
+
      FSDJACCLC  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(J8:2)
      F                                     RENAME(SDJACCD0:SDJACCDC)
- 
+
      FSDJACCLD  IF   E           K DISK    INFSR(*PSSR)
      F                                     PREFIX(J9:2)
      F                                     RENAME(SDJACCD0:SDJACCD9)
- 
+
      FSDNOSTL2  IF   E           K DISK    INFSR(*PSSR)
- 
+
      FOTPAYL9   IF   E           K DISK    INFSR(*PSSR)
- 
+
      FSDCUAHLA  IF   E           K DISK    INFSR(*PSSR)
      F                                     COMMIT                                           MD026705
                                                                                             MD026705
@@ -136,7 +138,7 @@
      FSDCUAHL1  IF   E           K DISK    INFSR(*PSSR)                                     MD026705
      F                                     PREFIX(L1:2)                                     MD026705
      F                                     RENAME(SDCUAHD0:SDCUAHD1)                        MD026705
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -163,21 +165,21 @@
       *
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
       *
       ** Program Status Data Structure
- 
+
       ** +-----------------------------------------------------------------+
       ** D specs of the following types should be inserted after the
       ** relevant box.  *** Remove this text afterwards. ***
       ** +-----------------------------------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** Input/Output: Transaction ID
      DPReturn          S              7A
       ** Input: Transaction ID
@@ -191,7 +193,7 @@
      DPMode            S              1A
       ** Input: Reporting Type
      DPRepType         S              1A
- 
+
      DArrayMax         C                   CONST(999)
      DIndiciaCount     C                   CONST(12)
      DSYSVAL1          C                    'FATCAEffectStartDate'
@@ -200,48 +202,48 @@
      DIndiciaF         S              1
      DIndToNo          S              1
      DWupdat           S              1                                                     MD027315
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Run-time Array for Country Codes with FATCA Flag
      DCtryCodeArr      S              2    DIM(ArrayMax)
- 
+
       ** Second DS for Access Programs, Long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Second DS for Access Programs, Long Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** External data structure for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External data structure for ACUS
      D SDCUXC        E DS                  EXTNAME(SDCUSTXC)
- 
+
       ** External data structure for ACUS
      D SDACUS        E DS                  EXTNAME(SDACUSPD)
- 
+
       ** External data structure for ALTN
      D SDALTN        E DS                  EXTNAME(SDALTNPD)
- 
+
       ** External data structure for SARD
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** External data structure for FTNH
      D SDFTCS        E DS                  EXTNAME(SDFTCSPD)
      D                                     PREFIX(HC:2)
- 
+
       ** External data structure for SVAL
      D SDSVAL        E DS                  EXTNAME(SDSVALPD)
- 
+
       ** Data Structure for Joint Account member search
      D WJointAcChk     DS                  DIM(ArrayMax) QUALIFIED
      D  JointAc                       6A
      D  MemCount                      3S 0
- 
+
       ** Data Structure for Authority Holder search                                         MD026705
      D WAuthHolChk     DS                  DIM(ArrayMax) QUALIFIED                          MD026705
      D  AuthHold                     10A                                                    MD026705
@@ -275,7 +277,7 @@
      D  FAHMOV
      DCustIndiciaDS                  12A   OVERLAY(CustIndOverDS)
      DCustOverideDS                  12A   OVERLAY(CustIndOverDS:13)
- 
+
       ** Data Structure for Non-Account Holder Indicia
      DNAHoIndOverDS    DS
      D  FNCISV
@@ -306,41 +308,41 @@
      D***NAHoOverideDS                  11A   OVERLAY(NAHoIndOverDS:12)                     MD026705
      DNAHoIndiciaDS                  12A   OVERLAY(NAHoIndOverDS)                           MD026705
      DNAHoOverideDS                  12A   OVERLAY(NAHoIndOverDS:13)                        MD026705
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D @RUN            S              1
      D Index           S              3S 0 INZ(1)
      D KCNUM           S              6A
      D KCust           S              6A
      D KNAHO           S             10A
- 
+
      D CSE023          S              1A
      D CSE024          S              1A
      D CSD092          S              1A
- 
+
      D PRetcode        S              7A
      D POption         S              7A
      D PSARD           S              6A
- 
+
      D WMesLen         S             15S 5 INZ(50)
- 
+
      D PRTCD           S             20A   INZ(*BLANKS)
      D POP01           S             20A   INZ(*BLANKS)
      D PVL01           S            200A   INZ(*BLANKS)
      D POP02           S             20A   INZ(*BLANKS)
      D PVL02           S            200A   INZ(*BLANKS)
- 
+
      D PDateFormat     S              1A
      D WEffDate        S              5P 0
      D WNEffDate       S              6P 0
- 
+
       ** Timestamp for the transaction
      D TimeStamp       S               Z
- 
+
      D PCUST           S              6A
      D PBefCUST        S           5000A
      D PAftCUST        S           5000A
@@ -362,7 +364,7 @@
      D WTime           S               T
      D WWTIME          S              6A
      D KUS             S              2A   INZ('US')
- 
+
       ** Joint Account DS Index
      D JIdx            S              2S 0 INZ(0)
      D AIdx            S              2S 0 INZ(0)                                           MD026705
@@ -373,7 +375,7 @@
      D WCustAuth       S              6A                                                    MD026705
      D WKeyNAHO        S             10A                                                    MD026705
      D WNAHORoll       S              1A                                                    MD026705
- 
+
       ** OTPAY Key
      D KOTPAYType      S              1A
      D KOTPAYKey35     S             35A
@@ -388,32 +390,32 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
- 
+
+
      C     *DTAARA       DEFINE                  RUNDAT
      C                   IN        RUNDAT
- 
+
      C                   EVAL      Wupdat = 'N'                                             MD027315
      C                   IF        PReturn = 'UPDAT'                                        MD027315
      C                   EVAL      Wupdat = 'Y'                                             MD027315
      C                   ENDIF                                                              MD027315
      C                   EVAL      PReturn = *BLANKS                                        MD027315
      C                   EXSR      SRInitialise
- 
+
      C                   IF        PSource = 'N'
      C                   EVAL      KNAHO = PTranID
      C                   EXSR      SRProcNAHO
      C                   ENDIF
- 
+
      C                   IF        PSource = 'C'
      C                   EVAL      KCUST = PTranID
      C                   EXSR      SRProcCUSD
      C                   ENDIF
- 
+
      C                   IF        PMode = 'A'
      C                             AND PSource = 'J'
      C                             OR PMode = 'A'
@@ -422,7 +424,7 @@
      C                             AND PSource = 'J'
      C                   EXSR      SrCheckJACM
      C                   ENDIF
- 
+
      C                   IF        PMode = 'A'                                              MD026705
      C                             AND PSource = 'C'                                        MD026705
      C                             OR PMode = 'M'                                           MD026705
@@ -430,8 +432,8 @@
      C                   ENDIF                                                              MD026705
                                                                                             MD026705
      C                   RETURN
- 
- 
+
+
       **********************************************************************
       /EJECT
       *****************************************************************                     MD027199
@@ -496,11 +498,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrInitialise  BEGSR
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -512,11 +514,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrProcNAHO    BEGSR
- 
+
      C     KNAHO         CHAIN(N)  SDFTNHL0
- 
+
       ** If not found, this means that no records exists; DB error
      C                   IF        NOT %FOUND(SDFTNHL0)
      C     *LOCK         IN        LDA
@@ -528,7 +530,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     KNAHO         CHAIN     SDNAHOL0
       ** If this is being run as part of automatic updates,
       ** Indicia should not be updated when tool has not been run
@@ -542,37 +544,37 @@
      C                             AND NAHoIndiciaDS = *BLANKS)
      C                   RETURN
      C                   ENDIF
- 
+
      C     KNAHO         CHAIN     SDFTNHL0
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   MOVE      TimeStamp     WTime
      C     *HMS0         MOVE      WTime         WWTIME
- 
+
       ** Country of Domicile
      C                   IF        %LOOKUP(NHCOLC:CtryCodeArr) <> 0
      C                             AND NHCOLC <> *BLANKS
      C                             AND FNCDSV <> 'Y'
- 
+
      C                   EVAL      FNCDSV = 'Y'
      C                   EVAL      FNCDSD = BJRDNB
      C                   EVAL      FNCDST = WWTIME
- 
+
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNCDSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNCDSV = 'N'
      C                   EVAL      FNCDSD = BJRDNB
      C                   EVAL      FNCDST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Country of Citizenship
      C                   IF        %LOOKUP(NHCOCZ:CtryCodeArr) <> 0
      C                             AND NHCOCZ <> *BLANKS
@@ -584,16 +586,16 @@
      C                   EVAL      FNCIST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNCISV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNCISV = 'N'
      C                   EVAL      FNCISD = BJRDNB
      C                   EVAL      FNCIST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Country of Issuance of Identity Document
      C                   IF        %LOOKUP(NHISCT:CtryCodeArr) <> 0
      C                             AND NHISCT <> *BLANKS
@@ -603,16 +605,16 @@
      C                   EVAL      FNIDST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNIDSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNIDSV = 'N'
      C                   EVAL      FNIDSD = BJRDNB
      C                   EVAL      FNIDST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Country of Birth
      C                   IF        %LOOKUP(NHBTHC:CtryCodeArr) <> 0
      C                             AND NHBTHC <> *BLANKS
@@ -622,16 +624,16 @@
      C                   EVAL      FNCBST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNCBSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNCBSV = 'N'
      C                   EVAL      FNCBSD = BJRDNB
      C                   EVAL      FNCBST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** FATCA Details
       ** Check Mailing Country
      C                   IF        %LOOKUP(FNMAIL:CtryCodeArr) <> 0
@@ -642,16 +644,16 @@
      C                   EVAL      FNMCST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNMCSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNMCSV = 'N'
      C                   EVAL      FNMCSD = BJRDNB
      C                   EVAL      FNMCST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Green Card
      C                   IF        FNGREC = 'Y'
      C                             AND FNGCSV <> 'Y'
@@ -660,16 +662,16 @@
      C                   EVAL      FNGCST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNGCSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNGCSV = 'N'
      C                   EVAL      FNGCSD = BJRDNB
      C                   EVAL      FNGCST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Regular Payment Instructions
       ** Check SDEXSTPD/OTPAYDD/STDSET
       ** Always N for NAHO
@@ -679,16 +681,16 @@
      C                   EVAL      FNRPST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNRPSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNRPSV = 'N'
      C                   EVAL      FNRPSD = BJRDNB
      C                   EVAL      FNRPST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Telephone Number
      C                   IF        FNPHON = 'Y'
      C                             AND FNTESV <> 'Y'
@@ -697,16 +699,16 @@
      C                   EVAL      FNTEST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   ELSE
- 
+
      C                   IF        FNTESV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FNTESV = 'N'
      C                   EVAL      FNTESD = BJRDNB
      C                   EVAL      FNTEST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Joint Account is set to N for NAHO
      C                   IF        FNJASV = ' '
      C                   EVAL      IndToNo = 'Y'
@@ -714,7 +716,7 @@
      C                   EVAL      FNJASD = BJRDNB
      C                   EVAL      FNJAST = WWTIME
      C                   ENDIF
- 
+
       ** Authority Holder is set to N for NAHO
      C                   IF        FNAUSV = ' '
      C                   EVAL      IndToNo = 'Y'
@@ -722,7 +724,7 @@
      C                   EVAL      FNAUSD = BJRDNB
      C                   EVAL      FNAUST = WWTIME
      C                   ENDIF
- 
+
       ** Hold Mail always set to N for NAHO
      C                   IF        FNHMSV = ' '
      C                   EVAL      IndToNo = 'Y'
@@ -730,7 +732,7 @@
      C                   EVAL      FNHMSD = BJRDNB
      C                   EVAL      FNHMST = WWTIME
      C                   ENDIF
- 
+
       ** TIN always set to N for NAHO
       ** TIN is set to N if US TIN is not populated
      C                   IF        FNUTIN <> *BLANKS
@@ -746,13 +748,13 @@
      C                   EVAL      FNTXST = WWTIME
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PMode = 'M'
      C                             OR PMode = 'J'
- 
+
      C                   EVAL      FNPCLA = FNCLAC
      C                   EVAL      FNCLAD = BJRDNB
- 
+
      C                   EVAL      WHasIndicia = 'N'
      C                   EXSR      SrChkNAHoInd
      C                   IF        WHasIndicia = 'N'
@@ -760,7 +762,7 @@
      C                   ELSE
      C                   EVAL      FNCLAC = PClasIF
      C                   ENDIF
- 
+
      C                   IF        FNRPTT = 'U'
      C                             AND PRepType <> ' '
      C                   EVAL      FNRPTT = PRepType
@@ -769,13 +771,13 @@
      C                   EVAL      FNRPTM = WWTIME
      C                   EVAL      FNRPTR = RepComment
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   UPDATE    SDFTNHD0
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -787,32 +789,32 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrGetCustRec  BEGSR
- 
+
      C     KCNUM         CHAIN     SDCUSTL1
      C                   IF        NOT %FOUND(SDCUSTL1)
       **DBerror
      C                   ENDIF
- 
+
      C     KCNUM         CHAIN     SDCUSXL1
      C                   IF        NOT %FOUND(SDCUSXL1)
      C                   EVAL      SDCUXC = *BLANKS
      C                   ENDIF
- 
+
      C     KCNUM         CHAIN     SDACUSL1
      C                   IF        NOT %FOUND(SDACUSL1)
      C                   EVAL      SDACUS = *BLANKS
      C                   ENDIF
- 
+
      C     KCNUM         SETLL     SDALTNL1
      C     KCNUM         READE     SDALTNL1
      C                   IF        NOT %EOF(SDALTNL1)
      C                   EVAL      SDALTN = *BLANKS
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -824,11 +826,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrProcCUSD    BEGSR
- 
+
      C     KCUST         CHAIN(N)  SDFTCSL0
- 
+
       ** If not found, this means that no records exists; DB error
      C                   IF        NOT %FOUND(SDFTCSL0)
      C     *LOCK         IN        LDA
@@ -840,7 +842,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C     KCUST         CHAIN     SDCUSTL1
       ** If this is being run as part of automatic updates,
       ** Indicia should not be updated when tool has not been run
@@ -854,26 +856,26 @@
      C                             AND CustIndiciaDS = *BLANKS)
      C                   RETURN
      C                   ENDIF
- 
+
      C     KCUST         CHAIN     SDFTCSL0
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   MOVE      TimeStamp     WTime
      C     *HMS0         MOVE      WTime         WWTIME
- 
+
      C                   EVAL      KCNUM = FACUST
      C                   EXSR      SrGetCustRec
- 
+
      C                   DOW       NOT %EOF(SDALTNL1)
      C                             OR %LOOKUP(BBCOLC:CtryCodeArr) <> 0
      C                             AND BBCOLC <> *BLANKS
      C                             AND FACDSV <> 'Y'
- 
+
       ** Check Country of Location/Domicile
      C                   IF        %LOOKUP(BBCOLC:CtryCodeArr) <> 0
      C                             AND BBCOLC <> *BLANKS
@@ -886,22 +888,22 @@
      C                   EVAL      FACDST = WWTIME
      C                   EVAL      IndiciaF = 'Y'
      C                   LEAVE
- 
+
      C                   ELSE
- 
+
      C     KCNUM         READE     SDALTNL1
- 
+
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   IF        FACDSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FACDSV = 'N'
      C                   EVAL      FACDSD = BJRDNB
      C                   EVAL      FACDST = WWTIME
      C                   ENDIF
- 
+
       ** Check Country of Citizenship
      C                   IF        %LOOKUP(BBCNCZ:CtryCodeArr) <> 0
      C                             AND BBCNCZ <> *BLANKS
@@ -913,16 +915,16 @@
      C                   EVAL      FACISD = BJRDNB
      C                   EVAL      FACIST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FACISV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FACISV = 'N'
      C                   EVAL      FACISD = BJRDNB
      C                   EVAL      FACIST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Country of Birth
      C                   IF        %LOOKUP(E5BTHC:CtryCodeArr) <> 0
      C                             AND E5BTHC <> *BLANKS
@@ -931,16 +933,16 @@
      C                   EVAL      FACBSD = BJRDNB
      C                   EVAL      FACBST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FACBSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FACBSV = 'N'
      C                   EVAL      FACBSD = BJRDNB
      C                   EVAL      FACBST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Identity Documents Issue
      C                   IF        %LOOKUP(E5ISCT:CtryCodeArr) <> 0
      C                             AND E5ISCT <> *BLANKS
@@ -949,16 +951,16 @@
      C                   EVAL      FAIDSD = BJRDNB
      C                   EVAL      FAIDST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FAIDSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FAIDSV = 'N'
      C                   EVAL      FAIDSD = BJRDNB
      C                   EVAL      FAIDST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** FATCA Details
       ** Check Mailing Country
      C                   IF        %LOOKUP(FAMAIL:CtryCodeArr) <> 0
@@ -968,16 +970,16 @@
      C                   EVAL      FAMCSD = BJRDNB
      C                   EVAL      FAMCST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FAMCSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FAMCSV = 'N'
      C                   EVAL      FAMCSD = BJRDNB
      C                   EVAL      FAMCST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Green Card
      C                   IF        FAGREC = 'Y'
      C                             AND FAGCSV <> 'Y'
@@ -985,16 +987,16 @@
      C                   EVAL      FAGCSD = BJRDNB
      C                   EVAL      FAGCST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FAGCSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FAGCSV = 'N'
      C                   EVAL      FAGCSD = BJRDNB
      C                   EVAL      FAGCST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Telephone Number
      C                   IF        FAPHON = 'Y'
      C                             AND FATESV <> 'Y'
@@ -1002,16 +1004,16 @@
      C                   EVAL      FATESD = BJRDNB
      C                   EVAL      FATEST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FATESV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FATESV = 'N'
      C                   EVAL      FATESD = BJRDNB
      C                   EVAL      FATEST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Check Regular Payment Instructions
       ** Check SDEXSTPD/OTPAYDD/STDSET
      C                   IF        FARPSV <> 'Y'
@@ -1020,7 +1022,7 @@
      C                   EVAL      FARPSD = BJRDNB
      C                   EVAL      FARPST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FARPSV =  ' '
      C                   EVAL      IndToNo = 'Y'
      C                   EVAL      FARPSV = 'N'
@@ -1028,9 +1030,9 @@
      C                   EVAL      FARPST = WWTIME
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Hold Mail always set to 'N'
      C                   IF        FAHMSV = ' '
      C                   EVAL      IndToNo = 'Y'
@@ -1038,9 +1040,9 @@
      C                   EVAL      FAHMSD = BJRDNB
      C                   EVAL      FAHMST = WWTIME                                          MD026705
      C                   ENDIF
- 
+
       ** US Witholding Tax Details
- 
+
      C                   IF        CSE023 = 'Y' AND CSE024 = 'Y'
      C     KCustUS       CHAIN     SDWTCSL1
      C                   IF        %FOUND(SDWTCSL1)
@@ -1050,32 +1052,32 @@
      C                   EVAL      FATXSD = BJRDNB
      C                   EVAL      FATXST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FATXSV =  ' '
      C                   EVAL      FATXSV = 'N'
      C                   EVAL      FATXSD = BJRDNB
      C                   EVAL      FATXST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   IF        FATXSV <> 'Y'
      C                             AND FAUTIN <> *BLANKS
      C                   EVAL      FATXSV = 'Y'
      C                   EVAL      FATXSD = BJRDNB
      C                   EVAL      FATXST = WWTIME
      C                   ELSE
- 
+
      C                   IF        FATXSV =  ' '
      C                   EVAL      FATXSV = 'N'
      C                   EVAL      FATXSD = BJRDNB
      C                   EVAL      FATXST = WWTIME
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Joint Account is system value set to N for non joint accounts
      C                   IF        FAJASV = ' '
      C     FACUST        CHAIN     SDJACCLC
@@ -1085,7 +1087,7 @@
      C                   EVAL      FAJAST = WWTIME
      C                   ENDIF
      C                   ENDIF
- 
+
       ** Authority Holder system value set to N if no records in
       ** Authority Holder table
      C                   IF        FAAUSV = ' '
@@ -1096,22 +1098,22 @@
      C                   EVAL      FAAUST = WWTIME
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   IF        PMode = 'M'
      C                             OR PMode = 'J'
- 
+
      C                   EVAL      FAPCLA = FACLAC
      C                   EVAL      FACLAD = BJRDNB
- 
+
      C                   EVAL      WHasIndicia = 'N'
      C                   EXSR      SrChkCustInd
- 
+
      C                   IF        WHasIndicia = 'N'
      C                   EVAL      FACLAC = PClasNF
      C                   ELSE
      C                   EVAL      FACLAC = PClasIF
      C                   ENDIF
- 
+
      C                   IF        FARPTT = 'U'
      C                             AND PRepType <> 'U'
      C                             OR FARPTT = ' '
@@ -1121,22 +1123,22 @@
      C                   EVAL      FARPTM = WWTIME
      C                   EVAL      FARPTR = RepComment
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode <> 'I'
      C                             AND CSD092 = 'Y'
      C**********                   AND Wupdat = 'Y'                                MD027315 MD027355
      C**********                   AND Wupdat = 'Y'                              MD027355A MD027355B
       ** If Information only mode do not update History
- 
+
      C                   EVAL      PELEC =  'Y'
- 
+
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
      C                             PBefFTCS = PAftFTCS                                     MD027355A
@@ -1159,9 +1161,9 @@
      C                   PARM                    PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1173,17 +1175,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrChkCustInd  BEGSR
- 
+
      C                   EVAL      WOvrOff = 1
       ** Check if any override flag has been set on
       ** If any has been set, this needs to get flagged as having indicia
      C                   IF        %SCAN('Y':CustOverideDS) = 0
- 
+
      C                   DOU       WOvrOff > IndiciaCount
      C                             OR  WOvrOff = 0
- 
+
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
      C                   EVAL      WOvrOff =
@@ -1193,7 +1195,7 @@
      C                   EVAL      WSysOff =
      C                               %SCAN('N':CustOverideDS:WSysOff)
      C                   ENDIF
- 
+
       ** If offsets match, system value has been overriden
      C                   IF        WSysOff <> WOvrOff
      C                             AND WOvrOff <> 0
@@ -1203,15 +1205,15 @@
      C                   IF        WOvrOff <> 0
      C                   EVAL      WOvrOff = WOvrOff + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
      C                   EVAL      WHasIndicia = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1223,17 +1225,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrChkNAHoInd  BEGSR
- 
+
      C                   EVAL      WOvrOff = 1
       ** Check if any override flag has been set on
       ** If any has been set, this needs to get flagged as having indicia
      C                   IF        %SCAN('Y':NAHoOverideDS) = 0
- 
+
      C                   DOU       WOvrOff > IndiciaCount
      C                             OR  WOvrOff = 0
- 
+
       ** Check any override as 'N' possibly invalidating
       ** system value Indicia
      C                   EVAL      WOvrOff =
@@ -1243,7 +1245,7 @@
      C                   EVAL      WSysOff =
      C                               %SCAN('N':NAHoOverideDS:WSysOff)
      C                   ENDIF
- 
+
       ** If offsets match, system value has been overriden
      C                   IF        WSysOff <> WOvrOff
      C                             AND WOvrOff <> 0
@@ -1253,15 +1255,15 @@
      C                   IF        WOvrOff <> 0
      C                   EVAL      WOvrOff = WOvrOff + 1
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ELSE
      C                   EVAL      WHasIndicia = 'Y'
      C                   ENDIF
- 
+
      C                   ENDSR
- 
+
       **********************************************************************
       /EJECT
       *****************************************************************
@@ -1273,11 +1275,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrCheckJACM   BEGSR
- 
+
      C                   EVAL      KCUST = PTranID
- 
+
      C     KCUST         CHAIN     SDCUSTL1
                                                                                             MD027125
      C     KCUST         CHAIN     SDFTCSL0                                                 MD027125
@@ -1293,7 +1295,7 @@
      C                             AND CustIndiciaDS = *BLANKS)
      C                   RETURN
      C                   ENDIF
- 
+
      C                   IF        PMode <> 'A'
      C     *LOVAL        SETLL     SDJACCLC
      C                   READ      SDJACCLC
@@ -1302,30 +1304,30 @@
      C     KCUST         SETLL     SDJACCLC
      C     KCUST         READE     SDJACCLC
      C                   ENDIF
- 
+
      C                   DOW       NOT %EOF(SDJACCLC)
      C                   EVAL      JIdx = 1
- 
+
       ** Timestamp
      C                   CALLB     'ZAGENTMSTM'
      C                   PARM                    TimeStamp
- 
+
      C                   MOVE      TimeStamp     WTime
      C     *HMS0         MOVE      WTime         WWTIME
- 
+
      C     J8JANO        CHAIN     SDFTCSL0
- 
+
      C                   IF        FAJASV = 'Y'
      C                             AND PMode = 'A'
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -1349,11 +1351,11 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   UPDATE    SDFTCSD0
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** Only process indicia not yet Y and Tool has been ran
      C                   IF        FAJASV = 'Y'
      C                             OR CustIndiciaDS = *BLANKS
@@ -1361,43 +1363,43 @@
      C                   READ      SDJACCLC
      C                   ITER
      C                   ENDIF
- 
+
      C                   EVAL      WJointAcChk(JIdx).JointAc = J8JANO
      C                   EVAL      MCount = 1
      C                   EVAL      WJointAcChk(JIdx).MemCount = MCount
- 
+
       ** A Blank customer field means that this only has NAHO members
       ** which means that this only has 1 layer
      C                   IF        J8CUST = *BLANKS
      C                   EVAL      WKey = J8JANO
      C                   EXSR      SRJacmNAHO
- 
+
       ** If indicia has been found and Joint Account Hierarchy
       ** updated, read next record and return control to loop
      C                   IF        WHasIndicia ='Y'
- 
+
       ** If any indicia has been found, Tag all Joint Accounts
       ** assosciated to have the Joint Account Indicia
      C                   DOW       JIdx >= 1
      C                   EVAL      WKey  = WJointAcChk(JIdx).JointAc
      C     WKey          CHAIN     SDFTCSL0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
      C                   IF        FAJASV <> 'Y'
      C                   EVAL      FAJASV = 'Y'
      C                   EVAL      FAJASD = BJRDNB
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -1421,22 +1423,22 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   EVAL      JIdx = JIdx - 1
      C                   ENDDO
- 
+
      C                   IF        FAJASV = 'Y'
      C                             AND PMode = 'A'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   READ      SDJACCLC
      C                   ITER
      C                   ENDIF
- 
+
      C                   ELSE
- 
+
      C                   EVAL      JIdx = JIdx + 1
      C                   EVAL      WJointAcChk(JIdx).JointAc = J8CUST
      C     Reposition    TAG
@@ -1444,49 +1446,49 @@
      C     MemCountTag   TAG
      C     WKey          SETLL     SDJACCLD
      C                   EVAL      WJointAcChk(JIdx).MemCount = MCount
- 
+
       ** Reposition to current Node
      C                   EVAL      WLoopCnt = 0
      C                   DOW       WLoopCnt < WJointAcChk(JIdx).MemCount
      C     WKey          READE     SDJACCLD
      C                   EVAL      WLoopCnt = WLoopCnt + 1
      C                   ENDDO
- 
+
      C                   SELECT
- 
+
       ** An End of File on the READ means that all the Nodes
       ** has been exhausted on this Hierarchy Level
      C                   WHEN      %EOF(SDJACCLD)
      C     WKey          CHAIN     SDFTCSL0
      C                   EVAL      WHasIndicia = 'N'
      C                   EXSR      SrChkCustInd
- 
+
      C                   IF        WHasIndicia = 'Y'
      C                             AND JIdx > 1
- 
+
       ** If any indicia has been found, Tag all Joint Accounts
       ** assosciated to have the Joint Account Indicia
      C                   DOW       JIdx >  1
      C                   EVAL      JIdx = JIdx - 1
      C                   EVAL      WKey  = WJointAcChk(JIdx).JointAc
      C     WKey          CHAIN     SDFTCSL0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
      C                   IF        FAJASV <> 'Y'
      C                   EVAL      FAJASV = 'Y'
      C                   EVAL      FAJASD = BJRDNB
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -1510,47 +1512,47 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        FAJASV = 'Y'
      C                             AND PMode = 'A'
      C                   LEAVESR
      C                   ENDIF
- 
+
       ** Read next record after flagging
      C                   READ      SDJACCLC
      C                   ITER
      C                   ELSE
- 
+
       ** If end of hierarchy but current node does not have indicia,
       ** Check next node
      C                   IF        JIdx > 1
- 
+
       ** If this has Joint Account Members but no US indicia
      C                   IF        WJointAcChk(JIdx).MemCount > 1
      C                   ENDIF
- 
+
      C                   EVAL      WKey  = WJointAcChk(JIdx).JointAc
      C     WKey          CHAIN     SDFTCSL0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
      C                   IF        FAJASV = ' '
      C                   EVAL      FAJASV = 'N'
      C                   EVAL      FAJASD = BJRDNB
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -1574,15 +1576,15 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      JIdx = JIdx - 1
      C                   EVAL      MCount = WJointAcChk(JIdx).MemCount
      C                   EVAL      MCount = MCount + 1
      C                   GOTO      Reposition
      C                   ELSE
- 
+
       ** End of File and Top Node
      C                   IF        FAJASV = ' '
      C                   EVAL      FAJASV = 'N'
@@ -1590,47 +1592,47 @@
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
      C                   ENDIF
- 
+
      C                   IF        FAJASV = 'Y'
      C                             AND PMode = 'A'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   READ      SDJACCLC
      C                   ITER
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C                   WHEN      NOT %EOF(SDJACCLD)
      C                             AND J9CUST = *BLANKS
      C                   EVAL      WKey = J9JANO
      C                   EXSR      SRJacmNAHO
      C                   IF        WHasIndicia = 'Y'
- 
+
       ** If any indicia has been found, Tag all Joint Accounts
       ** assosciated to have the Joint Account Indicia
      C                   DOW       JIdx >  1
      C                   EVAL      JIdx = JIdx - 1
      C                   EVAL      WKey  = WJointAcChk(JIdx).JointAc
      C     WKey          CHAIN     SDFTCSL0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
      C                   IF        FAJASV <> 'Y'
      C                   EVAL      FAJASV = 'Y'
      C                   EVAL      FAJASD = BJRDNB
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -1654,20 +1656,20 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   ENDDO
- 
+
      C                   IF        FAJASV = 'Y'
      C                             AND PMode = 'A'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C                   READ      SDJACCLC
      C                   ITER
- 
+
      C                   ELSE
- 
+
      C                   IF        JIdx >  1
      C                   EVAL      JIdx = JIdx - 1
      C                   EVAL      MCount = WJointAcChk(JIdx).MemCount
@@ -1678,28 +1680,28 @@
      C                   GOTO      MemCountTag
      C                   ENDIF
      C                   ENDIF
- 
+
      C                   WHEN      NOT %EOF(SDJACCLD)
      C                   EVAL      JIdx = JIdx + 1
      C                   EVAL      WJointAcChk(JIdx).JointAc = J9CUST
      C                   EVAL      MCount = 1
      C                   GOTO      Reposition
- 
+
      C                   ENDSL
- 
+
      C                   ENDIF
- 
+
      C                   IF        PMode <> 'A'
      C                   READ      SDJACCLC
      C                   ELSE
      C                   EVAL      KCUST = PTranID
      C     KCUST         READE     SDJACCLC
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************                     MD026705
@@ -2096,42 +2098,42 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRJacmNAHO    BEGSR
- 
+
      C     WKey          SETLL     SDJACCL2
      C     WKey          READE     SDJACCL2
- 
+
      C                   DOW       NOT %EOF(SDJACCL2)
- 
+
      C     J2NAHO        CHAIN     SDFTNHL0
      C                   EVAL      WHasIndicia = 'N'
      C                   EXSR      SrChkNAHoInd
- 
+
      C                   IF        WHasIndicia = 'Y'
- 
+
       ** If any indicia has been found, Tag all Joint Accounts
       ** assosciated to have the Joint Account Indicia
      C                   DOW       JIdx >= 1
      C                   EVAL      WKey  = WJointAcChk(JIdx).JointAc
      C     WKey          CHAIN     SDFTCSL0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PBefFTCS = SDFTCS
- 
+
      C                   IF        FAJASV <> 'Y'
      C                   EVAL      FAJASV = 'Y'
      C                   EVAL      FAJASD = BJRDNB
      C                   EVAL      FAJAST = WWTIME
      C                   UPDATE    SDFTCSD0
- 
+
      C                   EXSR      SrLoadFTCS
      C                   EVAL      PAftFTCS = SDFTCS
- 
+
      C                   IF        PMode =  'A'
      C                             AND CSD092 = 'Y'
       ** If Information only mode do not update History
- 
+
      C**********         CALL      'SDC009696'                                              MD026854
      C**********         IF        PMode <> 'A'                                   MD026869 MD027355A
      C                   IF        PMode = 'A' AND                                         MD027355A
@@ -2155,18 +2157,18 @@
      C                   PARM      'Y'           PELEC
      C                   ENDIF                                                              MD026869
      C                   ENDIF
- 
+
      C                   ENDIF
      C                   EVAL      JIdx = JIdx - 1
      C                   ENDDO
- 
+
      C                   LEAVESR
      C                   ELSE
      C     WKey          READE     SDJACCL2
      C                   ENDIF
- 
+
      C                   ENDDO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -2228,9 +2230,9 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SrLoadFTCS    BEGSR
- 
+
      C                   EVAL      HCCUST = FACUST
      C                   EVAL      HCCLAC = FACLAC
      C                   EVAL      HCCLAD = FACLAD
@@ -2482,9 +2484,9 @@
      C                   EVAL      HCFOID = FAFOID
      C                   EVAL      HCREPI = FAREPI
      C                   EVAL      HCTMST = FATMST
- 
+
      C                   ENDSR
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -2496,17 +2498,17 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     SRRegPayInst  BEGSR
- 
+
       ** Check Customer Number
      C                   EVAL      KOTPAYType = 'C'
      C                   EVAL      KOTPAYKey35 = FACUST
      C     KOTPAYKey     SETLL     OTPAYL9
      C     KOTPAYKey     READE     OTPAYL9
- 
+
      C                   DOW       NOT %EOF(OTPAYL9)
- 
+
      C                   EVAL      KCUST35 = ACB1
      C     KCUST35       CHAIN     SDCUSTL0
      C                   IF        %LOOKUP(OPCOLC:CtryCodeArr) <> 0
@@ -2515,18 +2517,18 @@
      C                   EVAL      FARPSV = 'Y'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C     KOTPAYKey     READE     OTPAYL9
      C                   ENDDO
- 
+
       ** Check Customer Shortname
      C                   EVAL      KOTPAYType = 'S'
      C                   EVAL      KOTPAYKey35 = BBCSSN
      C     KOTPAYKey     SETLL     OTPAYL9
      C     KOTPAYKey     READE     OTPAYL9
- 
+
      C                   DOW       NOT %EOF(OTPAYL9)
- 
+
      C                   EVAL      KCUST35 = ACB1
      C     KCUST35       CHAIN     SDCUSTL0
      C                   IF        %LOOKUP(OPCOLC:CtryCodeArr) <> 0
@@ -2535,22 +2537,22 @@
      C                   EVAL      FARPSV = 'Y'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C     KOTPAYKey     READE     OTPAYL9
      C                   ENDDO
- 
+
       ** Check Nostros Attached to the customer
      C     FACUST        SETLL     SDNOSTL2
      C     FACUST        READE     SDNOSTL2
- 
+
      C                   DOW       NOT %EOF(SDNOSTL2)
      C                   EVAL      KOTPAYType = 'A'
      C                   EVAL      KOTPAYKey35 = A7CYCD + A7NONB
      C     KOTPAYKey     SETLL     OTPAYL9
      C     KOTPAYKey     READE     OTPAYL9
- 
+
      C                   DOW       NOT %EOF(OTPAYL9)
- 
+
      C                   EVAL      KCUST35 = ACB1
      C     KCUST35       CHAIN     SDCUSTL0
      C                   IF        %LOOKUP(OPCOLC:CtryCodeArr) <> 0
@@ -2558,13 +2560,13 @@
      C                   EVAL      FARPSV = 'Y'
      C                   LEAVESR
      C                   ENDIF
- 
+
      C     KOTPAYKey     READE     OTPAYL9
      C                   ENDDO
- 
+
      C     FACUST        READE     SDNOSTL2
      C                   ENDDO
- 
+
      C                   ENDSR
       **********************************************************************
       /EJECT
@@ -2577,11 +2579,11 @@
       * Calls: None                                                   *
       *                                                               *
       *****************************************************************
- 
+
      C     *INZSR        BEGSR
- 
+
      C     *DTAARA       DEFINE                  LDA
- 
+
      C     *ENTRY        PLIST
       ** Return Code
       ** Transaction ID (Customer Number or NAHO Reference)
@@ -2596,14 +2598,14 @@
      C                   PARM                    PClasNF
      C                   PARM                    PRepType
      C                   PARM                    PMode
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*FIRST '     POption
      C     SDBANK        PARM      SDBANK        DSSDY
- 
+
       ** Database error
- 
+
      C     PRetCode      IFNE      *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBASE = 001
@@ -2614,9 +2616,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EVAL      CSE023 = 'N'
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*VERIFY'     POption
@@ -2626,9 +2628,9 @@
      C     PRetCode      IFEQ      *BLANK
      C                   EVAL      CSE023 = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      CSE024 = 'N'
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*VERIFY'     POption
@@ -2638,9 +2640,9 @@
      C     PRetCode      IFEQ      *BLANK
      C                   EVAL      CSE024 = 'Y'
      C                   ENDIF
- 
+
      C                   EVAL      CSD092 = 'N'
- 
+
      C                   CALL      'AOSARDR0'
      C                   PARM      *BLANKS       PRetCode
      C                   PARM      '*VERIFY'     POption
@@ -2650,7 +2652,7 @@
      C     PRetCode      IFEQ      *BLANK
      C                   EVAL      CSD092 = 'Y'
      C                   ENDIF
- 
+
      C                   CALL      'AOSVALR0'
      C                   PARM      *BLANKS       PRTCD
      C                   PARM      SYSVAL1       POP01
@@ -2673,44 +2675,44 @@
      C                   PARM                    PVL02
      C                   PARM                    POP02
      C                   PARM                    PVL02
- 
+
      C     PRTCD         IFNE      *BLANKS
      C                   EVAL      DBKEY = SYSVAL1
      C                   EVAL      DBFILE = 'SDSVALPD'
      C                   EVAL      DBASE = 002
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   IF        PVL01  <> *BLANKS
      C                   MOVEL     PVL01         WNEffDate
- 
+
      C                   CALL      'ZDATE1'                             90
      C                   PARM                    PRetCode
      C                   PARM                    WNEffDate
      C                   PARM      BJDFIN        PDateFormat
      C                   PARM      *ZERO         WEffDate
      C                   ENDIF
- 
+
       ** Build FATCA Country Code array
      C     *LOVAL        SETLL     SDCTRYL5
      C                   READ      SDCTRYL5
- 
+
      C                   DOW       NOT %EOF(SDCTRYL5)
      C                   EVAL      CtryCodeArr(Index) = A4CNCD
      C                   EVAL      Index = Index + 1
      C                   READ      SDCTRYL5
      C                   ENDDO
- 
+
      C     KCustUS       KLIST
      C                   KFLD                    FACUST
      C                   KFLD                    KUS
- 
+
      C     KOTPAYKey     KLIST
      C                   KFLD                    KOTPAYType
      C                   KFLD                    KOTPAYKey35
- 
+
      C                   ENDSR
- 
+
       *********************************************************************
       /EJECT
       *********************************************************************
@@ -2725,24 +2727,24 @@
       * Calls: None                                                       *
       *                                                                   *
       *********************************************************************
- 
+
      C     *PSSR         BEGSR
- 
+
      C                   DUMP
- 
+
      C                   IF        @RUN = *BLANK
      C                   EVAL      @RUN = 'Y'
- 
+
      C                   CALLB     'DBERRCTL'
- 
+
      C                   ENDIF
- 
+
      C                   EVAL      PRetCode = '*ERROR'
      C                   EVAL      *INU7 = *ON
      C                   EVAL      *INU8 = *ON
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
      C                   ENDSR
- 
+
       ********************************************************************

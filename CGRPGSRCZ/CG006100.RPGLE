@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CER069             Date 03Jul14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CER069             Date 03Jul14               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
@@ -36,6 +37,7 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CER069 - German Tax Enhancement                              *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -78,27 +80,27 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDACUSL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Additional Customer Details Retrieval
- 
+
      FSDNAHOL1  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Non-Account Holder Retrieval
- 
+
      FSDACTXL4  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD CTTX by Customer Retrieval
- 
+
      FSDNHTXL4  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD NHTX by Non-Account Holder Reference Retrieval
       *                                                                                    BUG24244A
       ** Midas SD Customer Details Retrieval                                               BUG24244A
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                                    BUG24244A
- 
+
       ** SD Customer Income - Customer Number                                               BUG24487
      FSDCSINL2  IF   E           K DISK    INFSR(*PSSR)                                     BUG24487
                                                                                             BUG24487
@@ -109,22 +111,22 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named Constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Data strucutre for access objects, short DS                                        BUG24767
      D DSFDY         E DS                  EXTNAME(DSFDY)                                   BUG24767
                                                                                             BUG24767
@@ -132,10 +134,10 @@
       ** Data structure for access objects, second DS
       ** DS for access objects - long  data structure                                         236129
      D DSLDY         E DS                  EXTNAME(DSLDY)                                     236129
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
       ** Data structure for SD Customer details file
- 
+
      D DSPARM          DS
       ** Data Structure of Parameters Passed to CG006110
      D PTaxYear                1      4  0
@@ -147,7 +149,7 @@
      D PAcus                  49     49                                                     BUG23971
      D  PTaxYrF1              50     53                                                     BUG24487
      D  PTaxYrT1              54     57                                                     BUG24487
- 
+
      D PDATA           DS           100
      D PClose                  1      1                                                    BUG24244A
      D PTaxYrEnt               1      4
@@ -195,12 +197,12 @@
       *                                                                                    BUG24244A
      D/COPY ZSRSRC,ZDATE9Z1LE                                                              BUG24244A
      D/COPY ZSRSRC,ZDATE9Z2LE                                                              BUG24244A
- 
+
       ** +--------------------------------------+
       ** ¦ Declared Variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Program Parameters
      D PRetCde         S              7A
      D PRtCd           S              7A
@@ -213,10 +215,10 @@
      D PCustN          S              6A                                                   BUG24244A
      D WYear           S              4A                                                   BUG24244A
      D @@DAYN          S              5P 0                                                 BUG24244A
- 
+
       ** Standard CG Utility Parameters
      D PZSeq           S              5A
- 
+
       ** Work Variables
      D WRecCnt         S             15S 0
      D WValue          S             10A
@@ -227,44 +229,44 @@
      D WYrEndP         S              5P 0                                                  BUG24767
      D PLoc            S              3A                                                    BUG24767
      D PCtry           S              2A                                                    BUG24767
- 
+
      D/COPY CGCPYSRC,SRERRDLE
       ** Fields, Data Structures, and Arrays Definition for CG Error Processing
- 
+
      D/COPY CGCPYSRC,CGAUDTDLE
       ** Fields, Data Structures, and Arrays Definition for CG Audit Processing
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------- Start of Main Processing -------------------+
       ** ¦                                                            ¦
       ** ¦  *INZSR is automatically executed at program activation.   ¦
       ** ¦                                                            ¦
       ** +------------------------------------------------------------+
- 
+
       ** Push the currently running routine into the stack.
- 
+
      C                   EVAL      WValue = 'Main'
      C                   EXSR      SRPush
- 
+
       ** Main Processing
       ** ===============
- 
+
      C                   EXSR      SRMain
- 
+
       ** Audit Processing
       ** ================
- 
+
      C                   EXSR      SRAudit
- 
+
       ** Pop values off the stack.
- 
+
      C                   EXSR      SRPop
- 
+
      C                   EVAL      *INLR = *ON
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -274,10 +276,10 @@
       *                                                               *
       *****************************************************************
      C     SRMain        BEGSR
- 
+
      C                   EVAL      WValue = 'SRMain'
      C                   EXSR      SRPush
- 
+
       ** If Extract for "Closed" Customers                                                 BUG24244A
       *                                                                                    BUG24244A
      C                   IF        PClose = 'Y'                                            BUG24244A
@@ -288,9 +290,9 @@
       *                                                                                    BUG24244A
      C                   EXSR      SRRead
      C                   ENDIF                                                             BUG24244A
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -352,18 +354,18 @@
       *                                                               *
       *****************************************************************
      C     SRRead        BEGSR
- 
+
      C                   EVAL      WValue = 'SRRead'
      C                   EXSR      SRPush
- 
+
      C                   EVAL      WRecCnt = *ZERO
- 
+
       ** Read customers file
       ** ===================
- 
+
      C     *LOVAL        SETLL     SDACUSL1
      C                   READ      SDACUSL1
- 
+
      C                   DOW       NOT %EOF
       *                                                                                     BUG24487
      C                   IF        (PCust = *BLANKS  AND                                    BUG24487
@@ -388,24 +390,24 @@
      C     E5CUST        READE     SDCSINL2                               90                BUG24487
       *                                                                                     BUG24487
      C                   ENDDO                                                              BUG24487
- 
+
       ** Retrieve customer tax status
- 
+
      C     XRCDFD        IFEQ      'Y'                                                      BUG24487
      C                   EXSR      SRRtvCTS
      C                   ENDIF                                                              BUG24487
       *                                                                                     BUG24487
      C                   ENDIF                                                              BUG24487
- 
+
      C                   READ      SDACUSL1
      C                   ENDDO
- 
+
       ** Read non-account holders file
       ** =============================
- 
+
      C     *LOVAL        SETLL     SDNAHOL1
      C                   READ      SDNAHOL1
- 
+
      C                   DOW       NOT %EOF
       *                                                                                     BUG24487
      C                   MOVE      'N'           XRCDFD            1                        BUG24487
@@ -428,18 +430,18 @@
      C                   ENDIF                                                              BUG24487
      C     NHNAHO        READE     SDCSINL3                               90                BUG24487
      C                   ENDDO                                                              BUG24487
- 
+
       ** Retrieve non-account holder tax status
- 
+
      C     XRCDFD        IFEQ      'Y'                                                      BUG24487
      C                   EXSR      SRRtvNTS
      C                   ENDIF                                                              BUG24487
- 
+
      C                   READ      SDNAHOL1
      C                   ENDDO
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -450,12 +452,12 @@
       *                                                               *
       *****************************************************************
      C     SRRtvCTS      BEGSR
- 
+
      C                   EVAL      WValue = 'SRRtvCTS'
      C                   EXSR      SRPush
- 
+
      C                   EVAL      WPrint = 'N'
- 
+
      C                   IF        PClose = 'Y'                                            BUG24244A
      C                   MOVE      WYear         PTaxYear                                  BUG24244A
      C                   ELSE                                                              BUG24244A
@@ -469,7 +471,7 @@
      C                   ENDIF                                                             BUG24244A
       *                                                                                    BUG24244A
      C                   EVAL      PRefInd = 'C'
- 
+
      C                   IF        PClose <> 'Y'                                           BUG24244A
      C                   EXSR      SRRRepDet
      C                   EVAL      PRepName = BBCRNM                                       BUG24244A
@@ -495,32 +497,32 @@
      C                   ELSE                                                              BUG24244A
      C                   EVAL      PAcus = 'Y'                                              BUG23971
      C                   ENDIF                                                             BUG24244A
- 
+
      C     E5CUST        SETLL     SDACTXL4
      C     E5CUST        READE     SDACTXL4
- 
+
      C                   DOW       NOT %EOF
- 
+
       ***Print*statement when tax status is 'S'                                               232543
       ** Print statement when tax status is 'T'                                               232543
- 
+
      C**********         IF        AXETXS = 'S'                                               232543
      C                   IF        AXETXS = 'T'                                               232543
      C                             OR AXETXS = 'Y'                                            CER069
      C                   EVAL      WPrint = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C     E5CUST        READE     SDACTXL4
      C                   ENDDO
- 
+
      C                   IF        WPrint = 'Y'
      C                   EXSR      SRPrint
      C                   EVAL      WRecCnt = WRecCnt + 1
      C                   ENDIF
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -531,44 +533,44 @@
       *                                                               *
       *****************************************************************
      C     SRRtvNTS      BEGSR
- 
+
      C                   EVAL      WValue = 'SRRtvNTS'
      C                   EXSR      SRPush
- 
+
      C                   EVAL      WPrint = 'N'
- 
+
      C                   MOVE      PTaxYrEnt     PTaxYear
      C                   EVAL      PRef = NHNAHO
      C                   EVAL      PRefInd = 'N'
      C                   EVAL      PRepName = NHNARN
      C                   EVAL      PRepTown = NHNATW
      C                   EVAL      PAcus = 'N'                                              BUG23971
- 
+
      C     NHNAHO        SETLL     SDNHTXL4
      C     NHNAHO        READE     SDNHTXL4
- 
+
      C                   DOW       NOT %EOF
- 
+
       ***Print*statement when tax status is 'S'                                               232543
       ** Print statement when tax status is 'T'                                               232543
- 
+
      C**********         IF        NXETXS = 'S'                                               232543
      C                   IF        NXETXS = 'T'                                               232543
      C                             OR NXETXS = 'Y'                                            CER069
      C                   EVAL      WPrint = 'Y'
      C                   LEAVE
      C                   ENDIF
- 
+
      C     NHNAHO        READE     SDNHTXL4
      C                   ENDDO
- 
+
      C                   IF        WPrint = 'Y'
      C                   EXSR      SRPrint
      C                   EVAL      WRecCnt = WRecCnt + 1
      C                   ENDIF
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -578,20 +580,20 @@
       *                                                               *
       *****************************************************************
      C     SRPrint       BEGSR
- 
+
      C                   EVAL      PBranch = BBBRCD                                         BUG23147
      C                   EVAL      WValue = 'SRPrint'
      C                   EXSR      SRPush
      C                   MOVE      PTaxYrF       PTaxYrF1                                   BUG24487
      C                   MOVE      PTaxYrT       PTaxYrT1                                   BUG24487
- 
+
      C                   CALL      'CG006110'
      C                   PARM      *BLANKS       PRtCd
      C                   PARM                    W0CMT
      C                   PARM                    WProduce
      C                   PARM                    WAUTO
      C                   PARM                    DSPARM
- 
+
      C                   IF        PRtCd <> *BLANKS
      C     *LOCK         IN        LDA
      C                   EVAL      DBFile = 'CG006110'
@@ -602,9 +604,9 @@
      C                   ELSE
      C                   COMMIT
      C                   ENDIF
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -614,10 +616,10 @@
       *                                                               *
       *****************************************************************
      C     SRPush        BEGSR
- 
+
      C                   EVAL      Q = Q + 1
      C                   EVAL      @STK(Q) = WValue
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -627,10 +629,10 @@
       *                                                               *
       *****************************************************************
      C     SRPop         BEGSR
- 
+
      C                   MOVEA     *BLANKS       @STK(Q)
      C                   EVAL      Q = Q - 1
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -640,10 +642,10 @@
       *                                                               *
       *****************************************************************
      C     SRClear       BEGSR
- 
+
      C                   MOVEA     *BLANKS       @STK(1)
      C                   EVAL      Q = *ZERO
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -653,12 +655,12 @@
       *                                                               *
       *****************************************************************
      C     SRRRepDet     BEGSR
- 
+
      C                   EVAL      WValue = 'SRRRepDet'
      C                   EXSR      SRPush
- 
+
      C                   MOVEL     E5CUST        PCustNo
- 
+
      C**********         CALL      'AOCUSTR0'                                                 236129
      C                   CALL      'AOCUSTR1'                                                 236129
      C                   PARM      *BLANKS       PRtCd
@@ -667,7 +669,7 @@
      C                   PARM      *BLANKS       PErrInf
      C*****SDCUST        PARM      SDCUST        DSSDY                                        236129
      C     SDCUST        PARM      SDCUST        DSLDY                                        236129
- 
+
      C**********         IF        PRtcd <> *Blanks                                           236129
      C**********         IF        PRtcd <> *Blanks and BBCLST <> 'Y'               236129 BUG23518B
      C                   IF        PRtcd <> *BLANKS AND                                    BUG23518B
@@ -680,9 +682,9 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -692,12 +694,12 @@
       *                                                               *
       *****************************************************************
      C     SRAudit       BEGSR
- 
+
      C                   EVAL      WValue = 'SRAudit'
      C                   EXSR      SRPush
- 
+
       ** Output the count of records read.
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG006100'    I#REF
      C                   MOVEL     'CGD1909'     I#TITL
@@ -709,42 +711,42 @@
      C                   Z-ADD     WRecCnt       I#QTY
      C                   Z-ADD     *ZERO         I#DECS
      C                   MOVEL     '1'           I#EDIT
- 
+
       ** Write a line of text.
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*LINE   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PZSeq
- 
+
       ** Skip a line.
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*SKIP   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PZSeq
- 
+
       ** Produce the Audit Report.
- 
+
       ** Close the Audit printer file.
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG006120'    I#REF
      C                   MOVEL     'CGD1909'     I#TITL
      C                   MOVEL     'CGD1910'     I#TUL
      C                   MOVEL     'CGUSRMSG'    I#FILE
      C                   MOVEL     'CAD1008'     I#TEXT
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*CLOSE  '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PZSeq
- 
+
      C                   EXSR      SRPop
- 
+
      C                   ENDSR
       *****************************************************************                     BUG24487
       /EJECT                                                                                BUG24487
@@ -774,12 +776,12 @@
       *                                                               *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       ** Entry Parameters
       ** ================
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Return Code
      C                   PARM                    PRetCde
      C                   PARM                    W0CMT
@@ -865,28 +867,28 @@
      C                   ENDIF                                                              BUG24767
      C                   ENDIF                                                              BUG24767
                                                                                             BUG24767
- 
+
       ** Set the program name.
- 
+
      C                   MOVEL     ##PGM         DBPgm
- 
+
       ** Open the Audit printer file.
- 
+
      C                   CLEAR                   I#DTA
      C                   MOVEL     'CG006120AU'  I#SPLN
      C                   MOVEL     'CG006120'    I#REF
      C                   MOVEL     'CGD1909'     I#TITL
      C                   MOVEL     'CGD1910'     I#TUL
      C                   MOVEL     'CGUSRMSG'    I#FILE
- 
+
      C                   CALL      'CGZAUDIT'
      C                   PARM      *BLANKS       W0RTN
      C                   PARM      '*OPEN   '    W0ACT
      C                   PARM                    I#DTA
      C                   PARM                    PZSeq
- 
+
       ** Clear stack.
- 
+
      C                   EXSR      SRClear
       *                                                                                     BUG24487
       ** Calculate "Start" and "End" Date of Year only when Year is                         BUG24487
@@ -976,7 +978,7 @@
       *                                                                                     BUG24487
      C                   ENDIF                                                              BUG24487
       *                                                                                     BUG24487
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT

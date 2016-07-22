@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2004            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 CGL132             Date 01May13               *
       *                 CLE134             Date 01Aug12               *
       *                 CER059             Date 19Jul10               *
       *                 263252             Date 06Jan10               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Master                             *
@@ -56,8 +58,8 @@
       *  CGL031 - Taxation of Savings Income                          *
       *                                                               *
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -69,64 +71,64 @@
       ** and the copyright array definition:
       /COPY ZACPYSRC,STD_D_SPEC
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY includes the MM standard declares:
       /COPY ZACPYSRC,STDDECLARE
       **--------------------------------------------------------------------------------------------
- 
+
       **--------------------------------------------------------------------------------------------
       ** The following /COPY line includes all the defined fields in the
       ** Program Status Data Structures.  They have meaningful
       ** names, prefixed by 'PS'.
       /COPY ZACPYSRC,PSDS
       **--------------------------------------------------------------------------------------------
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** SDACUSPD Transaction Details in File Format
      D TranFilFmt    E DS                  EXTNAME(SDACUSPD)
- 
+
       ** SDACUDPD Transaction Details in Screen Format
      D TrnDets       E DS                  EXTNAME(SDACUDPD)
                                                                                               CGL132
       ** SDACU5DPD Transaction Details in Screen Format                                       CGL132
      D CustDets5     E DS                  EXTNAME(SDACU5DPD)                                 CGL132
- 
+
       ** External DS for Bank Details
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
- 
+
       ** External DS for SAR Details
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
- 
+
       ** First DS for Access Programs, short Data Structure
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** Second DS for Access Programs, long Data Structure
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
+
       ** Midas SD Midas modules Data Structure                                                CSW207
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)                                  CSW207
                                                                                               CSW207
@@ -144,25 +146,25 @@
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Parameter for Access Object
      D PRtcd           S              7A
      D POptn           S              7A
- 
+
       ** Parameter for ZEDIT
      D ZFIELD          S             16A
      D ZADEC           S              1  0
- 
+
       ** Parameter for ZDATE2
      D ZDAYNO          S              5  0
      D ZDATE           S              6  0
      D ZADATE          S              7A
- 
+
       ** Other Variables
      D ##ACTN          S              1A
      D CSD029          S              1A                                                      CSD029
      D PSARD           S              6A                                                      CSD029
- 
+
       ** Swift installed flag                                                                 CSW207
      D CSW207          S              1A                                                      CSW207
                                                                                               CSW207
@@ -193,26 +195,26 @@
      D  DOYear                 1      4                                                       263252
      D  DOMonth                5      6                                                       263252
      D  DODay                  7      8                                                       263252
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
       *****************************************************************
- 
- 
+
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** Initialization
- 
+
      C                   EXSR      SRInit
- 
+
       ** Set screen fields
- 
+
      C                   EXSR      SRScreen
- 
+
      C                   RETURN
       *****************************************************************
       /EJECT
@@ -220,22 +222,22 @@
       * SRScreen - Set Screen Fields
       *****************************************************************
      C     SRScreen      BEGSR
- 
+
       ** Customer Number
      C                   EVAL      DDCUST = E5CUST
- 
+
       ** Tax Identification Number
      C                   EVAL      DDTINO = E5TINO
- 
+
       ** Joint Account Type
      C                   EVAL      DDJATP = E5JATP
- 
+
       ** Identification Type
      C                   EVAL      DDIDTP = E5IDTP
- 
+
       ** Issuing Country
      C                   EVAL      DDISCT = E5ISCT
- 
+
       ** Issuing Date
      C**********         IF        E5ISDT = *ZERO                                             232543
      C**********         EVAL      DDISDT = *BLANKS                                           232543
@@ -246,25 +248,25 @@
      C**********         MOVEL     ZDATE         DDISDT                                       232543
      C**********         ENDIF                                                                232543
      C                   EVAL      DDISDT = E5ISDT                                            232543
- 
+
       ** Alternative Number
      C                   EVAL      DDALTN = E5ALTN
- 
+
       ** Fax Number
      C                   EVAL      DDFXNB = E5FXNB
- 
+
       ** Identity Number
      C                   EVAL      DDIDNO = E5IDNO
- 
+
       ** Telex Number
      C                   EVAL      DDTXNB = E5TXNB
- 
+
       ** Date of Birth
      C                   EVAL      DDDBTH = E5DBTH
- 
+
       ** Provisional Opening
      C                   EVAL      DDPRVO = E5PRVO
- 
+
       ** Date of Last Visit
      C                   IF        E5DOLV = *ZERO
      C                   EVAL      DDDOLV = *BLANKS
@@ -274,49 +276,49 @@
      C                   EVAL      DDDOLV = *BLANKS
      C                   MOVEL     ZDATE         DDDOLV
      C                   ENDIF
- 
+
       ** Mail Details
      C                   EVAL      DDMDTL = E5MDTL
- 
+
       ** Country of Birth
      C                   EVAL      DDBTHC = E5BTHC
- 
+
       ** Town of Birth
      C                   EVAL      DDBTHT = E5BTHT
- 
+
       ** Customer Name and Address 1
      C                   EVAL      DDCNA1 = E5CNA1
- 
+
       ** Customer Name and Address 2
      C                   EVAL      DDCNA2 = E5CNA2
- 
+
       ** Customer Name and Address 3
      C                   EVAL      DDCNA3 = E5CNA3
- 
+
       ** Customer Name and Address 4
      C                   EVAL      DDCNA4 = E5CNA4
- 
+
       ** City
      C                   EVAL      DDCITY = E5CITY
- 
+
       ** Zip Code
      C                   EVAL      DDZIPC = E5ZIPC
- 
+
       ** Code Word One
      C                   EVAL      DDCWL1 = E5CWL1
- 
+
       ** Code Word Two
      C                   EVAL      DDCWL2 = E5CWL2
- 
+
       ** Code Word Three
      C                   EVAL      DDCWL3 = E5CWL3
- 
+
       ** Code Word Four
      C                   EVAL      DDCWL4 = E5CWL4
- 
+
       ** Code Word Five
      C                   EVAL      DDCWL5 = E5CWL5
- 
+
      C     CSD029        IFEQ      'Y'                                                        CSD029
       ** Field 01 details                                                                     CSD029
      C                   EVAL      DDF001 = E5FL01                                            CSD029
@@ -364,7 +366,7 @@
      C                   EVAL      DDTNC4 = E5TNC4                                            CGL132
      C                   EVAL      DDTIN5 = E5TIN5                                            CGL132
      C                   EVAL      DDTNC5 = E5TNC5                                            CGL132
- 
+
       *                                                                                       CER034
       ** Check if CER047 and CER048 is enabled.                                               CER034
       *                                                                                       CER034
@@ -569,6 +571,10 @@
       ** Risk Classification Code                                                             CER070
       *                                                                                       CER070
      C                   MOVEL     E5RIGR        DDRIGR                                       CER070
+      *                                                                                       CER071
+      ** Legal Form Code                                                                      CER071
+      *                                                                                       CER071
+     C                   MOVEL     E5RECH        DDRECH                                       CER071
       *                                                                                       CER045
       ** Economic Activity Code                                                               CER045
       *                                                                                       CER045
@@ -601,13 +607,13 @@
       *                                                               *
       *****************************************************************
      C     SRZDate2      BEGSR
- 
+
      C                   CALLB     'ZDATE2'
      C                   PARM                    ZDAYNO
      C                   PARM                    BJDFIN
      C                   PARM                    ZDATE
      C                   PARM                    ZADATE
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -617,11 +623,11 @@
       *                                                               *
       *****************************************************************
      C     SRZEdit       BEGSR
- 
+
      C                   CALLB     'ZEDIT'
      C                   PARM                    ZFIELD
      C                   PARM      0             ZADEC
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -629,13 +635,13 @@
       * SRInit - Initialization
       *****************************************************************
      C     SRInit        BEGSR
- 
+
       ** Blank outputs (Except for Action Code)
- 
+
      C                   EVAL      ##ACTN = DDACTN
      C                   EVAL      TrnDets = *Blanks
      C                   EVAL      DDACTN = ##ACTN
- 
+
      C                   ENDSR
       *****************************************************************
       /EJECT
@@ -643,24 +649,24 @@
       * *INZSR - Initial Processing                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       **  Program Parameters
- 
+
      C     *ENTRY        PLIST
- 
+
       ** Input Parameters
       ** Return Code
      C                   PARM                    RetCodeIn
- 
+
       ** SDACUSPD Transaction Details File Format
      C                   PARM                    TranFilFmt
- 
+
       ** Output Parameters
       ** SDACUDPD Transaction Details Screen Format
      C                   PARM                    TrnDets
       ** SDACU5DPD Transaction Details Screen Format                                          CGL132
      C                   PARM                    CustDets5                                    CGL132
- 
+
       *                                                                                       CER034
       ** SDACU1DPD Additional Customer Details Screen - 2 format                              CER034
       *                                                                                       CER034
@@ -671,18 +677,18 @@
      C                   PARM                    CustDet3                                     CER034
       *                                                                                       CER034
       ** Initialize program name
- 
+
      C                   EVAL      DBPGM = 'SDACUDCVT'
- 
+
       ** Access Bank Details
- 
+
      C                   CALL      'AOBANKR0'
      C                   PARM      *BLANKS       PRtcd
      C                   PARM      '*FIRST  '    POptn
      C     SDBANK        PARM      SDBANK        DSFDY
- 
+
       ** Database Error
- 
+
      C                   IF        PRtcd <> *BLANK
      C                   EVAL      DBKEY = POptn
      C                   EVAL      DBFILE = 'SDBANKPD'
@@ -727,7 +733,7 @@
      C                   EXSR      *PSSR                                                      CSD029
      C                   ENDIF                                                                CSD029
      C                   ENDIF                                                                CSD029
- 
+
       *                                                                                       CER034
       ** Check if CER034 is enabled.                                                          CER034
       *                                                                                       CER034

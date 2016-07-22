@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CER070             Date 25Nov14               *
-      *  Prev Amend No. CSW214             Date 25Nov14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 25Nov14               *
+      *                 CSW214             Date 25Nov14               *
       *                 MD030956           Date 09Oct14               *
       *                 CFT050             Date 03Jun13               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -52,6 +53,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0 (Recompile)          *
       *  CSW214 - SWIFT Changes 2014 (Recompile)                      *
       *  MD030956 - Additional changes to BFM-TI enhancement          *
@@ -94,31 +96,31 @@
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDCUSTL0  IF   E           K DISK    INFSR(*PSSR)
      FSDCBRTL0  IF   E           K DISK    INFSR(*PSSR)
      FSDPBDSL0  IF   E           K DISK    INFSR(*PSSR)
      FSDTICSL1  IF   E           K DISK    INFSR(*PSSR)                                      BUG3362
      FSDCSSWL1  IF   E           K DISK    INFSR(*PSSR)                                     BUG14969
- 
+
      FSDCDSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BBREBG:SDCDSHD0)
      FSDCDSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(@BBREBF:SDCDSHD1)
       ** Midas SD Customer Details Shadow File
- 
+
      FSDCBSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCBRTD0:SDCBSHD0)
      FSDCBSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDCBRTD0:SDCBSHD1)
       ** Midas SD BRT Customer Details Shadow File
- 
+
      FSDPBSHL0  IF   E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDPBDSD0:SDPBSHD0)
      FSDPBSHL1  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDPBDSD0:SDPBSHD1)
       ** Midas SD Private Banking Customer Details File
- 
+
      FSDTDSHL0  IF   E           K DISK    INFSR(*PSSR)                                      BUG3362
      F                                     RENAME(SDTICSD0:SDTICSH0)                         BUG3362
      FSDTDSHL1  UF A E           K DISK    INFSR(*PSSR)                                      BUG3362
@@ -137,10 +139,10 @@
      FSDAULGL3  UF A E           K DISK    INFSR(*PSSR)
      F                                     RENAME(SDAULGD0:SDAULGD3)
       ** Midas SD Authorisation Log - by Function
- 
+
      F/COPY WNCPYSRC,SDCUSDF001
      F*/COPY**WNCPYSRC,SDCUSDC001*****                                                TEMPFIXBUG7018
- 
+
       *****************************************************************
       ** +--------------------------------------+
       ** ¦ Automatically included D-specs       ¦
@@ -159,51 +161,51 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Include the MM standard declares
      D/COPY ZACPYSRC,STDDECLARE
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Fisrt DS for Access Programs, Short Data Structure
- 
+
      D SDMMOD        E DS                  EXTNAME(SDMMODPD)
       * DATA STRUCTURE FOR Midas Modules Details
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       * DATA STRUCTURE FOR Midas SAR Details
- 
+
      D @1DCUST       E DS                  EXTNAME(SDCUSTPD)
       * Stored Customer details file format fields
      D @1DCBRT       E DS                  EXTNAME(SDCBRTPD)
@@ -217,7 +219,7 @@
       **Current*Customer*-*SWIFT*Details**in*File*Format******                     BUG14924 BUG14969
      D*ValidSwft*    E DS                  EXTNAME(SDVSWSDPD)                      BUG14924 BUG14969
      D**********                           PREFIX(V_)                              BUG14924 BUG14969
- 
+
      D #1DCUST       E DS                  EXTNAME(SDCUSTPD) PREFIX(#)
       * Stored Customer shadow file format fields
      D #1DCBRT       E DS                  EXTNAME(SDCBRTPD) PREFIX(#)
@@ -228,11 +230,11 @@
       * Stored Trade Innovation Customer Details shadow file format fields                   BUG3362
      D #1DSWCS       E DS                  EXTNAME(SDCSSWPD) PREFIX(#)                      BUG14969
       * Stored Customer Extension SWIFT Details shadow file format fields                   BUG14969
- 
+
       **  Data Structure for AOSVALR0 string
      DSVAL1            DS           200
      DSVAL11                   1      1
- 
+
      D UBA             DS          5000
       **  1st Record Format
      D  MAINUBA                            LIKE(@1DCUST)
@@ -241,7 +243,7 @@
      D  EXT3UBA                            LIKE(@1DTICS)                                     BUG3362
      D  EXT4UBA                            LIKE(@1DSWCS)                                    BUG14969
      D/COPY WNCPYSRC,SDCUSDD001
- 
+
      D UPA             DS          5000
       **  2nd Record Format
      D  MAINUPA                            LIKE(@1DCUST)
@@ -250,12 +252,12 @@
      D  EXT3UPA                            LIKE(@1DTICS)                                     BUG3362
      D  EXT4UPA                            LIKE(@1DSWCS)                                    BUG14969
      D/COPY WNCPYSRC,SDCUSDD002
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ***Override*SDCDSHL0,SDCBSHL0*&*SDPBSHL0.****************************                  BUG3362
       ***Override*SDCDSHL0,SDCBSHL0,SDPBSHL0*and*SDTDSHL0.*****************         BUG3362 BUG14969
       ** Override SDCDSHL0,SDCBSHL0,SDPBSHL0,SDTDSHL0, and SDSWSHL0                         BUG14969
@@ -264,7 +266,7 @@
      D CMD2            S              1    DIM(50) CTDATA PERRCD(50)
      D CMD3            S              1    DIM(50) CTDATA PERRCD(50)                         BUG3362
      D CMD4            S              1    DIM(50) CTDATA PERRCD(50)                        BUG14969
- 
+
      D CSD012          S              1A
      D SVALKK          C                   CONST('AuthReqCustomerMaint')
      D FUNCD           C                   CONST('CUSTOMER DETAILS')
@@ -281,12 +283,12 @@
      D PTransType      S              4                                                       CSD028
      D CSW207          S              1A                                                   BUG14969A
      D*/COPY*WNCPYSRC,SDCUSDC002******                                                TEMPFIXBUG7018
- 
+
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
       ** +--------------------------------------+
- 
+
       /EJECT
       *****************************************************************
      C
@@ -296,11 +298,11 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       *********************************************************************
       * MAIN PROCEDURE                                                    *
       *********************************************************************
- 
+
       ** Access record from authorisation log
      C     KAULG         CHAIN     SDAULGL2                           80
       *
@@ -313,7 +315,7 @@
      C                   OUT       LDA
      C                   EXSR      *PSSR
      C                   ENDIF
- 
+
       ** Access record from master file
      C                   MOVEL     PKEY          @CUCUST           6
      C*****              MOVEL     PKEY          @BRCNUM           6 0                        CSD027
@@ -322,7 +324,7 @@
      C                   MOVEL     PKEY          @PBCNUM           6                          CSD027
      C                   MOVEL     PKEY          @TCCUST           6                         BUG3362
      C                   MOVEL     PKEY          @SWCUST           6                        BUG14969
- 
+
      C     @CUCUST       CHAIN     SDCUSTL0                           81
       *
      C                   IF        *IN81 = '1' AND ALACTN = 'A'
@@ -337,9 +339,9 @@
      C                   MOVEL     *BLANKS       MAINUBA
      C                   MOVEL     @1DCUST       MAINUBA
      C                   ENDIF
- 
+
      C     S01383        IFEQ      'Y'
- 
+
      C     @BRCNUM       CHAIN     SDCBRTL0                           82
       *
      C                   IF        *IN82 = '1' AND ALACTN = 'A'
@@ -354,11 +356,11 @@
      C                   MOVEL     *BLANKS       EXT1UBA
      C                   MOVEL     @1DCBRT       EXT1UBA
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     BGN4ST        IFEQ      'Y'
- 
+
      C     @PBCNUM       CHAIN     SDPBDSL0                           83
       *
      C                   IF        *IN83 = '1' AND ALACTN = 'A'
@@ -373,7 +375,7 @@
      C                   MOVEL     *BLANKS       EXT2UBA
      C                   MOVEL     @1DPBDS       EXT2UBA
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                      BUG3362
       ** Access record from TI Customer Details File                                         BUG3362
@@ -414,7 +416,7 @@
      C                   MOVEL     @1DSWCS       EXT4UBA                                    BUG14969
      C                   ENDIF                                                              BUG14969
      C**********         ENDIF                                                    BUG14969A BUG15138
- 
+
       ** Access record from shadow Customer file
      C     @CUCUST       CHAIN     SDCDSHL0                           84
       *
@@ -425,7 +427,7 @@
      C                   MOVEL     *BLANKS       MAINUBA
      C                   MOVEL     @1DCUST       MAINUBA
      C                   ENDIF
- 
+
      C     @BRCNUM       CHAIN     SDCBSHL0                           85
       *
      C                   IF        *IN85 = '1'
@@ -441,9 +443,9 @@
      C                   MOVEL     *BLANKS       EXT1UBA
      C                   MOVEL     @1DCBRT       EXT1UBA
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
      C     @PBCNUM       CHAIN     SDPBSHL0                           86
       *
      C                   IF        *IN86 = '1'
@@ -459,7 +461,7 @@
      C                   MOVEL     *BLANKS       EXT2UBA
      C                   MOVEL     @1DPBDS       EXT2UBA
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                      BUG3362
       ** Access record from shadow Trade Innovation Customer Details file                    BUG3362
@@ -504,15 +506,15 @@
      C**********         ENDIF                                                    BUG14969A BUG15138
      C**********/COPY WNCPYSRC,SDCUSDC002***                                         TEMPFIX BUG6506
      C/COPY WNCPYSRC,SDCUSDAC02                                                              BUG6506
- 
+
       ** Call program SDAUTHCMP to display differences
- 
+
      C                   CALLB     'SDAUTHCMP'
      C                   PARM      *BLANKS       RETCODE
      C                   PARM      'SDCUSTPD'    FILE             10
      C                   PARM                    UBA
      C                   PARM                    UPA
- 
+
      C                   PARM                    PKEY
      C                   PARM                    PACTN
       ** Command Keys
@@ -520,19 +522,19 @@
      C                   PARM                    @INKI             1
      C                   PARM                    @INKJ             1
      C                   PARM                    @INKL             1
- 
+
       ** Exit program if Enquire or F3 or F12
      C                   IF        PACTN = 'E' OR @INKC = '1' OR @INKL = '1'
      C                   MOVEL     RETCODE       ERRMSG
      C                   EXSR      SREnd
      C                   ENDIF
- 
+
       ** Authorise Requested
      C                   IF        @INKI = '1'
      C                   EXSR      SRUpdate
      C                   EXSR      SRDelete
      C                   ENDIF
- 
+
       ** Delete Requested
      C                   IF        @INKJ = '1'
      C                   EXSR      SRDelete
@@ -549,7 +551,7 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRDelete      BEGSR
- 
+
       ** Delete record from Audit Log
      C     KAULG         CHAIN     SDAULGL3                           87
       *
@@ -561,41 +563,41 @@
      C                   MOVE      FUNCD         DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
      C                   ELSE
      C                   DELETE    SDAULGL3
      C                   ENDIF
- 
+
       ** Delete record from Shadow file
      C     @CUCUST       CHAIN     SDCDSHL1                           88
       *
      C                   IF        *IN88 = '0'
      C                   DELETE    SDCDSHL1
      C                   ENDIF
- 
+
       ** Delete record from BRT Customer Shadow file if S01383 is ON
- 
+
      C     S01383        IFEQ      'Y'
- 
+
      C     @BRCNUM       CHAIN     SDCBSHL1                           89
       *
      C                   IF        *IN89 = '0'
      C                   DELETE    SDCBSHD1
      C                   ENDIF
- 
+
      C                   ENDIF
- 
+
       ** Delete record from Private Banking Customer Shadow file
       ** If BGN4St is ON
- 
+
      C     BGN4ST        IFEQ      'Y'
- 
+
      C     @PBCNUM       CHAIN     SDPBSHL1                           90
       *
      C                   IF        *IN90 = '0'
      C                   DELETE    SDPBSHD1
      C                   ENDIF
- 
+
      C                   ENDIF
       *                                                                                      BUG3362
       ** Delete record from TI Customer Details shadow file                                  BUG3362
@@ -616,10 +618,10 @@
      C                   ENDIF                                                              BUG14969
      C**********         ENDIF                                                    BUG14969A BUG15138
                                                                                             BUG14969
- 
+
      C*****/COPY*WNCPYSRC,SDCUSDC003**                                                       BUG6506
      C/COPY WNCPYSRC,SDCUSDAC03                                                              BUG6506
- 
+
      C                   COMMIT                                                              BUG7186
                                                                                              BUG7186
      C                   ENDSR
@@ -631,23 +633,23 @@
       * Calls    :                                                    *
       *****************************************************************
      C     SRUpdate      BEGSR
- 
+
       ** Hold shadow record image for the 3 customer master files
      C     @CUCUST       CHAIN     SDCDSHL0                           84
      C                   IF        *IN84 = '0'
      C                   MOVEL     @1DCUST       #1DCUST
      C                   ENDIF
- 
+
      C     S01383        IFEQ      'Y'
- 
+
      C     @BRCNUM       CHAIN     SDCBSHL0                           85
      C                   IF        *IN85 = '0'
      C                   MOVEL     @1DCBRT       #1DCBRT
      C                   ENDIF
      C                   ENDIF
- 
+
      C     BGN4ST        IFEQ      'Y'
- 
+
      C     @PBCNUM       CHAIN     SDPBSHL0                           86
      C                   IF        *IN86 = '0'
      C                   MOVEL     @1DPBDS       #1DPBDS
@@ -668,7 +670,7 @@
      C                   Z-ADD     0             #TCLCD                                      BUG5407
      C                   ENDIF                                                               BUG3362
       *                  ENDIF                                                               BUG3362
- 
+
       ** Hold shadow image from Customer Extn SWIFT Details shadow file                     BUG14969
                                                                                             BUG14969
      C**********         IF        CSW207 = 'Y'                                   BUG14969A BUG15138
@@ -680,7 +682,7 @@
      C**********         ENDIF                                                    BUG14969A BUG15138
                                                                                             BUG14969
      C     @CUCUST       CHAIN     SDCUSTL0                           81
- 
+
  B1  C     *IN81         IFEQ      *ON
      C     ALACTN        ANDNE     'I'
      C     *LOCK         IN        LDA
@@ -689,7 +691,7 @@
      C                   MOVEL     @CUCUST       DBKEY
      C                   OUT       LDA
      C                   EXSR      *PSSR
- 
+
  X1  C                   ELSE
                                                                                               CSD023
      C                   if        ALACTN='C' or ALACTN='R'                                   CSD023
@@ -701,9 +703,9 @@
      C                   IF        CSD028 = 'Y'                                               CSD028
      C                   EVAL      PTransType = 'AUTH'                                        CSD028
      C                   ENDIF                                                                CSD028
- 
+
       ** Update Master files
- 
+
      C                   CALLB     'SDCUSDUPD'
      C                   PARM      *BLANKS       @RTCD
      C                   PARM                    #1DCUST
@@ -744,10 +746,10 @@
  E2  C                   ENDIF
      C
  E1  C                   ENDIF
- 
+
      C*****/COPY*WNCPYSRC,SDCUSDC004*                                                        BUG6506
      C/COPY WNCPYSRC,SDCUSDAC04                                                              BUG6506
- 
+
      C                   ENDSR
       *****************************************************************
       * SREnd - End Program                                           *
@@ -756,15 +758,15 @@
       * Calls    : None                                               *
       *****************************************************************
      C     SREnd         BEGSR
- 
+
       ** Terminate program
- 
+
      C                   EVAL      *INLR = *ON
- 
+
       ** Exit program
- 
+
      C                   RETURN
- 
+
      C                   ENDSR
       /EJECT
       *****************************************************************
@@ -774,18 +776,18 @@
       *  Calls    :                                                   *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
       * Override SDCDSHL0
      C                   Z-ADD     50            CMDLEN           15 5
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD
      C                   PARM                    CMDLEN
- 
+
       * Override SDCBSHL0
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD1
      C                   PARM                    CMDLEN
- 
+
       * Override SDPBSHL0
      C                   CALL      'QCMDEXC'
      C                   PARM                    CMD2
@@ -801,18 +803,18 @@
      C                   PARM                    CMD4                                       BUG14969
      C                   PARM                    CMDLEN                                     BUG14969
      C**********         ENDIF                                                    BUG14969A BUG15138
- 
+
       ** Set up copyright parameter
- 
+
      C                   MOVEA     CPY@          CPY2@
- 
+
       ** Define Keylist
      C     KAULG         KLIST
      C                   KFLD                    @FUNC            21
      C                   KFLD                    PKEY
       *
      C                   MOVEL     FUNCD         @FUNC
- 
+
       ** Receive entry parameters
      C     *ENTRY        PLIST
      C                   PARM                    RETCODE           7
@@ -822,14 +824,14 @@
      C                   PARM                    DACTN             1                          CSD028
      C                   PARM                    ERRMSG            7
      C                   PARM                    @INKC
- 
+
       ** Define LDA
      C     *LOCK         IN        LDA
      C                   EVAL      DBPGM = 'SDCUSDAUT'
      C                   EVAL      DBFILE = *BLANKS
      C                   EVAL      DBKEY =  *BLANKS
      C                   OUT       LDA
- 
+
       ** Access SAR details file to determine if CSD012
       ** (Standing Data Authorisation) is on.
      C                   CALLB     'AOSARDR0'
@@ -843,7 +845,7 @@
      C                   ELSE
      C                   MOVE      'N'           CSD012
      C                   ENDIF
- 
+
       ** If CSD012 is ON, Check if Customer Details Authorisation is ON
  B1  C     CSD012        IFEQ      'Y'
       *
@@ -919,7 +921,7 @@
      C                   ENDIF
       *
  E1  C                   ENDIF
- 
+
       ** Access SAR details file to determine if S01383
       ** (Base Rate Tax) is on.
      C                   CALLB     'AOSARDR0'
@@ -933,7 +935,7 @@
      C                   ELSE
      C                   MOVEL     'N'           S01383
      C                   ENDIF
- 
+
       ** Access SAR details file to determine if CSW024
       ** S.W.I.F.T. MT3xx Field 82/83/87 is installed.
      C                   CALLB     'AOSARDR0'
@@ -989,7 +991,7 @@
      C                   ELSE                                                                 CFX001
      C                   EVAL      CFX001 = 'N'                                               CFX001
      C                   ENDIF                                                                CFX001
- 
+
       ** Check if enhancement CSD028 (KYC) is on                                              CSD028
       *                                                                                       CSD028
      C                   CALLB     'AOSARDR0'                                                 CSD028
@@ -1017,7 +1019,7 @@
      C                   PARM      '*MSG    '    @RTCD
      C                   PARM      '*FIRST  '    @OPTN
      C     SDMMOD        PARM      SDMMOD        DSFDY
- 
+
       *                                                                                    BUG14969A
       ** Check if SWIFT 2007 is installed                                                  BUG14969A
       *                                                                                    BUG14969A
@@ -1032,7 +1034,7 @@
                                                                                            BUG14969A
      C**********/COPY*WNCPYSRC,SDCUSDC001**                                          TEMPFIX BUG6506
      C/COPY WNCPYSRC,SDCUSDAC01                                                              BUG6506
- 
+
      C                   ENDSR
       /EJECT
       ********************************************************************

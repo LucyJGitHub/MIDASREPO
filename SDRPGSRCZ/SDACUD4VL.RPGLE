@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. CER070             Date 19Aug14               *
-      *  Prev Amend No. MD024991           Date 24Mar14               *
+      *  Last Amend No. CER071             Date 01Aug16               *
+      *  Prev Amend No. CER070             Date 19Aug14               *
+      *                 MD024991           Date 24Mar14               *
       *                 CER059             Date 19Jul10               *
       *                 CER045             Date 20Jul09               *
       *                 CER054             Date 07Apr09               *
@@ -23,6 +24,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CER071 - BAIS - Legal Form field                             *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
       *  MD024991 - Error appears upon deleting customer.             *
       *           - Do not perform defaulting if action code is 'D'.  *
@@ -200,6 +202,7 @@
      C                   EXSR      SR_ECACFld                                                 CER045
      C                   EXSR      SR_ABSKFld                                                 CER045
      C                   EXSR      SR_RIGRFld                                                 CER070
+     C                   EXSR      SR_RECHFld                                                 CER071
      C                   ENDIF                                                                CER045
       *                                                                                       CER045
      C                   ENDIF                                                                CER045
@@ -781,6 +784,54 @@
      C                   EXSR      UPDATERRS                                                  CER070
       *                                                                                       CER070
      C                   ENDSR                                                                CER070
+      /EJECT                                                                                  CER071
+      *****************************************************************                       CER071
+      *                                                               *                       CER071
+      *  SR_RECHFld - Validate Legal Form Code                        *                       CER071
+      *                                                               *                       CER071
+      *  Called by: MAIN Processing                                   *                       CER071
+      *                                                               *                       CER071
+      *  Calls: RESETERRS, UPDATERRS                                  *                       CER071
+      *                                                               *                       CER071
+      *****************************************************************                       CER071
+     C     SR_RECHFld    BEGSR                                                                CER071
+      *                                                                                       CER071
+     C                   EXSR      RESETERRS                                                  CER071
+      *                                                                                       CER071
+     C                   CALLB     'SDVRECH'                                                  CER071
+      *                                                                                       CER071
+      ** Inputs                                                                               CER071
+      *                                                                                       CER071
+      ** Return Code                                                                          CER071
+      *                                                                                       CER071
+     C                   PARM                    RetCodeIn                                    CER071
+      *                                                                                       CER071
+      ** Legal Form                                                                           CER071
+      *                                                                                       CER071
+     C                   PARM                    DDRECH                                       CER071
+      *                                                                                       CER071
+      ** Customer Required for Bundesbank Reporting                                           CER071
+      *                                                                                       CER071
+     C                   PARM                    DDBEXT                                       CER071
+      *                                                                                       CER071
+      ** Outputs                                                                              CER071
+      *                                                                                       CER071
+      ** Error fields/message IDs/message data (arrays) from/to caller                        CER071
+      *                                                                                       CER071
+     C                   PARM      *ZEROS        Idx                                          CER071
+     C                   PARM                    FldNamXAr                                    CER071
+     C                   PARM                    MsgIdXAr                                     CER071
+     C                   PARM                    MsgDtaXAr                                    CER071
+      *                                                                                       CER071
+      ** Ok Flag for Legal Form Code                                                          CER071
+      *                                                                                       CER071
+     C                   PARM      *BLANK        OKRECH                                       CER071
+      *                                                                                       CER071
+      ** Update error info with that returned from validation module                          CER071
+      *                                                                                       CER071
+     C                   EXSR      UPDATERRS                                                  CER071
+      *                                                                                       CER071
+     C                   ENDSR                                                                CER071
       *****************************************************************
       /EJECT
       *****************************************************************

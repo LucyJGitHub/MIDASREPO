@@ -18,9 +18,10 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. MD039309           Date 08Jun16               *
-      *  Prev Amend No. MD035554           Date 25May16               *
-      *  Prev Amend No. MD033630           Date 11May16               *
+      *  Last Amend No. MD039509           Date 13Jul16               *
+      *  Prev Amend No. MD039309           Date 08Jun16               *
+      *                 MD035554           Date 25May16               *
+      *                 MD033630           Date 11May16               *
       *                 MD027587           Date 19Jun14               *
       *                 MD000091           Date 08May13               *
       *                 CSF011A            Date 28Nov11               *
@@ -33,6 +34,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039509 - Able to insert a Reversal without a prior insert  *
+      *             of an Outward Clearing Check. Included the        *
+      *             checking of amount for today's reversal           *
       *  MD039309 - Unable to Edit/Delete CRE023 Credit Journal Entry *
       *             Reversed some of the MD033630 fixes that were     *
       *             affected by the changes in MD035554 regarding the *
@@ -377,13 +381,13 @@
       *
      C                   IF        DDPTAMOK = 'Y'
       *
-      ** Do not validate Today's Outward clearing transactions if
-      ** their value date has not been reached yet.
+      ***Do*not*validate*Today's*Outward*clearing*transactions*if******                     MD039509
+      ***their*value*date*has*not*been*reached*yet.********************                     MD039509
       *
-     C                   IF        (GRCLT = 'Y') AND
-     C                             (GB2VLDT > P_BJRDNB)
-     C                   LEAVESR
-     C                   ENDIF
+     C**********         IF        (GRCLT = 'Y') AND                                        MD039509
+     C**********                   (GB2VLDT > P_BJRDNB)                                     MD039509
+     C**********         LEAVESR                                                            MD039509
+     C**********         ENDIF                                                              MD039509
       *
       ** A record of the account must exist on REMEMLPD and its
       ** record ID must be 'L'

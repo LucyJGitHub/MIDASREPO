@@ -17,8 +17,9 @@
       *                                                               *
       *  Called From: SDC008150                                       *
       *                                                               *
-      *  Last Amend No. AR1084524          Date 13Feb13               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. MD038025           Date 27Jul16               *
+      *  Prev Amend No. AR1084524          Date 13Feb13               *
+      *                 CLE148             Date 23Jul12               *
       *                 AR873924A          Date 08Feb12               *
       *                 AR888911           Date 26Jan12               *
       *                 AR864714B          Date 28Mar12               *
@@ -33,6 +34,8 @@
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD038025 - Review AR875365 to only default ST rate if        *
+      *             'number of month' is not zero.                    *
       *  AR1084524 - Performance issue on IPAY & OPAY listview        *
       *              (Recompile)                                      *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
@@ -419,6 +422,7 @@
      C                             A3KEY = 'DEAL'                                           AR875365
      C                   SELECT                                                             AR875365
      C                   WHEN      T2MNTH < 12                                              AR875365
+     C                             and T2MNTH > 0                                           MD038025
      C                   Z-ADD     A3F01Y        A3STRT                                     AR875365
      C                   WHEN      T2MNTH >= 12  AND T2MNTH <= 59                           AR875365
      C                   Z-ADD     A3F05Y        A3STRT                                     AR875365

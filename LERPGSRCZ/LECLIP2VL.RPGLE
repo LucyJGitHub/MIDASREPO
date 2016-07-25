@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE141             Date 08Feb16               *
-      *  Prev Amend No. MD031736           Date 02Mar15               *
+      *  Last Amend No. MD039304           Date 19Jul16               *
+      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *                 MD031736           Date 02Mar15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD025521           Date 19Aug14               *
       *                 MD022807C          Date 15Oct13               *
@@ -107,6 +108,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039304 - Prevent a combination of zero spread rate and a   *
+      *             spread indicator equal to percentage.             *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions (Recompile)                    *
       *  MD031736 - Make use of system values to condition use of rate*
@@ -1531,6 +1534,16 @@
      C                   ENDIF                                                                CLE035
      C                   ENDIF
      C                   ENDIF
+      *                                                                                     MD039304
+      ** SPIN should not be P if there is no spread rate.                                   MD039304
+      *                                                                                     MD039304
+     C     DDSPIN        IFEQ      'P'                                                      MD039304
+     C     WSVRS         ANDEQ     *ZERO                                                    MD039304
+     C                   MOVE      'N'           DDRTSPOK                                   MD039304
+     C                   ADD       1             Idx                                        MD039304
+     C                   MOVEL     'DDRTSP'      FldNamXAr(Idx)                             MD039304
+     C                   MOVEL     '5048709'     MsgIDXAr(Idx)                              MD039304
+     C                   ENDIF                                                              MD039304
       *
       ***  Calculate effective interest rate
       *

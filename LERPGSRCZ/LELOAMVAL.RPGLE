@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD035672           Date 07Sep15               *
-      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *  Last Amend No. MD039304           Date 19Jul16               *
+      *  Prev Amend No. MD035672           Date 07Sep15               *
+      *                 CDL094             Date 11Jun14               *
       *                 MD000091           Date 10May13               *
       *                 AR1094243          Date 05Mar13               *
       *                 AR632104           Date 02Oct12               *
@@ -88,6 +89,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039304 - Prevent a combination of zero spread rate and a   *
+      *             spread indicator equal to percentage.             *
       *  MD035672 - Spread rate should only be allowed if the loan has*
       *             either base rate, base rate code or current base  *
       *             rate.                                             *
@@ -2292,6 +2295,24 @@
      C                   ENDIF
       *
      C                   ENDIF
+      *                                                                                     MD039304
+      ** Spread rate should not be zero if loan SPIN is Percentage                          MD039304
+      *                                                                                     MD039304
+     C     DDATYP        IFEQ      'SC'                                                     MD039304
+     C                   CALLB     'ZALIGN'                                                 MD039304
+     C                   PARM      *BLANK        ZALIGNok                                   MD039304
+     C                   PARM      DDRTSP        ZFIELD                                     MD039304
+     C                   PARM      7             ZADEC                                      MD039304
+     C                   PARM      4             ZADIG                                      MD039304
+     C                   MOVE      ZFIELD        WSPRD            11 7                      MD039304
+     C     SPIN          IFEQ      'P'                                                      MD039304
+     C     WSPRD         ANDEQ     *ZERO                                                    MD039304
+     C                   MOVE      'N'           DDRTSPOK                                   MD039304
+     C                   ADD       1             Idx                                        MD039304
+     C                   EVAL      FldNameArr(Idx) = 'DDRTSP'                               MD039304
+     C                   MOVEL     '5048709'     MsgIdArr(Idx)                              MD039304
+     C                   ENDIF                                                              MD039304
+     C                   ENDIF                                                              MD039304
       *
      C     DDATYP        IFEQ      'SC'
      C**********         If        CLE035 = 'N' or                                   CLE035 BUG10392

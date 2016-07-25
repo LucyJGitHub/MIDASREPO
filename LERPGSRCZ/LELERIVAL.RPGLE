@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039017           Date 26May16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD039304           Date 19Jul16               *
+      *  Prev Amend No. MD039017           Date 26May16               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR702532           Date 13Jan15               *
       *                 243608             Date 13Mar15               *
       *                 MD031083           Date 25Nov14               *
@@ -105,6 +106,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039304 - Prevent a combination of zero spread rate and a   *
+      *             spread indicator equal to percentage.             *
       *  MD039017 - Amend generated overridable error message for     *
       *             Rollover Date                                     *
       *  CLE141 - Currency and Location Business Day Convention       *
@@ -3505,6 +3508,41 @@
      C                   EVAL      MsgIDArr(Idx) = 'LEV0142'
      C                   MOVE      'N'           DDNsinOK
      C                   ENDIF
+      *                                                                                     MD039304
+      ** Prevent zero spread rate for laon with Percentage indicator.                       MD039304
+      *                                                                                     MD039304
+     C                   EVAL      ZFIELD = *Blanks                                         MD039304
+     C                   EVAL      ZFIELD = DDNRTSB                                         MD039304
+     C                   EVAL      ZADEC = 7                                                MD039304
+     C                   EVAL      ZADIG = 4                                                MD039304
+     C                   EXSR      ZALIGN                                                   MD039304
+     C                   MOVE      ZFIELD        WRATE            11 7                      MD039304
+      *                                                                                     MD039304
+      ** New Spread Indicator is 'P' and New Spread Rate is zero                            MD039304
+      *                                                                                     MD039304
+     C     DDNSINB       IFEQ      'P'                                                      MD039304
+     C     DDNRTSB       ANDNE     *BLANKS                                                  MD039304
+     C     WRATE         ANDEQ     *ZERO                                                    MD039304
+      *                                                                                     MD039304
+      ** New Spread Indicator is 'P', New Spread Rate is blank and                          MD039304
+      ** current spread rate is zero.                                                       MD039304
+      *                                                                                     MD039304
+     C     DDNSINB       OREQ      'P'                                                      MD039304
+     C     DDNRTSB       ANDEQ     *BLANKS                                                  MD039304
+     C     RTSP          ANDEQ     *ZERO                                                    MD039304
+      *                                                                                     MD039304
+      ** Has a zero new spread rate, no new spread indicator and the                        MD039304
+      ** current spread rate is 'P'                                                         MD039304
+      *                                                                                     MD039304
+     C     WRATE         OREQ      *ZERO                                                    MD039304
+     C     DDNRTSB       ANDNE     *BLANKS                                                  MD039304
+     C     DDNSINB       ANDEQ     *BLANKS                                                  MD039304
+     C     SPIN          ANDEQ     'P'                                                      MD039304
+     C                   ADD       1             Idx                                        MD039304
+     C                   EVAL      FldNameArr(Idx) = 'DDNSINB'                              MD039304
+     C                   EVAL      MsgIDArr(Idx) = '5048709'                                MD039304
+     C                   MOVE      'N'           DDNrtsOK                                   MD039304
+     C                   ENDIF                                                              MD039304
       *
       * If no errors
       *

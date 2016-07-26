@@ -22,8 +22,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039187           Date 03Jun16               *
-      *  Prev Amend No. MD038831           Date 19May16               *
+      *  Last Amend No. MD039391A          Date 21Jul16               *
+      *  Prev Amend No. MD039391           Date 05Jul16               *
+      *                 MD020807A          Date 05Jul16               *
+      *                 MD039187           Date 03Jun16               *
+      *                 MD038831           Date 19May16               *
       *                 CLE141A            Date 28Apr16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031378           Date 23Jun15               *
@@ -253,6 +256,14 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039391A - When 'LoanRolloverMaturity' is 'M', LOAC will    *
+      *              display events up to rollover date and events    *
+      *              with definite dates as defined in loan.          *
+      *  MD039391 - Also applied same fix when 'LoanRolloverMaturity' *
+      *             is 'M'.                                           *
+      *  MD020807A - Ensure 'Balance as of' line is written at the    *
+      *              end if 'LoanRolloverMaturity' is 'R'.            *
+      *           - Applied for MD-39391.                             *
       *  MD039187 - System does not adjust Next Repayment Date based  *
       *             on PTDI if original NPD falls on holiday. Include *
       *             settlement check on computing next payment date.  *
@@ -1801,6 +1812,7 @@
       *                                                                                     BUG21922
      C           CAS005    IFEQ 'Y'                                                           260274
      C           WWRLDT    ANDGT*ZERO                                                         260274
+     C           WENDT     ANDNE99999                                                      MD039391A
      C           NIDT      IFGT *ZERO                                                         260274
      C           NIDT      ANDGTWWRLDT                                                        260274
      C           NRPD      ORGT *ZERO                                                         260274
@@ -1868,6 +1880,7 @@
       *                                                                                     BUG21922
      C           CAS005    IFEQ 'Y'                                                           260274
      C           WWRLDT    ANDGT*ZERO                                                         260274
+     C           WENDT     ANDNE99999                                                      MD039391A
      C           NIDT      IFGT *ZERO                                                         260274
      C           NIDT      ANDGTWWRLDT                                                        260274
      C           NRPD      ORGT *ZERO                                                         260274
@@ -6224,6 +6237,8 @@
      C           ZDYNBR    ANDGEMDAT                                                         BUG9052
      C           MDAT      ANDNE0                                                            BUG9052
       *                                                                                      BUG9052
+     C           WENDT     OREQ 99999                                                      MD039391A
+   	 C           ZDYNBR    ANDGTRLDT                                                       MD039391A
      C                     MOVE *BLANK    WFRIN
      C                     Z-ADD99999     NIDT
      C                     ELSE
@@ -6454,6 +6469,8 @@
      C           CLE028    ANDEQ'Y'                                                           CLE028
      C           PTYP      ANDEQ80                                                            CLE028
      C           ZFREQ     OREQ *BLANKS                                   132287
+     C           WENDT     OREQ 99999                                                      MD039391A
+   	 C           ZDYNBR    ANDGTRLDT                                                       MD039391A
      C                     MOVE *BLANK    WFRPR
      C                     Z-ADD99999     NRPD
      C                     ELSE
@@ -8417,7 +8434,8 @@
      C                     SELEC
      C           RLDT      WHNE *ZEROS
      C********** CAS005    ANDEQ'N'                                                    224646 246037
-     C           CAS005    ANDEQ'N'                                                           260274
+     C********** CAS005    ANDEQ'N'                                                 260274 MD020807A
+     C           CAS5      ANDEQ'N'                                                        MD020807A
      C                     Z-ADDRLDT      WENDT   50
      C           MDAT      WHNE *ZEROS
      C                     Z-ADDMDAT      WENDT
@@ -8428,12 +8446,17 @@
      C                     ELSE                                                             BUG21922
      C                     SELEC                                                            BUG21922
      C           RLDT      WHNE *ZEROS                                                      BUG21922
-     C           CAS005    ANDEQ'N'                                                         BUG21922
+     C********** CAS005    ANDEQ'N'                                                BUG21922 MD039391
+     C********** CAS5      ANDEQ'N'                                               MD039391 MD039391A
+     C           CAS005    ANDEQ'N'                                                        MD039391A
      C                     Z-ADDRLDT      WENDT   50                                        BUG21922
      C           MDAT      WHNE *ZEROS                                                      BUG21922
      C                     Z-ADDMDAT      WENDT                                             BUG21922
      C                     OTHER                                                            BUG21922
-     C                     Z-ADD*ZEROS    WENDT                                             BUG21922
+     C**********           Z-ADD*ZEROS    WENDT                                   BUG21922 MD039391A
+     C           RLDT      IFNE *ZEROS                                                     MD039391A
+     C                     Z-ADD99999     WENDT                                            MD039391A
+     C                     ENDIF
      C                     ENDSL                                                            BUG21922
      C                     ENDIF                                                            BUG21922
       *                                                                                       193701
@@ -10161,6 +10184,10 @@
      C                     MOVE ' '       WDTL9                                               218984
      C**********           Z-ADD*ZERO     RLDT                                        BUG9240 246037
      C           WRKFLD    IFEQ 'M'                                                         BUG21922
+     C           WENDT     ANDNE99999                                                      MD039391A
+     C           WRKFLD    OREQ 'M'                                                        MD039391A
+     C           WENDT     ANDEQ99999                                                      MD039391A
+     C           VSLN      ANDLT20                                                         MD039391A
      C                     Z-ADD*ZERO     RLDT                                                260274
      C                     ENDIF                                                            BUG21922
      C                     ELSE                                                               193701

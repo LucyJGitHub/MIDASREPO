@@ -34,8 +34,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. LLN022A            Date 03Jun15               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *  Last Amend No. MD039577           Date 27Jul16               *
+      *  Prev Amend No. LLN022A            Date 03Jun15               *
+      *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 MD028970           Date 25Nov14               *
       *                 MD026979           Date 09Jun14               *
@@ -126,6 +127,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039577 - Account maintenance - Account name different from *
+      *             Customer report name                              *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE101 - Interim Interest Statements on a Frequency          *
@@ -1661,6 +1664,7 @@
       *
       *
      C                   MOVEL     DDCCY         CCY                                          240916
+     C                   MOVEL     BBCRNM        DDANAM                                     MD039577
       *                                                                                     BUG13639
       ** Do not execute GLAMAD4DT when currency code is blanks,                             BUG13639
       ** Serious midas error will be encountered                                            BUG13639

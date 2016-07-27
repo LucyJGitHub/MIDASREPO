@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD022920           Date 19Nov13               *
-      *  Prev Amend No. AR1081071          Date 13Jan15               *
+      *  Last Amend No. MD037863           Date 27Jul16               *
+      *  Prev Amend No. MD022920           Date 19Nov13               *
+      *                 AR1081071          Date 13Jan15               *
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CRE073             Date 06Dec10               *
@@ -40,6 +41,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD037863 - Generate maturity repayment event only when       *
+      *             repayment date falls on maturity date.            *
       *  MD022920 - Principal Repayment was decreased on exposure but *
       *             the loan is non auto settle. Ensure that RE event *
       *             will not be posted in GPPOSNPD when AUTO is N.    *
@@ -72,15 +75,15 @@
       *  CGP001 - Global Processing                                   *
       *                                                               *
       *****************************************************************
- 
+
      FLOAMS     IF   E           K DISK    INFSR(*PSSR)
      F                                     IGNORE(LOAMSDHF)
      F                                     IGNORE(LOAMSZ1F)
- 
- 
+
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
- 
+
+
       ** T R A N S A C T I O N    D E T A I L S
      D T_TRAP        E DS                  EXTNAME(GPTRAPPD)
       ** P O S I T I O N    D E T A I L S
@@ -89,17 +92,17 @@
      D E_EVNT        E DS                  EXTNAME(GOWEVNTPD)
      D**E_SETD***************179    198                                                       TDA102
      D  E_SETD               185    210                                                       TDA102
- 
- 
+
+
       **  Loan types
      D TABCDE          S              2  0 DIM(12) CTDATA PERRCD(1)
      D TABTYP          S              2    DIM(12) ALT(TABCDE)
- 
- 
+
+
      D LOANCL        E DS                  EXTNAME(CLOANCL) PREFIX(CL_)
      D LOANCK        E DS                  EXTNAME(CLOANCK) PREFIX(CK_)
- 
- 
+
+
      D W#PAYD          DS
      D  W#PAYM                 1      2
      D  W#PAYA                 3     20                                                       TDA102
@@ -127,20 +130,20 @@
      D W#TABT          DS
      D  W#TYP                  1      1
      D  W#ASLI                 2      2
- 
- 
+
+
       * Power array
      D POWER           S              7  3 DIM(7) CTDATA PERRCD(1)              POWERS OF 10
- 
- 
+
+
      D SDBANK        E DS                  EXTNAME(SDBANKPD)
      D SDGELR        E DS                  EXTNAME(SDGELRPD)
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D DSFDY         E DS                  EXTNAME(DSFDY)
      D DSSDY         E DS                  EXTNAME(DSSDY)
- 
- 
+
+
      ILOAMSDKF
      I              RECI                        LARECI
      I              VDAT                        LAVDAT
@@ -161,16 +164,16 @@
      I              IRCF                        LAIRCF
      I              FRCF                        LAFRCF
      I              AUTO                        LAAUTO                                      MD022920
- 
+
       * ENTRY PARAMETERS
- 
+
      C     *ENTRY        PLIST
      C                   PARM                    I#RTCD            7            * RETURN CODE
      C                   PARM                    I#ERMS           50            * ERROR MESSAGE
       * INPUTS
      C                   PARM                    I#LOC             4
      C                   PARM                    I#CCID           10 0
- 
+
      C                   PARM                    I#RDNB            5 0          * RUN DATE
      C                   PARM                    I#DNWD            5 0          * DATE OF NXT W DAY
      C                   PARM                    I#PCOD            5 0          * PROJECTION DATE
@@ -183,40 +186,40 @@
      C                   PARM                    SL_MLNR           6                          CLE148
      C**********         PARM                    SL_OLNO           6 0                        CSD027
      C                   PARM                    SL_OLNO           6                          CSD027
- 
+
       * SETUP TRANSACTION INDEX RECORD
- 
+
      C                   EXSR      SETUP_TRAP
- 
+
       * NO VALUE DATE POSITION EXTRACT IS REQUIRED IF MATURED
- 
+
      C     I#TVDI        IFEQ      'V'
      C     T_MATI        ANDEQ     'Y'
      C                   RETURN
      C                   ENDIF
- 
+
       * SETUP SETTLEMENT INSTRUCTIONS
- 
+
      C                   EXSR      SETUP_SETI
- 
+
       * IMPORT OPENING POSITION AND EVENTS
- 
+
      C                   EXSR      IMPORT
- 
+
       * PROCESS IMPORTED EVENTS
- 
+
      C                   MOVEL     '*PROCSIM'    W#MODE
      C                   EXSR      WRKEDTA
- 
+
       * WRITE TRANSACTION INDEX RECORD
       * Commitment Cycle ID
      C     I#TVDI        IFEQ      'T'
      C                   Z-ADD     I#CCID        T_CCID
      C                   EXSR      WRITE_TRAP
      C                   ENDIF
- 
+
       * RETURN
- 
+
      C                   RETURN
       *
       *****************************************************************
@@ -234,7 +237,7 @@
      C                   PARM                    SL_OLNO
       * OUTPUTS
      C                   PARM                    T_TRAP
- 
+
      C     W#RTCD        IFEQ      '*ERROR'
      C                   EVAL      I#ERMS = 'ERROR IN CALL TO GOSETLOAN'
      C                   EXSR      *PSSR
@@ -247,11 +250,11 @@
       * WRITE TRANSACTION INDEX RECORD
       *****************************************************************
      C     WRITE_TRAP    BEGSR
- 
+
      C                   MOVEL     'N'           I#CUSTDEFLT
- 
+
       /COPY GOCPYSRC,GOWRTTRAP
- 
+
      C                   ENDSR
       *****************************************************************
      C/SPACE 5
@@ -259,7 +262,7 @@
       * SETUP SETTLEMENT INSTRUCTIONS
       *****************************************************************
      C     SETUP_SETI    BEGSR
- 
+
       * Asset/Liability
      C     CL_PTYP       LOOKUP    TABCDE        TABTYP                   99    *
      C                   MOVEL     TABTYP        W#TABT
@@ -738,7 +741,8 @@
       *
       * Determine next repayment date
       *
-     C                   EXSR      DETNXD
+     C**********         EXSR      DETNXD                                                   MD037863
+     C                   EXSR      DETNXD2                                                  MD037863
      C                   Z-ADD     ZFRNXD        E_PRDT
      C                   Z-ADD     ZFRNXD        ZFRDAT
       *
@@ -754,7 +758,8 @@
       *
       * Determine next repayment date
       *
-     C                   EXSR      DETNXD
+     C**********         EXSR      DETNXD                                                   MD037863
+     C                   EXSR      DETNXD2                                                  MD037863
      C                   Z-ADD     ZFRNXD        E_PRDT
      C                   Z-ADD     ZFRNXD        ZFRDAT
       *
@@ -762,8 +767,10 @@
       *
       ** Import last repayment date event (at maturity date)
       *
+     C     E_PRDT        IFEQ      CL_MDAT                                                  MD037863
      C                   MOVEL     '*IMPEVNT'    W#MODE
      C                   EXSR      WRKEDTA
+     C                   ENDIF                                                              MD037863
       *
      C     EIMP_RE       ENDSR
       *****************************************************************
@@ -1095,6 +1102,30 @@
      C                   END
       *
      C                   ENDSR
+      ********************************************************************                  MD037863
+      /SPACE 5                                                                              MD037863
+      ********************************************************************                  MD037863
+      * DETERMINE NEXT DAY 2                                                                MD037863
+      ********************************************************************                  MD037863
+     C     DETNXD2       BEGSR                                                              MD037863
+      *                                                                                     MD037863
+     C                   CALLB     'ZFREQB'                                                 MD037863
+     C                   PARM                    RetCodeIn                                  MD037863
+     C                   PARM                    ZFRFRQ                         * FREQUENCY MD037863
+     C                   PARM                    ZFRDAT                         * DATE      MD037863
+     C                   PARM                    ZFRCCY                         * CURRENCY  MD037863
+     C                   PARM                    BJSLCD                                     MD037863
+     C                   PARM                    ZFRBAS                         * BASE DAY  MD037863
+     C                   PARM                    BJDFIN                                     MD037863
+     C     SDGELR        PARM                    SDGELR                                     MD037863
+      *                                                                                     MD037863
+     C     RetCodeIn     IFEQ      '*ERROR'                                                 MD037863
+     C                   EVAL      I#ERMS = 'ERROR IN CALL TO ZFREQB'                       MD037863
+     C                   EXSR      *PSSR                                                    MD037863
+     C                   END                                                                MD037863
+     C                   EVAL      ZFRNXD = ZFRDAT                                          MD037863
+      *                                                                                     MD037863
+     C                   ENDSR                                                              MD037863
       *****************************************************************
       /SPACE 5
       ********************************************************************

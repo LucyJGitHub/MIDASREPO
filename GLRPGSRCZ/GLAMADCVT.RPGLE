@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CRE101             Date 27Aug14               *
-      *  Prev Amend No. CGL165             Date 23Feb15               *
+      *  Last Amend No. MD034725           Date 27Jul16               *
+      *  Prev Amend No. CRE101             Date 27Aug14               *
+      *                 CGL165             Date 23Feb15               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE073             Date 06Dec10               *
       *                 CER055             Date 06Dec10               *
@@ -61,6 +62,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  CRE101 - Interim Interest Statements on a Frequency          *
       *           Added hooks: CRE101_010, CRE101_011, CRE101_012,    *
       *                         CRE101_013, CRE101_014, CRE101_015,   *
@@ -317,6 +319,7 @@
      D CER055          S              1A                                                      CER055
      D CRE073          S              1A                                                      CRE073
      D CGL165          S              1A                                                      CGL165
+     D CTI006          S              1A                                                    MD034725
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -522,6 +525,10 @@
       *
       ** TI Account
       *
+     C                   IF        CTI006 = 'Y'                                             MD034725
+     C                   EVAL      DDTIAC = AMA5TIAC                                        MD034725
+     C                   ENDIF                                                              MD034725
+      *                                                                                     MD034725
      C                   IF        BGN3ST='Y'
      C                   IF        AMA5TIAC=*BLANK
      C                   EVAL      DDTIAC='N'
@@ -2339,6 +2346,26 @@
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
       *
+      ** Check if enhancement CRE073 is ON                                                  MD034725
+      *                                                                                     MD034725
+     C                   CALLB     'AOSARDR0'                                               MD034725
+     C                   PARM      *BLANKS       PRTCD                                      MD034725
+     C                   PARM      '*VERIFY'     POPTN                                      MD034725
+     C                   PARM      'CTI006'      PSARD                                      MD034725
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD034725
+                                                                                            MD034725
+     C                   IF        PRTCD = *BLANKS                                          MD034725
+     C                   EVAL      CTI006 = 'Y'                                             MD034725
+     C                   ELSE                                                               MD034725
+     C                   EVAL      CTI006 = 'N'                                             MD034725
+     C                   ENDIF                                                              MD034725
+                                                                                            MD034725
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                MD034725
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD034725
+     C                   EVAL      DBKEY = 'CTI006'                                         MD034725
+     C                   EVAL      DBASE = 910                                              MD034725
+     C                   EXSR      *PSSR                                                    MD034725
+     C                   ENDIF                                                              MD034725
       *
      C                   ENDSR
       *****************************************************************

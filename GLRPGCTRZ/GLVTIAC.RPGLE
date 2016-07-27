@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. 230445             Date 03Nov14               *
-      *  Prev Amend No. MD030198           Date 30Aug14               *
+      *  Last Amend No. MD034725           Date 27Jul16               *
+      *  Prev Amend No. 230445             Date 03Nov14               *
+      *                 MD030198           Date 30Aug14               *
       *                 TI010206           Date 06May13               *
       *                 CSD091             Date 04Jul11               *
       *                 BUG23497           Date 21Mar09               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  230445 - Do not accept 'Y' as TI account flag if the customer*
       *           is a non-TI customer.                               *
       *  MD030198 - Repeating TI Account Suffix warning message       *
@@ -63,13 +65,13 @@
       ** ¦ =======                              ¦
       ** +--------------------------------------+
       *****************************************************************
- 
+
       ** GL Accounts by branch, TI A/c no and TI A/c suffix
      FACCNTTI   IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** SD Account Codes Retrieval
      FSDACODL1  IF   E           K DISK    INFSR(*PSSR)
- 
+
       ** SD Customer Detail Retrieval                                                         230445
      FSDCUSTL1  IF   E           K DISK    INFSR(*PSSR)                                       230445
                                                                                               230445
@@ -103,67 +105,67 @@
       **                                    handler)
       ** and the following variables:
       **    RunBefore  1A (for the PSSR)
- 
+
      D/COPY ZACPYSRC,STD_D_SPEC
- 
+
       ** Program Status Data Structure
       ** =============================
       ** The following /COPY line includes all the defined fields in the
       ** PSDS.  They have meaningful names, prefixed by 'PS'.
- 
+
      D/COPY ZACPYSRC,PSDS
- 
+
       ** +--------------------------------------+
       ** ¦ End of automatically included D-specs¦
       ** ¦ =====================================¦
       ** +--------------------------------------+
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ Manually included D-specs            ¦
       ** ¦ =========================            ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** The maximum size of the appended error arrays
      D XArrayMax       C                   CONST(20)
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
       ** Array of Fields in error.
      D FldNamXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of error message IDs
      D MsgIDXAr        S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of error message data.
      D MsgDtaXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** Array of Fields with warnings.
      D WFldNmXAr       S             10A   DIM(XArrayMax)
- 
+
       ** Array of warning message IDs
      D WMsgIDXAr       S                   DIM(XArrayMax) LIKE(#MsgId)
- 
+
       ** Array of warning message data.
      D WMsgDtXAr       S                   DIM(XArrayMax) LIKE(#MsgData)
- 
+
       ** External data structure for branch codes file
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
- 
+
       ** External data structure for access programs (long)
      D DSFDY         E DS                  EXTNAME(DSFDY)
- 
+
       ** TI ICD details                                                                      BUG3365
      D SDTIIN        E DS                  EXTNAME(SDTIINPD)                                 BUG3365
                                                                                              BUG3365
@@ -171,12 +173,12 @@
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
       ** Index for arrays of error message ids etc
      D Idx             S              3P 0
                                                                                              BUG3365
@@ -197,8 +199,9 @@
                                                                                              BUG3365
       ** Indicator Array                                                                     BUG3365
      DIndicatorP       S               *   INZ(%ADDR(*IN))                                   BUG3365
- 
+
      D CSD012          S              1A                                                     BUG5340
+     D CTI006          S              1A                                                    MD034725
       ** +--------------------------------------+
       ** ¦ End of D-specs                       ¦
       ** ¦ ==============                       ¦
@@ -213,9 +216,9 @@
       ** ¦ executed at program activation.                                ¦
       ** ¦                                                                ¦
       ** +----------------------------------------------------------------+
- 
+
       ** Initialization
- 
+
      C                   MoveL     *Blanks       RetCodeIn
      C**********         MoveL     *Blanks       FldNamXAr                                   BUG5340
      C**********         MoveL     *Blanks       MsgIDXAr                                    BUG5340
@@ -225,6 +228,7 @@
       ** If Midas/TI Interface is on then:
       *
      C     BGN3ST        IFEQ      'Y'                                          B01
+     C     CTI006        ANDEQ     'N'                                                      MD034725
       *
      C                   MOVE      *OFF          WIN89
       *
@@ -675,6 +679,18 @@
      C                   ENDIF                                                  E02
       *
      C                   ENDIF                                                  E01
+      *                                                                                     MD034725
+      ** If CTI006 is on                                                                    MD034725
+      *                                                                                     MD034725
+     C                   IF        CTI006 = 'Y'                                             MD034725
+     C                   IF        DDTIAC <> 'Y' AND                                        MD034725
+     C                             DDTIAC <> 'N'                                            MD034725
+     C                   Move      'N'           DDTIACOk                                   MD034725
+     C                   Add       1             Idx                                        MD034725
+     C                   MoveL     'DDTIAC'      FldNamXAr(Idx)                             MD034725
+     C                   MoveL     'RE71113'     MsgIDXAr(Idx)                              MD034725
+     C                   ENDIF                                                              MD034725
+     C                   ENDIF                                                              MD034725
       *
       ** If an error was found, set the return code appropriately
       *
@@ -698,7 +714,7 @@
       * *INZSR - Program Initialisation routine                       *
       *****************************************************************
      C     *INZSR        BEGSR
- 
+
      C     *Entry        Plist
       *
       ** INPUTS
@@ -761,6 +777,20 @@
      C                   ELSE                                                                BUG5340
      C                   MOVE      'N'           CSD012                                      BUG5340
      C                   ENDIF                                                               BUG5340
+      *                                                                                     MD034725
+      ** Access SAR details file to determine if CTI006 is on                               MD034725
+      *                                                                                     MD034725
+     C                   CALLB     'AOSARDR0'                                               MD034725
+     C                   PARM      *BLANKS       @RTCD                                      MD034725
+     C                   PARM      '*VERIFY'     @OPTN                                      MD034725
+     C                   PARM      'CTI006'      @SARD                                      MD034725
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD034725
+      *                                                                                     MD034725
+     C     @RTCD         IFEQ      *BLANKS                                                  MD034725
+     C                   MOVE      'Y'           CTI006                                     MD034725
+     C                   ELSE                                                               MD034725
+     C                   MOVE      'N'           CTI006                                     MD034725
+     C                   ENDIF                                                              MD034725
       *
       ** Key list to access accounts on ACCNTTI
       *
@@ -773,9 +803,9 @@
       ** =================================================================
       ** The following /COPY sets these values, and also defines LDA as
       ** an external data area
- 
+
      C/COPY ZACPYSRC,DBFIELDS
- 
+
      C                   ENDSR                                                  *** InzEnd ***
       *****************************************************************
       /EJECT

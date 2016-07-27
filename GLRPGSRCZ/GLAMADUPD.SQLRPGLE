@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD035554           Date 25May16               *
-      *  Prev Amend No. MD033852           Date 20Aug15               *
+      *  Last Amend No. MD034725           Date 27Jul16               *
+      *  Prev Amend No. MD035554           Date 25May16               *
+      *                 MD033852           Date 20Aug15               *
       *                 CRE101             Date 27Aug14               *
       *                 CGL165             Date 23Feb15               *
       *                 MD027195           Date 19Aug14               *
@@ -124,6 +125,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD034725 - Single CCY + Branch available in BFM and TI Plus  *
       *  MD035554 - 2o'clock/ABC compatibility (Recompile)            *
       *  MD033852 - Wrong balance when statement frequency is         *
       *             changed from non 'E' to 'E'.                      *
@@ -958,6 +960,7 @@
      D CRE073          S              1A                                                      CRE073
      D/COPY WNCPYSRC,GLH00574
      D CRE072          S              1A                                                      CRE072
+     D CTI006          S              1A                                                    MD034725
      I**
      I** RENAME REACR FIELDS
      I**
@@ -2162,6 +2165,12 @@
      C                   EVAL      AC_A5TIAN=AMA5TIAN
      C                   EVAL      AC_A5TIAS=AMA5TIAS
      C                   ENDIF
+      *                                                                                     MD034725
+      ** If CTI006 is on, save TI field                                                     MD034725
+      *                                                                                     MD034725
+     C                   IF        CTI006 = 'Y'                                             MD034725
+     C                   EVAL      AC_A5TIAC = AMA5TIAC                                     MD034725
+     C                   ENDIF                                                              MD034725
       *
       ** If EMU Account Postings Narrative is on, move fields in.
      C                   IF        CEU013='Y'
@@ -6733,6 +6742,30 @@ MAH  C     Rehiskey      CHAIN     ACCBR                              80
      C                   ELSE                                                                 CGL165
      C                   EVAL      CGL165 = 'N'                                               CGL165
      C                   ENDIF                                                                CGL165
+      *                                                                                     MD034725
+      ** Check if enhancement CTI006 is ON                                                  MD034725
+      *                                                                                     MD034725
+     C                   CALLB     'AOSARDR0'                                               MD034725
+     C                   PARM      *BLANKS       PRTCD                                      MD034725
+     C                   PARM      '*VERIFY'     POPTN                                      MD034725
+     C                   PARM      'CTI006'      PSARD                                      MD034725
+     C     SCSARD        PARM      SCSARD        DSFDY                                      MD034725
+                                                                                            MD034725
+     C                   IF        PRTCD = *BLANKS                                          MD034725
+     C                   EVAL      CTI006 = 'Y'                                             MD034725
+     C                   ELSE                                                               MD034725
+     C                   EVAL      CTI006 = 'N'                                             MD034725
+     C                   ENDIF                                                              MD034725
+                                                                                            MD034725
+     C                   IF        PRTCD <> *BLANKS  AND  PRTCD <> '*NRF   '                MD034725
+     C     *LOCK         IN        LDA                                                      MD034725
+     C                   EVAL      DBFILE = 'SCSARDPD'                                      MD034725
+     C                   EVAL      DBKEY = 'CTI006'                                         MD034725
+     C                   EVAL      DBASE = 82                                               MD034725
+     C                   OUT       LDA                                                      MD034725
+     C                   EXSR      *PSSR                                                    MD034725
+     C                   ENDIF                                                              MD034725
+      *                                                                                     MD034725
      C                   ENDSR
      C****************************************************************
       /EJECT

@@ -10,8 +10,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
-      *  Last Amend No. CLE141A            Date 28Apr16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 08Feb16               *      
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -74,6 +75,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            *
       *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for LE Transactions                                 *
@@ -164,7 +167,8 @@
 0011 F***LVENTL1*IP**F     400 17AI     2 DISK                     S01153 CLE004
      F***LVENTL1 IP  F     410 17AI     2 DISK                                         CLE004 CGL029
      F*LVENTL1*IP  F     416 17AI     2 DISK                                           CGL029 CLE042
-     FLVENTL1 IP  F     420 17AI     2 DISK                                                   CLE042
+     F*LVENTL1*IP  F     420 17AI     2 DISK                                           CLE042 CLE154
+     FLVENTL1 IP  F     421 17AI     2 DISK                                                   CLE154
      FCLOAN   IF  E           K        DISK                                                   237466
      F            CLOANHHF                          KIGNORE                                   237466
      F            CLOANCKF                          KIGNORE                                   237466
@@ -176,7 +180,8 @@
      F***LVEDIF1*O***F     131            DISK                     100373 CLE004
      F*LVEDIF1*O   F     132            DISK                                           CLE004 CLE042
      F***LVEDIF1 O   F     194            DISK                                         CLE042 244589
-     FLVEDIF1 O   F     211            DISK                                                   244589
+     F*LVEDIF1*O   F     211            DISK                                           244589 CLE154
+     FLVEDIF1 O   F     212            DISK                                                   CLE154
 0014 FLVEDIT2 O   F     128            DISK
      F/COPY WNCPYSRC,LE0680F001
 0015 F*E0680P1O** F     132     OF     PRINTER                  S01124    S01117
@@ -376,6 +381,7 @@
      I                                      387 392 OLNO                                      CSD027
      I                                      416 416 GASI                                      CGL029
      I                                      417 420 CLAS                                      CLE042
+     I                                      421 4210REPT                                      CLE154     
      I*                                                                   S01408
      I/COPY WNCPYSRC,LE0680IIPG                                           S01408
      I*                                                                   S01408
@@ -837,7 +843,34 @@
      C           SCSARD    PARM SCSARD    DSFDY                                               CLE141
      C           PRTCD     IFEQ *BLANKS                                                       CLE141
      C                     MOVEL'Y'       CLE141                                              CLE141
-     C                     ENDIF                                                              CLE141
+     C                     ENDIF                                                              CLE141     
+      *                                                                                       CLE154
+      ** Access SAR file to determine if CLE154 is switched ON.                               CLE154
+      *                                                                                       CLE154
+     C                     CALL 'AOSARDR0'                                                    CLE154
+     C                     PARM *BLANKS   PRTCD   7                                           CLE154
+     C                     PARM '*VERIFY' POPTN   7                                           CLE154
+     C                     PARM 'CLE154'  PSARD                                               CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+      *                                                                                       CLE154
+     C           PRTCD     IFNE *BLANKS                                                       CLE154
+     C           PRTCD     ANDNE'*NRF   '                                                     CLE154
+     C           *LOCK     IN   LDA                                                           CLE154
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE154
+     C                     Z-ADD13        DBASE                                               CLE154
+     C                     MOVELPSARD     DBKEY                                               CLE154
+     C                     OUT  LDA                                                           CLE154
+     C                     MOVE *ON       *INU7                                               CLE154
+     C                     MOVE *ON       *INU8                                               CLE154
+     C                     GOTO END                                                           CLE154
+     C                     ENDIF                                                              CLE154
+      *                                                                                       CLE154
+     C           PRTCD     IFEQ *BLANKS                                                       CLE154
+     C                     MOVE 'Y'       CLE154  1                                           CLE154
+     C                     SETON                     29                                       CLE154
+     C                     ELSE                                                               CLE154
+     C                     MOVE 'N'       CLE154                                              CLE154
+     C                     ENDIF                                                              CLE154     
       *                                                                   CLE005
 0278 C*****N20**           GOTO BY02                                      S01194
 0279 C**********           MOVEL'02'      DBASE            ** DBASE  02 **S01194
@@ -1908,6 +1941,7 @@
      O                         MPCRF    209                                                   244589
      O                         MLPFI    210                                                   244589
      O                         INOI     211                                                   244589
+     O                 29      REPT     212                                                   CLE154     
      O*                                                                   S01408
      O/COPY WNCPYSRC,LE0680OOPG                                           S01408
      O*                                                                   S01408

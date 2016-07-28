@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. MD025679A          Date 12May14               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 MD025679A          Date 12May14               *
       *                 MD022695           Date 03Oct13               *
       *                 AR740107           Date 21Dec12               *
       *                 CLE134             Date 01Aug12               *
@@ -44,6 +45,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD025679A - API - OLPOSOA Locking Issue Performance Update   *
       *  MD022695 - Auto Settlement valid values validation issue     *
@@ -392,6 +394,12 @@
       /COPY WNCPYSRC,LERPSCV112
      C                   EXSR      SRAUTO
       /COPY WNCPYSRC,LERPSCV113
+      *                                                                                       CLE154
+      ***  Validate repayment type                                                            CLE154
+      *                                                                                       CLE154
+     C                   IF        CLE154 = 'Y'                                               CLE154
+     C                   EXSR      SRREPT                                                     CLE154
+     C                   ENDIF                                                                CLE154
       *
       ***  Move the screen fields to valid file
       *
@@ -433,9 +441,23 @@
      C                   MOVEL     DDCURR        RPCCY
       *
      C     CL_REPT       IFNE      3
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     CL_REPT       ORNE      3                                                          CLE154
+     C     DDREPT        ANDEQ     ' '                                                        CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
+     C     DDREPT        ORNE      '3'                                                        CLE154
+     C     DDREPT        ANDNE     ' '                                                        CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     WLAMT         RPPRAM
      C                   ENDIF
      C     CL_REPT       IFNE      1
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     CL_REPT       ORNE      1                                                          CLE154
+     C     DDREPT        ANDEQ     ' '                                                        CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
+     C     DDREPT        ORNE      '1'                                                        CLE154
+     C     DDREPT        ANDNE     ' '                                                        CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     WLAMT         RPTAMT
      C                   ENDIF
       *
@@ -449,6 +471,15 @@
      C                   MOVEL     DDSPI3        RPSPI3
       *
       /COPY WNCPYSRC,LERPSCV117
+      *                                                                                       CLE154
+     C                   IF        CLE154 = 'Y'                                               CLE154
+     C                   IF        DDREPT = ' '                                               CLE154
+     C                   MOVEL     CL_REPT       RPREPT                                       CLE154
+     C                   ELSE                                                                 CLE154
+     C                   MOVEL     DDREPT        RPREPT                                       CLE154
+     C                   ENDIF                                                                CLE154
+     C                   ENDIF                                                                CLE154
+      *                                                                                       CLE154
      C                   ENDSR
       *****************************************************************
      C/EJECT
@@ -799,6 +830,12 @@
       ***  Entry in Amount field is mandatory
       *
      C     DDSAMT        IFEQ      *BLANKS
+     C     CLE154        IFEQ      'Y'                                                        CLE154
+     C     DDREPT        ANDEQ     '2'                                                        CLE154
+     C                   MOVE      'Y'           DDSAMTOK                                     CLE154
+     C                   Z-ADD     *ZEROS        WLAMT                                        CLE154
+     C                   GOTO      ENDSAMT                                                    CLE154
+     C                   ENDIF                                                                CLE154
      C                   MOVE      'N'           DDSAMTOK
      C                   ADD       1             Idx
      C                   MOVEL     'DDSAMT'      FldNamXAr(Idx)
@@ -1407,6 +1444,34 @@
      C                   Endif                                                                CLE164
                                                                                               CLE164
      C                   ENDSR
+      *****************************************************************                       CLE154
+      /EJECT                                                                                  CLE154
+      *****************************************************************                       CLE154
+      *  SRREPT - Validate repayment type                             *                       CLE154
+      *****************************************************************                       CLE154
+     C     SRREPT        BEGSR                                                                CLE154
+                                                                                              CLE154
+     C                   IF        DDREPT = *BLANKS                                           CLE154
+     C                   GOTO      ENDREPT                                                    CLE154
+     C                   ENDIF                                                                CLE154
+                                                                                              CLE154
+     C                   IF        DDREPT <> '1' AND                                          CLE154
+     C                             DDREPT <> '2' AND                                          CLE154
+     C                             DDREPT <> '3'                                              CLE154
+     C                   ADD       1             Idx                                          CLE154
+     C                   MOVEL     'DDREPT'      FldNamXAr(Idx)                               CLE154
+     C                   MOVEL     'LEL0155'     MsgIDXAr(Idx)                                CLE154
+     C                   ENDIF                                                                CLE154
+                                                                                              CLE154
+     C                   IF        CL_WTRT <> 0 AND                                           CLE154
+     C                             CL_WTIN <> ' ' AND                                         CLE154
+     C                             DDREPT = '3'                                               CLE154
+     C                   ADD       1             Idx                                          CLE154
+     C                   MOVEL     'DDREPT'      FldNamXAr(Idx)                               CLE154
+     C                   MOVEL     'LEL0155'     MsgIDXAr(Idx)                                CLE154
+     C                   ENDIF                                                                CLE154
+                                                                                              CLE154
+     C     ENDREPT       ENDSR                                                                CLE154
       *****************************************************************
      C/EJECT
       *****************************************************************
@@ -1589,6 +1654,16 @@
      C     @RTCD         IFEQ      *BLANKS                                                    CLE036
      C                   MOVE      'Y'           CLE036                                       CLE036
      C                   END                                                                  CLE036
+      *                                                                                       CLE154
+     C                   MOVE      'N'           CLE154            1                          CLE154
+     C                   CALLB     'AOSARDR0'                                                 CLE154
+     C                   PARM      *BLANK        @RTCD                                        CLE154
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE154
+     C                   PARM      'CLE154'      @SARD                                        CLE154
+      *                                                                                       CLE154
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE154
+     C                   MOVE      'Y'           CLE154                                       CLE154
+     C                   END                                                                  CLE154
       *                                                                                       CLE036
      C                   MOVE      'N'           CLE134            1                          CLE134
      C                   CALLB     'AOSARDR0'                                                 CLE134

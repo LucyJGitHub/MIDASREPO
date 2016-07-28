@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141A            Date 28Apr16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *      
+      *                 CLE141             Date 08Feb16               *
       *                 LLN022A            Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR897086           Date 10Mar15               *
@@ -222,7 +223,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  CLE141A - CLE141 Change Control 1                            *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            * 
+      *  CLE141A - CLE141 Change Control 1                            *     
       *  CLE141 - Currency and Location Business Day Convention       *
       *           for Lending Transactions                            *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
@@ -702,7 +705,8 @@
      F***LVNTXEL*O***F     410            DISK                     163486 218992
      F***LVNTXEL O   F    1070            DISK                                         218992 CGL029
      F*LVNTXEL*O***F****1124            DISK                                           CGL029 CLE042
-     FLVNTXEL O   F    1128            DISK                                                   CLE042
+     F*LVNTXEL*O   F    1128            DISK                                           CLE042 CLE154
+     FLVNTXEL O   F    1129            DISK                                                   CLE154
      F***LVNTXZZ O   F     400            DISK                                             AR1078776
      FLVNTXZZ UF  E                    DISK                      A                         AR1078776
      FEMTE1H1 O   F     128            DISK                      A    U1
@@ -2803,6 +2807,37 @@
      C                     MOVE 'Y'       CLE141                                              CLE141
      C                     ENDIF                                                              CLE141
       *                                                                                       CLE134
+      *                                                                                       CLE154
+      ** Determine if CLE154 enhancement is installed                                         CLE154
+      *                                                                                       CLE154
+     C                     CALL 'AOSARDR0'                                                    CLE154
+     C                     PARM *BLANKS   W0RTCD                                              CLE154
+     C                     PARM '*VERIFY' W0OPTN                                              CLE154
+     C                     PARM 'CLE154'  W0SARD                                              CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+     C                     MOVE 'N'       CLE154  1                                           CLE154
+      *                                                                                       CLE154
+      ** If feature is on, set up SAR work flag                                               CLE154
+      *                                                                                       CLE154
+     C           W0RTCD    IFEQ *BLANKS                                                       CLE154
+     C                     MOVE 'Y'       CLE154                                              CLE154
+     C                     SETON                     28                                       CLE154
+     C                     ELSE                                                               CLE154
+      *                                                                                       CLE154
+      ** else, database error (return code other than *NRF)                                   CLE154
+      *                                                                                       CLE154
+     C           W0RTCD    IFNE '*NRF   '                                                     CLE154
+     C                     MOVEL'LE0480'  DBPGM                                               CLE154
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE154
+     C                     MOVEL'CAS008  'DBKEY                                               CLE154
+     C                     Z-ADD76        DBASE                                               CLE154
+     C                     MOVE *ON       *INU7                                               CLE154
+     C                     MOVE *ON       *INU8                                               CLE154
+     C                     MOVE *ON       *INLR                                               CLE154
+     C                     GOTO END                                                           CLE154
+     C                     ENDIF                                                              CLE154
+      *                                                                                       CLE154
+     C                     ENDIF                                                              CLE154      
      C           KSPOTD    KLIST                                                              CAS008
      C                     KFLD           WFYLD                                               CAS008
      C                     KFLD           WCCY                                                CAS008
@@ -5936,6 +5971,12 @@
      C**   CALLS    : SR.INTCAL,LEVENT,EQUIV,RECOUT,FREQB,ZFWDT           S01195
 1427 C**
 1428 C           REPAY     BEGSR                           **REPAY**
+      *                                                                                       CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN50     ANDEQ'1'                                                           CLE154
+      ** Determine Repayment Type                                                             CLE154
+     C           REPTLA    COMP 2                    535152                                   CLE154
+     C                     END                                                                CLE154
      C*                                                                   CEU004
      C                     MOVE EMUCC2    EMUCCY                          CEU004
       *                                                                   CLE031
@@ -6130,6 +6171,12 @@
      C                     END                                            089289
      C*                                                                   089289
 1447 C   52                Z-ADD0         REINT
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN52     ANDEQ'1'                                                           CLE154
+     C           TAMT      ANDEQ*ZERO                                                         CLE154
+      ** Means that it is an Interest payment schedule                                        CLE154
+     C                     Z-ADDINTDUE    REINT                                               CLE154
+     C                     END                                                                CLE154
 1448 C**
 1449 C**   REPAYMENT TYPE '3'
 1450 C   53 50             Z-ADDTAMT      TOTAL  130
@@ -6280,6 +6327,12 @@
      C           *IN52     IFEQ '1'                                                           CAS005
      C                     Z-ADD0         WREINT                                              CAS005
      C                     ENDIF                                                              CAS005
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN52     ANDEQ'1'                                                           CLE154
+     C           TAMT      ANDEQ*ZERO                                                         CLE154
+      ** Means that it is an Interest payment schedule                                        CLE154
+     C                     Z-ADDWNTRIN    WREINT                                              CLE154
+     C                     END                                                                CLE154
       *                                                                                       CAS005
       ** Repayment type '3'                                                                   CAS005
       *                                                                                       CAS005
@@ -6319,7 +6372,15 @@
      C                     ENDIF                                                              CAS005
 1480 C**
 1481 C**   FOR REPAYMENT TYPES 1 OR 3,GENERATE EVENT FOR INTEREST AMOUNT
+     C           CLE154    IFEQ 'N'                                                           CLE154
 1482 C  N51N53             GOTO REP01
+     C                     ELSE                                                               CLE154
+     C           *IN52     IFEQ 'Y'                                                           CLE154
+     C           REINT     ANDEQ*ZERO                                                         CLE154
+      ** Means that it is an Principal payment schedule                                       CLE154
+     C                     GOTO REP01                                                         CLE154
+     C                     END                                                                CLE154
+     C                     END                                                                CLE154
 1483 C**
 1484 C**   FORMAT EVENT AS PER P/LEVENT
       *                                                                                       CLE028
@@ -12192,6 +12253,9 @@
      O                 79      SACNO   1088                                                   CER049
      O                         LOTX5   1124                                                   CGL029
      O                         CLAS    1128                                                   CLE042
+     O                 28 51           1129 '1'                                               CLE154
+     O                 28 52           1129 '2'                                               CLE154
+     O                 28 53           1129 '3'                                               CLE154
       *                                                                   CEU004
       * CEU004 Change - 1st new event created for non-blank setlement ccy.CEU004
       *                                                                   CEU004
@@ -12285,6 +12349,9 @@
      O                         SETAC   1088                                                   CGL029
      O                         LOTX5   1124                                                   CGL029
      O                         CLAS    1128                                                   CLE042
+     O                 28 51           1129 '1'                                               CLE154
+     O                 28 52           1129 '2'                                               CLE154
+     O                 28 53           1129 '3'                                               CLE154
       *                                                                   CEU004
       ** CEU004 Change - 2nd new event created for non-blank setlement ccyCEU004
       *                                                                   CEU004
@@ -12383,6 +12450,9 @@
      O                         EMSTAC  1088                                                  BUG9175
      O                         LOTX5   1124                                                   CGL029
      O                         CLAS    1128                                                   CLE042
+     O                 28 51           1129 '1'                                               CLE154
+     O                 28 52           1129 '2'                                               CLE154
+     O                 28 53           1129 '3'                                               CLE154
       *                                                                   CEU004
       *                                                                   CEU004
 2718 O***LVNTXZZ T        LR                                                               AR1078776

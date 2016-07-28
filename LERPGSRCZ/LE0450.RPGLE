@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE141A            Date 28Apr16               *
-      *  Prev Amend No. CLE141             Date 01Mar16               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE141A            Date 28Apr16               *
+      *                 CLE141             Date 01Mar16               *
       *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 MD021302           Date 29Jan15               *
@@ -365,6 +366,8 @@
      F*                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            *
       *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions - Phase 2                      *
@@ -3530,6 +3533,7 @@ L118 I                             P   72   77 7RTSPL
      I              FSPRAM                      PFPRAM
      I              FSCPAM                      PFCPAM
      I              CLAS                        HCLAS
+     I              REPT                        HREPT                                         CLE154
       *                                                                   131520
       ** HISTSHQ                                                          131520
       *                                                                   131520
@@ -5229,6 +5233,29 @@ L118 I                             P   72   77 7RTSPL
      C                   ELSE                                                                 CLE141
      C                   MOVE      'N'           CLE141                                       CLE141
      C                   ENDIF                                                                CLE141
+      *                                                                                       CLE154
+      ** Access SAR details to check if CLE154 is installed                                   CLE154
+      *                                                                                       CLE154
+     C                   MOVE      'N'           CLE154            1                          CLE154
+     C                   CALL      'AOSARDR0'                                                 CLE154
+     C                   PARM      *BLANKS       @RTCD                                        CLE154
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE154
+     C                   PARM      'CLE154'      @SARD                                        CLE154
+     C     SCSARD        PARM      SCSARD        DSFDY                                        CLE154
+      *                                                                                       CLE154
+     C     @RTCD         IFEQ      *BLANK                                                     CLE154
+     C                   MOVE      'Y'           CLE154                                       CLE154
+     C                   ELSE                                                                 CLE154
+     C     @RTCD         IFNE      '*NRF   '                                                  CLE154
+     C                   MOVEL     'SCSARDPD'    DBFILE                                       CLE154
+     C                   MOVEL     'CLE154 '     DBKEY                                        CLE154
+     C                   Z-ADD     41            DBASE                                        CLE154
+     C                   MOVE      *ON           *INU7                                        CLE154
+     C                   MOVE      *ON           *INU8                                        CLE154
+     C                   MOVE      *ON           *INLR                                        CLE154
+     C                   GOTO      ENDDBE                                                     CLE154
+     C                   ENDIF                                                                CLE154
+     C                   ENDIF                                                                CLE154
       *
      C**********         MOVE      'N'           CFC006            1              AR1097176 MD020563
      C**********         CALL      'AOSARDR0'                                     AR1097176 MD020563
@@ -5623,6 +5650,7 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      *OFF          *IN28                                      MD028338
      C                   MOVE      'N'           WROTDY            1
      C                   MOVE      'N'           SVFPAM            1
+     C                   Z-ADD     REPTL         WWREPT            1 0                        CLE154
       *                                                                                       CLE031
       ** If feature CLE031 is on, save values for CPAM and FCXR                               CLE031
       *                                                                                       CLE031
@@ -8868,7 +8896,7 @@ L118 I                             P   72   77 7RTSPL
      C                   EXSR      SR34E
      C                   ENDIF
       *                                                                                       CLE034
-     C                   ENDIF                                                                 CEU02
+     C                   ENDIF                                                                CEU020
       *                                                                                       199197
       ** If the repayment type is not 2 and this is an MC rollover,                           199197
       ** need to output total key, but for interest amount only.                              199197
@@ -8876,6 +8904,11 @@ L118 I                             P   72   77 7RTSPL
      C     CEU020        IFEQ      'Y'
      C     ECIN          ANDEQ     'Y'
      C     REPT          ANDNE     2
+     C     CEU020        OREQ      'Y'                                                        CLE154
+     C     ECIN          ANDEQ     'Y'                                                        CLE154
+     C     REPT          ANDEQ     2                                                          CLE154
+     C     INTA          ANDNE     *ZERO                                                      CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     INTA          ACAMNT                   89
      C                   MOVE      'R'           AKY(3)
      C                   MOVEA     BKAKY         AKY(6)
@@ -8899,6 +8932,11 @@ L118 I                             P   72   77 7RTSPL
      C                   MOVE      *BLANK        NNRPD                                         18903
 1369 C**
      C/COPY WNCPYSRC,LE0450CP20                                           S01408
+      *                                                                                       CLE154
+     C     CLE154        IFEQ      'Y'                                                        CLE154
+     C                   Z-ADD     REPT          WWREPT                                       CLE154
+     C                   END                                                                  CLE154
+      *                                                                                       CLE154
 1370 C                   ENDSR
 1371 C**
 1372 C**
@@ -19533,6 +19571,7 @@ C    C                   ENDIF                                                  
 3407 O                       SPINL               82
      O                       CHINL               83
      O/COPY WNCPYSRC,LE0450O001
+     O                       WWREPT              91                                           CLE154
 3408 O                       RAMT                98P
      O               17      NLRAX               98P                            166149
 3409 O                       NRPD               101P

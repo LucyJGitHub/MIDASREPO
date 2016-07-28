@@ -15,8 +15,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference (Recompile)                    *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -267,6 +269,10 @@
      C                   EXSR      SRTEXT
      C                   MOVEL     ZAMSTP        DDSTAT
      C                   MOVE      *BLANKS       ZAMSID
+      *                                                                                       CLE154
+     C                   IF        CLE154 = 'Y'                                               CLE154
+     C                   MOVE      REPT          DDREPT                                       CLE154
+     C                   ENDIF                                                                CLE154
       *
      C                   ENDSR
       *****************************************************************
@@ -343,6 +349,18 @@
      C                   MOVEL     '002'         DBASE                          * DBERR 002 *
      C                   EXSR      *PSSR                                        *************
      C                   END
+      *                                                                                       CLE154
+      ** Check if CLE154 is on                                                                CLE154
+      *                                                                                       CLE154
+     C                   MOVE      'N'           CLE154            1                          CLE154
+     C                   CALLB     'AOSARDR0'                                                 CLE154
+     C                   PARM      *BLANK        @RTCD                                        CLE154
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE154
+     C                   PARM      'CLE154'      @SARD                                        CLE154
+      *                                                                                       CLE154
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE154
+     C                   MOVE      'Y'           CLE154                                       CLE154
+     C                   END                                                                  CLE154
       *                                                                                       240408
       ** Check System Value: Use Original Borrower or Purchased From?                         240408
       ** Set up parameter so access object checks LoanCustOriginPurch                         240408

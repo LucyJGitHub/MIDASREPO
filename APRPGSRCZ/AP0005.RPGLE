@@ -16,8 +16,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CGL133             Date 01May13               *
-      *  Prev Amend No. CGL132             Date 01May13               *
+      *  Last Amend No. CLE154             Date 09Aug12               *      
+      *  Prev Amend No. CGL133             Date 01May13               *
+      *                 CGL132             Date 01May13               *
       *                 CFT039             Date 28Sep12               *
       *                 CLE148             Date 23Jul12               *
       *                 AR787620           Date 10Jun11               *
@@ -101,6 +102,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CGL133 - FATCA Phase 1 - Customers' Identification and       *
       *           Classification - Enquiry Only                       *
       *  CGL132 - FATCA Phase 1 - Customers' Identification and       *

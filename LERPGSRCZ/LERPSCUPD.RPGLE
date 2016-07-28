@@ -16,8 +16,9 @@
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
       *                                                               *
-      *  Last Amend No. MD025467           Date 08May14               *
-      *  Prev Amend No. MD024342B          Date 08May14               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. MD025467           Date 08May14               *
+      *                 MD024342B          Date 08May14               *
       *                 MD024342           Date 08May14               *
       *                 MD023787           Date 29Apr14               *
       *                 MD021356           Date 24Jul13               *
@@ -76,6 +77,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  MD025467 - API locking issues Redesign Approach              *
       *  MD024342B - API issue. Trailer file allocation problem.      *
       *  MD024342 - LOAMSZ1 allocation problem                        *
@@ -693,6 +695,7 @@
      I              PSCY                        PSCYC                                         CLE031
      I              PEXR                        PEXRC                                         CLE031
      I              PEXI                        PEXIC                                         CLE031
+     I              INTC                        INTCC                                         CLE154
       *
      ICLOANCKF
       ** Rename fields for Loans file - B
@@ -1534,12 +1537,33 @@
      C                   ENDIF                                                                CLE106
       *
      C     REPTC         IFNE      1
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        ORNE      1                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     RPTAMT        TAMT
      C                   ENDIF
       *
      C     REPTC         IFNE      3
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        ORNE      3                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     RPPRAM        PRAM
      C                   ENDIF
+      *                                                                                       CLE154
+     C     REPTC         IFEQ      2                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
+     C     PRAM          ANDEQ     0                                                          CLE154
+     C     INTCC         IFNE      ' '                                                        CLE154
+     C                   MOVE      INTCC         INTC                                         CLE154
+     C                   ELSE                                                                 CLE154
+     C                   MOVE      'N'           INTC                                         CLE154
+     C                   ENDIF                                                                CLE154
+     C                   ENDIF                                                                CLE154
+     C     REPTC         IFEQ      2                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
+     C     PRAM          ANDNE     0                                                          CLE154
+     C                   MOVE      ' '           INTC                                         CLE154
+     C                   ENDIF                                                                CLE154
       *
      C     RPTAMT        IFEQ      0                                                        BUG22113
      C     RPPRAM        ADD       RPINTA        RPTAMT                                     BUG22113
@@ -1556,7 +1580,11 @@
       * Use customer from CLOANCL for database write.                                         240408
      C*********          MOVE      RPCNUM        CNUM                                         240408
      C                   MOVE      CNUMC         CNUM                                         240408
+     C                   IF        CLE154 = 'N'                                               CLE154
      C                   MOVE      REPTC         REPT
+     C                   ELSE                                                                 CLE154
+     C                   Z-ADD     RPREPT        REPT                                         CLE154
+     C                   ENDIF                                                                CLE154
      C                   BITOFF    '01234567'    LAIN
      C                   MOVE      WTINC         WTIN
      C                   MOVE      'A'           LLAG
@@ -2440,6 +2468,9 @@ B001 C     RPCHTP        IFEQ      'I'
       ***  Use WFCXRT when calculating for the correct payment amount.
       *
      C     REPTC         IFNE      3
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        ORNE      3                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     RPPRAM        WLAMT            13 0
      C                   ELSE
      C                   Z-ADD     RPTAMT        WLAMT
@@ -2449,6 +2480,9 @@ B001 C     RPCHTP        IFEQ      'I'
      C     WLAMT         MULT      WFCXRT        WFCBAL
      C                   ELSE
      C     REPTC         IFEQ      1
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        OREQ      1                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C     PRAM          MULT      WFCXRT        WFCBAL           13 0
      C                   ELSE
      C     TAMT          MULT      WFCXRT        WFCBAL
@@ -2480,6 +2514,9 @@ B001 C     RPCHTP        IFEQ      'I'
      C     WLAMT         MULT(H)   WSPXRT        WCEXP            13 0                       BUG3112
      C                   ELSE                                                                BUG3112
      C     REPTC         IFEQ      1                                                         BUG3112
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        OREQ      1                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C     PRAM          MULT(H)   WSPXRT        WCEXP                                       BUG3112
      C                   ELSE                                                                BUG3112
      C     TAMT          MULT(H)   WSPXRT        WCEXP                                       BUG3112
@@ -2819,6 +2856,9 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   Z-ADD     WLAMT         WRK13
      C                   ELSE
      C     REPTC         IFEQ      1
+     C     CLE154        ANDEQ     'N'                                                        CLE154
+     C     RPREPT        OREQ      1                                                          CLE154
+     C     CLE154        ANDEQ     'Y'                                                        CLE154
      C                   Z-ADD     PRAM          WRK13
      C                   ELSE
      C                   Z-ADD     TAMT          WRK13            13 0
@@ -4259,6 +4299,15 @@ B001 C     RPCHTP        IFEQ      'I'
      C                   IF        PRTCD = *BLANKS                                            CLE025
      C                   MOVE      'Y'           CLE025                                       CLE025
      C                   ENDIF                                                                CLE025
+      *                                                                                       CLE154
+     C                   MOVEL     'N'           CLE154            1                          CLE154
+     C                   CALLB     'AOSARDR0'                                                 CLE154
+     C                   PARM      *BLANKS       @RTCD                                        CLE154
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE154
+     C                   PARM      'CLE154'      @SARD                                        CLE154
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE154
+     C                   MOVE      'Y'           CLE154                                       CLE154
+     C                   END                                                                  CLE154
       *
      C                   Z-ADD     0             I                 3 0
      C                   MOVE      *OFF          *IN99

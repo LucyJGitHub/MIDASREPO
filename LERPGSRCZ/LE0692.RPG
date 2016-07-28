@@ -10,8 +10,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CLE134             Date 01Aug12               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE154             Date 09Aug12               *
+      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *                 CLE148             Date 23Jul12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       *                 247474             Date 01May07               *
@@ -53,6 +54,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  CLE134 - Past Due Call Loan Processing                       *
       *  CLE148 - Alpha Loan Reference                                *
       *  247474 - Avoid array index error, initialize 'Z'.            *
@@ -105,7 +107,8 @@
      F***LVEDSL2*IP**F     132 21AI     2 DISK                                         CLE004 CGL014
      F***LVEDSL2 IP  F     190 21AI     2 DISK                                         CGL014 CLE042
      F***LVEDSL2 IP  F     194 21AI     2 DISK                                         CLE042 244589
-     FLVEDSL2 IP  F     211 21AI     2 DISK                                                   244589
+     F***LVEDSL2 IP  F     211 21AI     2 DISK                                         244589 CLE154
+     FLVEDSL2 IP  F     212 21AI     2 DISK                                                   CLE154
 0013 FLE0692AUO   F     132     OA     PRINTER      KINFDS SPOOLU
 0013 FLE0692P1O   F     132     OF     PRINTER      KINFDS SPOOL      UC  093584
 0013 F*E0692P1O***F     132     OF    LPRINTER      KINFDS SPOOL      UC  093584
@@ -231,6 +234,7 @@
      I                                      182 182 GNSP                                      CGL014
      I                                    P 183 1900LAMT                                      CGL014
      I                                      191 194 CLAS                                      CLE042
+     I                                      212 212 REPT                                      CLE154
      I*                                                                   S01408
      I/COPY WNCPYSRC,LE0692IIPG                                           S01408
      I*                                                                   S01408
@@ -447,6 +451,32 @@
      C                     MOVE 'N'       CGL014                                              CGL014
      C                     MOVE *OFF      *IN29                                               CGL014
      C                     ENDIF                                                              CGL014
+      *                                                                                       CLE154
+      ** Check if Loan Repayment Schedule Enhancement (CLE154) is On                          CLE154
+      *                                                                                       CLE154
+     C                     CALL 'AOSARDR0'                                                    CLE154
+     C                     PARM *BLANKS   @RTCD                                               CLE154
+     C                     PARM '*VERIFY' @OPTN                                               CLE154
+     C                     PARM 'CLE154'  PSARD                                               CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+      *                                                                                       CLE154
+     C           @RTCD     IFNE *BLANKS                                                       CLE154
+     C           @RTCD     ANDNE'*NRF   '                                                     CLE154
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE154
+     C                     MOVEL'*VERIFY' DBKEY                                               CLE154
+     C                     Z-ADD5         DBASE                                               CLE154
+     C                     MOVE *ON       *INU7                                               CLE154
+     C                     MOVE *ON       *INU8                                               CLE154
+     C                     GOTO ENDALL                                                        CLE154
+     C                     ENDIF                                                              CLE154
+      *                                                                                       CLE154
+     C           @RTCD     IFEQ *BLANKS                                                       CLE154
+     C                     MOVE 'Y'       CLE154  1                                           CLE154
+     C                     MOVE *ON       *IN59                                               CLE154
+     C                     ELSE                                                               CLE154
+     C                     MOVE 'N'       CLE154                                              CLE154
+     C                     MOVE *OFF      *IN59                                               CLE154
+     C                     ENDIF                                                              CLE154
 0218 C*
       ** CLE134 - Past Due Call Loans                                                         CLE134
       *                                                                                       CLE134
@@ -641,6 +671,15 @@
 0249 C**  CHECK IF EVENT TYPE 'L'
 0250 C           Z         COMP 7                        25
      C/COPY WNCPYSRC,LE0692C001
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C                     MOVE '0'       *IN58                                               CLE154
+     C           Z         IFEQ 2                                                             CLE154
+     C           Z         OREQ 5                                                             CLE154
+     C           Z         OREQ 6                                                             CLE154
+     C** CHECK IF INTEREST, REPAYMENT OR MATURITY EVENT                                       CLE154
+     C                     MOVE '1'       *IN58                                               CLE154
+     C                     END                                                                CLE154
+     C                     END                                                                CLE154
      C*
 0251 C**  PERFORM RELEVENT PROCESSING
 0252 C*****N25*****                                                       MOF60
@@ -1182,7 +1221,9 @@
 0612 O                                  103 'REPAYMENT'
      O/COPY WNCPYSRC,LE0692O001
 0613 O                                  121 'INTEREST'
-0614 O                                  132 'NON'
+0614 O**********                        132 'NON'                                             CLE154
+     O                                  127 'NON'                                             CLE154
+     O                 58 59            132 'REP'                                             CLE154
 0615 O        E 1      36 10
 0616 O************************           44 'LOAN/DD   TYP/SUB  CCY'      S01339
 0616 O***********                        44 'LOAN      TYP/SUB  CCYS01339 CLE004
@@ -1205,8 +1246,11 @@
 0620 O                                  119 'DUE'
      O                 29               120 '/'                                               CGL014
 0621 O**********                        132 'AUTO'                                            CGL014
-     O                                  131 'AUTO'                                            CGL014
-     O                 29               132 '/'                                               CGL014
+     O**********                        131 'AUTO'                                     CGL014 CLE154
+     O**********       29               132 '/'                                        CGL014 CLE154
+     O                                  127 'AUTO'                                            CLE154
+     O                 29               128 '/'                                               CLE154
+     O                 58 59            132 'TYPE'                                            CLE154
       *                                                                                       CGL014
      O        E 1      36 29                                                                  CGL014
      O                                   11 'COLLATERAL'                                      CGL014
@@ -1327,30 +1371,49 @@
      O                       40          72 '-'                                               CGL014
      O                    25 24          84 'ESTIM. AVE.'                                     CGL014
      O                         EVNF      86                                                   CGL014
-     O                N30N25 50RPYA     107 ' ,   ,   ,   , 0 '                               CGL014
-     O                N30N25 51RPYA     107 '   ,   ,   , 0 . '                               CGL014
-     O                N30N25 52RPYA     107 '  ,   ,   , 0 .  '                               CGL014
-     O                N30N25 53RPYA     107 ' ,   ,   , 0 .   '                               CGL014
-     O                N30N25 41         108 '-'                                               CGL014
-     O                 30 50   LAMT     107 '   ,   ,   ,   , 0 '                             CGL014
-     O                 30 51   LAMT     107 '  ,   ,   ,   , 0 . '                            CGL014
-     O                 30 52   LAMT     107 ' ,   ,   ,   , 0 .  '                            CGL014
-     O                 30 53   LAMT     107 '   ,   ,   , 0 .   '                             CGL014
-     O                 30 44            108 '-'                                               CGL014
-     O                 29      ENTT     111                                                   237251
+     O**********      N30N25 50RPYA     107 ' ,   ,   ,   , 0 '                        CGL014 CLE154
+     O**********      N30N25 51RPYA     107 '   ,   ,   , 0 . '                        CGL014 CLE154
+     O**********      N30N25 52RPYA     107 '  ,   ,   , 0 .  '                        CGL014 CLE154
+     O**********      N30N25 53RPYA     107 ' ,   ,   , 0 .   '                        CGL014 CLE154
+     O**********      N30N25 41         108 '-'                                        CGL014 CLE154
+     O**********       30 50   LAMT     107 '   ,   ,   ,   , 0 '                      CGL014 CLE154
+     O**********       30 51   LAMT     107 '  ,   ,   ,   , 0 . '                     CGL014 CLE154
+     O**********       30 52   LAMT     107 ' ,   ,   ,   , 0 .  '                     CGL014 CLE154
+     O**********       30 53   LAMT     107 '   ,   ,   , 0 .   '                      CGL014 CLE154
+     O**********       30 44            108 '-'                                        CGL014 CLE154
+     O**********       29      ENTT     111                                            237251 CLE154
      O**********      N29N25 50INTA     125 ' ,   ,   ,   , 0 '                       CGL014 BUG8477
      O**********      N29N25 51INTA     125 '   ,   ,   , 0 . '                       CGL014 BUG8477
      O**********      N29N25 52INTA     125 '  ,   ,   , 0 .  '                       CGL014 BUG8477
      O**********      N29N25 53INTA     125 ' ,   ,   , 0 .   '                       CGL014 BUG8477
      O**********      N29N25 42         126 '-'                                       CGL014 BUG8477
-     O                   N25 50INTA     125 ' ,   ,   ,   , 0 '                              BUG8477
-     O                   N25 51INTA     125 '   ,   ,   , 0 . '                              BUG8477
-     O                   N25 52INTA     125 '  ,   ,   , 0 .  '                              BUG8477
-     O                   N25 53INTA     125 ' ,   ,   , 0 .   '                              BUG8477
-     O                   N25 42         126 '-'                                              BUG8477
+     O**********         N25 50INTA     125 ' ,   ,   ,   , 0 '                       BUG8477 CLE154
+     O**********         N25 51INTA     125 '   ,   ,   , 0 . '                       BUG8477 CLE154
+     O**********         N25 52INTA     125 '  ,   ,   , 0 .  '                       BUG8477 CLE154
+     O**********         N25 53INTA     125 ' ,   ,   , 0 .   '                       BUG8477 CLE154
+     O**********         N25 42         126 '-'                                       BUG8477 CLE154
+     O                N30N25 50RPYA     103 ' ,   ,   ,   , 0 '                               CLE154
+     O                N30N25 51RPYA     103 '   ,   ,   , 0 . '                               CLE154
+     O                N30N25 52RPYA     103 '  ,   ,   , 0 .  '                               CLE154
+     O                N30N25 53RPYA     103 ' ,   ,   , 0 .   '                               CLE154
+     O                N30N25 41         104 '-'                                               CLE154
+     O                 30 50   LAMT     103 '   ,   ,   ,   , 0 '                             CLE154
+     O                 30 51   LAMT     103 '  ,   ,   ,   , 0 . '                            CLE154
+     O                 30 52   LAMT     103 ' ,   ,   ,   , 0 .  '                            CLE154
+     O                 30 53   LAMT     103 '   ,   ,   , 0 .   '                             CLE154
+     O                 30 44            104 '-'                                               CLE154
+     O                 29      ENTT     107                                                   CLE154
+     O                   N25 50INTA     121 ' ,   ,   ,   , 0 '                               CLE154
+     O                   N25 51INTA     121 '   ,   ,   , 0 . '                               CLE154
+     O                   N25 52INTA     121 '  ,   ,   , 0 .  '                               CLE154
+     O                   N25 53INTA     121 ' ,   ,   , 0 .   '                               CLE154
+     O                   N25 42         122 '-'                                               CLE154
      O**********       29      ENTT     116                                            CGL014 237251
-0668 O                    38            129 'W/T'
-0669 O                   N39            132 'NA'
+0668 O**********          38            129 'W/T'                                             CLE154
+0669 O**********         N39            132 'NA'                                              CLE154
+     O                    38            125 'W/T'                                             CLE154
+     O                   N39            128 'NA'                                              CLE154
+     O                 58 59   REPT     132                                                   CLE154
 0670 O*
 0671 O**  TRAILER OUTPUT
 0675 O*

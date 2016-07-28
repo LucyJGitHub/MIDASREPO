@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR897086           Date 09Mar15               *
-      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. AR897086           Date 09Mar15               *
+      *                 CLE164             Date 18Aug14               *
       *                 230712             Date 28Nov14               *
       *                 MD028338           Date 28Nov14               *
       *                 MD026266           Date 19Aug14               *
@@ -239,6 +240,8 @@
 0009 F*                                                               *
 0011 F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            *
       *  AR897086 - Amended program to ensure that INTDUE will not be *
       *             zeroised when interest rate (INTRAT) has sign     *
       *             opposite the interest due.                        *
@@ -1439,6 +1442,7 @@
      I                                    P 214 2200FSPRAM                                    CAS005
      I                                    P 221 2270FSCPAM                                    CAS005
      I                                      228 231 CLAS                                      CLE042
+     I                                      232 2320REPT                                      CLE154
 0220 I***********                             1 100 LOTH                  CAC001
      I/COPY WNCPYSRC,LE0400I003
      I***********                             1 107 LOTHP          CAC001 CLE003
@@ -7116,6 +7120,10 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 1980 C** CALLS:      OUTBVH,OUTINH,INTCAL,QNTDUE,WHTAX,EXCPT,CREDIT
 1981 C*
 1982 C           REPAY     BEGSR                           ** REPAY **
+      *                                                                                       CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C                     Z-ADDREPT      REPTYP                                              CLE154
+     C                     END                                                                CLE154
      C*
      C           INTST     IFEQ '1'                                                           236196
      C                     GOTO OUTRER                                                        236196
@@ -7351,6 +7359,15 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
       *                                                                                       CLE028
      C                     ENDIF                                          147438
      C/COPY WNCPYSRC,LE0400CP10                                           S01408
+      *                                                                                       CLE154
+      ** If the feature is on and Repayment type is '2'                                       CLE154
+      ** and INTC #' ' (INTC from Action file,                                                CLE154
+      ** meaning it is an Interest Repayment Schedule)                                        CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTC      ANDNE*BLANKS                                                       CLE154
+     C                     Z-ADDINTDUE    REINT                                               CLE154
+     C                     END                                                                CLE154     
      C*                                                                   CAC001
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C           *IN39     ANDEQ'1'                                       CAC001
@@ -7380,6 +7397,12 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2032 C*
 2033 C   37      INPAID    ADD  INTDUE    INPAID
 2034 C   39      INPAID    ADD  REINT     INPAID
+      *                                                                                       CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTC      ANDNE*BLANKS                                                       CLE154
+     C           INPAID    ADD  REINT     INPAID                                              CLE154
+     C                     END                                                                CLE154
      C*                                                                   CAC001
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C   37      CFPAID    ADD  COFDUE    CFPAID                          CAC001
@@ -7408,6 +7431,12 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2042 C   38                Z-ADD0         OPINTA
 2043 C   39                Z-ADDREINT     OPINTA
 2044 C   37N16             Z-ADDINTDUE    OPINTA
+      *                                                                                       CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTC      ANDNE*BLANKS                                                       CLE154
+     C                     Z-ADDREINT     OPINTA                                              CLE154
+     C                     END                                                                CLE154
 2045 C*
 2046 C   37 16             Z-ADDINTDUE    WHTINT
 2047 C   37 16             EXSR WHTAX
@@ -7428,6 +7457,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C**********           Z-ADD*ZEROS    OPINTA                                      CAS005 BUG8142
      C                     Z-ADD*ZEROS    OPINTN                                             BUG8142
      C                     ENDIF                                                              CAS005
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTC      ANDNE' '                                                           CLE154
+     C                     Z-ADDNTRDUE    OPINTN                                              CLE154
+     C                     END                                                                CLE154     
      C           *IN39     IFEQ *ON                                                           CAS005
      C**********           Z-ADDRENTR     OPINTA                                      CAS005 BUG8142
      C                     Z-ADDRENTR     OPINTN                                             BUG8142
@@ -10125,6 +10159,15 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C                     ENDIF                                                              CLE028
       *                                                                   S01408
      C/COPY WNCPYSRC,LE0400CP20                                           S01408
+      *                                                                                       CLE154
+      ** If the feature is on and Repayment type is '2'                                       CLE154
+      ** and INTA #0 (INTA from Action file,                                                  CLE154
+      ** meaning it is a Interest Repayment Schedule)                                         CLE154
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTA      ANDNE*ZERO                                                         CLE154
+     C                     Z-ADDINTDUE    PDINT                                               CLE154
+     C                     END                                                                CLE154     
       *                                                                   S01408
      C*                                                                   CAC001
      C           BGN0ST    IFEQ 'Y'                                       CAC001
@@ -10149,6 +10192,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2813 C*
 2814 C   37      INPAST    ADD  INTDUE    INPAST
 2815 C   39      INPAST    ADD  PDINT     INPAST
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTA      ANDNE*ZERO                                                         CLE154
+     C           INPAST    ADD  PDINT     INPAST                                              CLE154
+     C                     END                                                                CLE154
      C*                                                                   CAC001
      C           BGN0ST    IFEQ 'Y'                                       CAC001
      C   37      CFPAST    ADD  COFDUE    CFPAST                          CAC001
@@ -10173,6 +10221,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
 2823 C   38                Z-ADD0         OPINTA
 2824 C   39                Z-ADDPDINT     OPINTA
 2825 C   37N16             Z-ADDINTDUE    OPINTA
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTA      ANDNE*ZERO                                                         CLE154
+     C                     Z-ADDPDINT     OPINTA                                              CLE154
+     C                     END                                                                CLE154
 2826 C*
 2827 C   37 16             Z-ADDINTDUE    WHTINT
 2828 C   37 16             EXSR WHTAX
@@ -10190,6 +10243,11 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           *IN38     IFEQ *ON                                                           CAS005
      C                     Z-ADD*ZEROS    OPINTN                                              CAS005
      C                     ENDIF                                                              CAS005
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           *IN38     ANDEQ'Y'                                                           CLE154
+     C           INTA      ANDNE*ZERO                                                         CLE154
+     C                     Z-ADDNTRDUE    OPINTN                                              CLE154
+     C                     END                                                                CLE154     
      C           *IN39     IFEQ *ON                                                           CAS005
      C                     Z-ADDPDNTR     OPINTN                                              CAS005
      C                     ENDIF                                                              CAS005
@@ -13692,6 +13750,29 @@ Rate C           RCDT      COMP 'E'                      77               CLE003
      C           WPNAM     ANDEQ'NEWCOB'                                                      CLE134
      C                     MOVE 'Y'       NEWCOB  1                                           CLE134
      C                     ENDIF                                                              CLE134
+      *                                                                                       CLE154
+      ** Access SAR details to check if CLE154 is installed                                   CLE154
+      *                                                                                       CLE154
+     C                     MOVE 'N'       CLE154  1                                           CLE154
+     C                     CALL 'AOSARDR0'                                                    CLE154
+     C                     PARM *BLANKS   @RTCD                                               CLE154
+     C                     PARM '*VERIFY' @OPTN                                               CLE154
+     C                     PARM 'CLE154'  @SARD                                               CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+      *                                                                                       CLE154
+     C           @RTCD     IFEQ *BLANK                                                        CLE154
+     C                     MOVE 'Y'       CLE154                                              CLE154
+     C                     ELSE                                                               CLE154
+     C           @RTCD     IFNE '*NRF   '                                                     CLE154
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE154
+     C                     MOVEL'CLE154 ' DBKEY                                               CLE154
+     C                     Z-ADD23        DBASE                                               CLE154
+     C                     MOVE *ON       *INU7                                               CLE154
+     C                     MOVE *ON       *INU8                                               CLE154
+     C                     MOVE *ON       *INLR                                               CLE154
+     C                     GOTO INITEN                                                        CLE154
+     C                     ENDIF                                                              CLE154
+     C                     ENDIF                                                              CLE154     
       *                                                                   S01408
      C/COPY WNCPYSRC,LE0400CP21                                           S01408
       *                                                                   S01408

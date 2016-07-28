@@ -16,10 +16,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *  Last Amend No. 256564             Date 17Sep08               *
-      *  Prev Amend No. 246703             Date 28Mar07               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
+      *                 246703             Date 28Mar07               *
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
       *                 CAP086             Date 08Jun05               *
@@ -28,6 +29,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  256564 - Recompile due to PF changes done by fix 256330      *
       *  246703 - ZAINVTRENQ InvFData3 parm as done by 209905         *
       *  CAP086 - Introduce Auto Authorisation to the API's           *

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039304           Date 19Jul16               *
-      *  Prev Amend No. MD039017           Date 26May16               *
+      *  Last Amend No. CLE154             Date 10Aug12               *
+      *  Prev Amend No. MD039304           Date 19Jul16               *      
+      *                 MD039017           Date 26May16               *
       *                 CLE141             Date 08Feb16               *
       *                 AR702532           Date 13Jan15               *
       *                 243608             Date 13Mar15               *
@@ -106,12 +107,13 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD039304 - Prevent a combination of zero spread rate and a   *
-      *             spread indicator equal to percentage.             *
+      *             spread indicator equal to percentage.             *      
       *  MD039017 - Amend generated overridable error message for     *
       *             Rollover Date                                     *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           for LE Transactions                                 *
+      *           for LE Transactions                                 *      
       *  AR702532 - After rejection, there is no WIP record but RSTS  *
       *             is still 'R'. Pass reject action parameter to     *
       *             skip validation during rejection to prevent the   *
@@ -9313,7 +9315,7 @@
      C                   MOVE      'Y'           CRE073                                       CRE073
      C                   ELSE                                                                 CRE073
      C                   MOVE      'N'           CRE073                                       CRE073
-     C                   ENDIF                                                                CRE073
+     C                   ENDIF                                                                CRE073   
                                                                                               CLE141
       ** Determine if CLE141 is installed                                                     CLE141
                                                                                               CLE141

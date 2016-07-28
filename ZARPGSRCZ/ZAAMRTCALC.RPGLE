@@ -18,8 +18,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2005            *
       *                                                               *
-      *  Last Amend No. CDL093             Date 11Apr14               *
-      *  Prev Amend No. CLE148             Date 23Jul12               *
+      *  Last Amend No. CLE154             Date 07Aug12               *
+      *  Prev Amend No. CDL093             Date 11Apr14               *
+      *                 CLE148             Date 23Jul12               *
       *                 262632             Date 10Apr09               *
       *                 262600             Date 19Feb09               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
@@ -43,6 +44,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CDL093 - MM Interest calculation type 9.                     *
       *  CLE148 - Alpha Loan Reference                                *
       *  262632 - Include cash flows happening at beginning of        *

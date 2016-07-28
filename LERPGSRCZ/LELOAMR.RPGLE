@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CLE134             Date 01Aug12               *
+      *  Last Amend No. AR878735           Date 13Dec11               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CSF011             Date 12Sep11               *
@@ -48,6 +49,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR878735 - Field CVMR not properly inserted/updated in       *
+      *             LOAMSDK. Ensure that CVMR will be written in file *
+      *             Pattern fix after TCA091. (Child: AR878736)       *      
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
@@ -514,6 +518,7 @@
      C                   EVAL      FLRONS = CLRECEx                                           CGL029
      C                   EVAL      FLRSTM = RSTM                                              CGL029
      C                   EVAL      FLROBR = OSBR                                              TCA091
+     C                   EVAL      FLCVMR = CVMR                                            AR878735
      C                   EVAL      FLPONS = CLPAYEx                                           CGL029
      C                   EVAL      FLPSTM = PSTM                                              CGL029
      C                   EVAL      FLPOBR = OSBR                                              TCA091

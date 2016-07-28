@@ -14,15 +14,17 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CSF011A            Date 28Nov11               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
       * Midas Plus 1.4 Base ------------------------------------------*
       * Midas Plus 1.3 ----------- Base ------------------------------*
-      *  Prev Amend No. CAP079  *CREATE    Date 01Jul02               *
+      *                 CAP079  *CREATE    Date 01Jul02               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
       *            (Recompile)                                        *
       *  CAP079 - Lending API enhancements - Repayments schedule      *
@@ -239,6 +241,11 @@
      C                   MOVEL     *BLANKS       @VDAT
      C                   MOVEL     *BLANKS       @LSSQ
      C                   END
+      *                                                                                       CLE154
+     C                   MOVE      '0'           *IN90                                        CLE154
+     C                   IF        CLE154 = 'Y'                                               CLE154
+     C                   MOVE      '1'           *IN90                                        CLE154
+     C                   ENDIF                                                                CLE154
       *
       ***  Write message sub-file, details and footer screen
       *
@@ -390,6 +397,18 @@
      C                   MOVEL     '*'           DDPGMQ           10
      C                   MOVEL     '*SAME'       ZAPGRL            5
      C                   MOVEL     'GBLERMSGF'   ZMSGF            10
+      *                                                                                       CLE154
+      ** Check if CLE154 is on                                                                CLE154
+      *                                                                                       CLE154
+     C                   MOVE      'N'           CLE154            1                          CLE154
+     C                   CALLB     'AOSARDR0'                                                 CLE154
+     C                   PARM      *BLANK        @RTCD                                        CLE154
+     C                   PARM      '*VERIFY'     @OPTN                                        CLE154
+     C                   PARM      'CLE154'      @SARD                                        CLE154
+      *                                                                                       CLE154
+     C     @RTCD         IFEQ      *BLANKS                                                    CLE154
+     C                   MOVE      'Y'           CLE154                                       CLE154
+     C                   END                                                                  CLE154
       *
      C                   ENDSR
       *****************************************************************

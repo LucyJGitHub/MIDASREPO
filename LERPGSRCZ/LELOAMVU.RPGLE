@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 11Jun14               *
-      *  Prev Amend No. CSD095             Date 08Apr14               *
+      *  Last Amend No. AR878735           Date 13Dec11               *
+      *  Prev Amend No. CDL094             Date 11Jun14               *
+      *                 CSD095             Date 08Apr14               *
       *                 MD021423E          Date 12Sep13               *
       *                 AR868380           Date 19Jun13               *
       *                 MD020736           Date 05Jun13               *
@@ -90,6 +91,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR878735 - Field CVMR not properly inserted/updated in       *
+      *             LOAMSDK. Ensure that CVMR will be written in file *
+      *             Pattern fix after TCA091. (Child: AR878736)       *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
       *  CSD095 - Allow Deal Sub-Type and Branch for MM and FX SSIs   *
@@ -1209,6 +1213,7 @@
       *                                                                                       TCA091
      C                   IF        (PType <> 'PTSO')                                          TCA091
      C                   EVAL      V_LAOSBR = FLPOBR                                          TCA091
+     C                   EVAL      V_LACVMR = FLCVMR                                        AR878735
       *                                                                                      BUG4486
       ** Populate SETP and OSAC fields in order for the system to post the 'PI' to the       BUG4486
       ** correct a/c during COB.                                                             BUG4486
@@ -1218,6 +1223,7 @@
       *                                                                                      BUG4486
      C                   ELSE                                                                 TCA091
      C                   EVAL      V_LAOSBR = FLROBR                                          TCA091
+     C                   EVAL      V_LACVMR = FLCVMR                                        AR878735
       *                                                                                      BUG4486
      C                   EVAL      V_LASETP= FLRSTM                                          BUG4486
      C                   EVAL      V_LAOSAC= FLRONS                                          BUG4486

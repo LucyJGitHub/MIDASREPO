@@ -10,8 +10,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0009 F*                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. AR806351           Date 19Aug14               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 AR806351           Date 19Aug14               *
       *                 MD023312           Date 24Apr14               *
       *                 MD022510           Date 25Sep13               *
       *                 MD021152           Date 03Jul13               *
@@ -149,6 +150,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement                 *
+      *           (Amendable Payment Type)                            *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  AR806351 - Exclude negative MR's of PDCL on AR786878         *
       *             processing. (Child: AR806352)                     *
@@ -664,6 +667,7 @@
      I              FSGN                            FSGNC                 136244
      I              FPRC                            FPRCC                 136244
      I              STAL                            STALC                                     CLE034
+     I              REPT                            REPTC                                     CLE154
      I/COPY WNCPYSRC,LE0370I001
 0139 I********NS* 03   1 CD   8 CA                                        S01117
 0140 I*******OR** 03   1 CR   8 CA                                        S01117
@@ -2254,6 +2258,10 @@
      C                     SETOF                     88                                       246490
      C                     TESTN          FTOX           88                                   246490
      C   88                Z-ADD*ZEROS    FTOT                                                246490
+     C           CLE154    IFEQ 'Y'                                                           CLE154
+     C           REPT      ANDEQ*ZERO                                                         CLE154
+     C                     MOVE REPTC     REPT                                                CLE154
+     C                     END                                                                CLE154
       *                                                                                       246490
 0839 C           AMTP      COMP 'SA'                     12
 0840 C           AMTP      COMP 'PI'                     13
@@ -3445,6 +3453,11 @@
      C           PRAM      ANDLE0                                         127671
      C           REPT      OREQ 2                                         127671
      C           PRAM      ANDLE0                                         127671
+     C           CLE154    ANDEQ'Y'                                                           CLE154
+     C           INTA      ANDLE0                                                             CLE154
+     C           REPT      OREQ 2                                                             CLE154
+     C           PRAM      ANDLE0                                                             CLE154
+     C           CLE154    ANDEQ'N'                                                           CLE154     
      C           REPT      OREQ 3                                         127671
      C           TAMT      ANDEQ0                                         127671
      C                     SETOF                     75                   127671
@@ -3466,7 +3479,17 @@
      C                     ENDIF                                          CLE007
       *                                                                   157556
      C                     ELSE                                           157556
+     C           CLE154    IFEQ 'N'                                                           CLE154
      C           GDPR      ADD  VDAT      WVDAT                           157556
+     C                     ELSE                                                               CLE154
+     C           INTC      IFEQ *BLANKS                                                       CLE154
+      ** Repayment schedule for Principal                                                     CLE154
+     C           GDPR      ADD  VDAT      WVDAT                                               CLE154
+     C                     ELSE                                                               CLE154
+      ** Repayment schedule for Interest                                                      CLE154
+     C           GDIN      ADD  VDAT      WVDAT                                               CLE154
+     C                     END                                                                CLE154
+     C                     END                                                                CLE154     
      C                     ENDIF                                          157556
       *                                                                   157556
      C           WVDAT     IFGT ECD                                       CLE007
@@ -4885,6 +4908,33 @@
      C                     ENDIF                                                              CAS016
       *                                                                                       CAS016
      C                     ENDIF                                                              CAS016
+      ** Check if CLE154 is enabled.                                                          CLE154
+      *                                                                                       CLE154
+     C                     CALL 'AOSARDR0'                                                    CLE154
+     C                     PARM *BLANKS   PRTCD   7                                           CLE154
+     C                     PARM '*VERIFY' POPTN   7                                           CLE154
+     C                     PARM 'CLE154'  PSARD   6                                           CLE154
+     C           SCSARD    PARM SCSARD    DSFDY                                               CLE154
+      *                                                                                       CLE154
+     C                     MOVE 'N'       CLE154  1                                           CLE154
+     C           PRTCD     IFEQ *BLANKS                                                       CLE154
+     C                     MOVE 'Y'       CLE154                                              CLE154
+     C                     ELSE                                                               CLE154
+      *                                                                                       CLE154
+     C           PRTCD     IFNE '*NRF   '                                                     CLE154
+     C                     MOVE *ON       *INU7                                               CLE154
+     C                     MOVE *ON       *INU8                                               CLE154
+     C                     MOVE *ON       *INLR                                               CLE154
+     C                     MOVE *ON       *IN99                                               CLE154
+     C                     MOVEL'SCSARDPD'DBFILE                                              CLE154
+     C                     MOVELPSARD     DBKEY                                               CLE154
+     C                     Z-ADD103       DBASE                                               CLE154
+     C                     EXSR *PSSR                                                         CLE154
+     C                     GOTO FIREND                                                        CLE154
+     C                     ENDIF                                                              CLE154
+      *                                                                                       CLE154
+     C                     ENDIF                                                              CLE154
+      *                                                                                       CLE154
       *                                                                                       CAS016
      C/COPY WNCPYSRC,LEH01419
 1710 C           FIR1      TAG                             ** FIR1 TAG **

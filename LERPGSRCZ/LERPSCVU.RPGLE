@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CDL094             Date 01Sep14               *
-      *  Prev Amend No. MD025105B          Date 16Apr14               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. CDL094             Date 01Sep14               *
+      *                 MD025105B          Date 16Apr14               *
       *                 CSD095             Date 08Apr14               *
       *                 MD021356           Date 24Jul13               *
       *                 AR868380           Date 11Jun13               *
@@ -59,6 +60,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  CDL094 - Enhance Receive Settlement Instructions             *
       *           (Recompile)                                         *
       *  MD025105B - API Reverse of RPSC returns error for DDACTN     *

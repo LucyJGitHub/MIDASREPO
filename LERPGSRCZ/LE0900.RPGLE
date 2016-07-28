@@ -12,8 +12,9 @@
 0007 F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
 0009 F*                                                               *
-      *  Last Amend No. MD024133           Date 30Apr14               *
-      *  Prev Amend No. MD023534           Date 30Apr14               *
+      *  Last Amend No. CLE154             Date 07Aug12               *
+      *  Prev Amend No. MD024133           Date 30Apr14               *
+      *                 MD023534           Date 30Apr14               *
       *                 MD023031           Date 22Apr14               *
       *                 MD024318           Date 13Jan14               *
       *                 CLE137             Date 06Aug12               *
@@ -71,6 +72,7 @@
 0009 F*                                                               *
 0009 F*---------------------------------------------------------------*
 0009 F*                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD024133 - LEC06A failed due to FOOB in BoM CoB              *
       *  MD023534 - LEMAT is access with previous loan number avoiding*
       *             drop to occur and overwrite RECI so no loan are   *

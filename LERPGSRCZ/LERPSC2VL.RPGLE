@@ -11,10 +11,11 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039260           Date 07Jun16               *
-      *  Prev Ament No. MD039016           Date 26May16               *
+      *  Last Amend No. CLE154             Date 02Aug12               *
+      *  Prev Amend No. MD039260           Date 07Jun16               *
+      *                 MD039016           Date 26May16               *
       *                 CLE141A            Date 28Apr16               *
-      *                 CLE141             Date 08Feb16               *
+      *                 CLE141             Date 08Feb16               *      
       *                 CLE134             Date 01Aug12               *
       *                 CLE148             Date 23Jul12               *
       *                 261070             Date 16Jul09               *
@@ -34,6 +35,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD039260 - No error message related to Local currency if     *
       *             value date falls on holiday in Local currency     *
       *             and settlement method is 14                       *
@@ -41,7 +43,7 @@
       *             various Lending APIs                              *
       *  CLE141A - CLE141 Change Control 1                            *
       *  CLE141 - Currency and Location Business Day Convention       *
-      *           for LE Transactions                                 *
+      *           for LE Transactions                                 *      
       *  CLE134 - Past Due Call Loan Processing (Recompile)           *
       *  CLE148 - Alpha Loan Reference                                *
       *  261070 - Warning message not shown when value date is on a   *

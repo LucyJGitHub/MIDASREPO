@@ -9,6 +9,7 @@
 /*                                                                   */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                   */
+/*       Last Amend No. MD039072           Date 25Jul16              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
@@ -16,10 +17,13 @@
 /* Midas Release 4 --------------- Base -----------------------------*/
 /* Midas DBA 3.02 ---------------------------------------------------*/
 /* Midas DBA 3.00 ---------------- Base -----------------------------*/
-/*       LAST AMEND NO. S01413 *CREATE          DATE 13APR93         */
+/*       Prev Amend No. S01413 *Create     Date 13Apr93              */
 /*                                                                   */
 /*********************************************************************/
 /*                                                                   */
+/*       MD039072 - GL3572AU is empty and no GL03572P1 report when   */
+/*                  called from GLC3571. Change overrides to ACCBA   */
+/*                  because SADETA is always empty. Filter in GL3572.*/
 /*       S01413 - Retail 3 Incorporation                             */
 /*                                                                   */
 /*********************************************************************/
@@ -40,7 +44,8 @@
              SNDPGMMSG  MSG('GLC3571 - Account Details Audit List') +
                         TOMSGQ(MRUNQ)
              CHGJOB     SWS(10000000)
-             OVRDBF     FILE(SADET) TOFILE(SADETA) SEQONLY(*YES 100)
+/**********  OVRDBF     FILE(SADET) TOFILE(SADETA) SEQONLY(*YES 100)                 */ /*MD039072*/
+             OVRDBF     FILE(SADET) TOFILE(ACCBA) SEQONLY(*YES 100)                     /*MD039072*/
 /*/COPY WNCPYSRC,GLC3571002                                          */
 /**/
 /*  Run report */

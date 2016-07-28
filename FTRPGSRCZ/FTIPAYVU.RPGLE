@@ -33,9 +33,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD038991           Date 25May16               *
-      *  Prev Amend No. MD037938           Date 25May16               *
-      *                 MD034973           Date 16Jul15               *
+      *  Last Amend No. MD036159           Date 15Jul16               *
+      *  Prev Amend No. MD034973           Date 16Jul15               *
       *                 MD032077           Date 26Jan15               *
       *                 MD030906           Date 13Nov14               *
       *                 CFT157             Date 29Aug14               *
@@ -94,10 +93,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD038991 - Insertion of IPAY: SWIFT Reference prevents user  *
-      *             from cancelling the transaction                   *
-      *  MD037938 - Unable to exit IPAY maintenance because of wrong  *
-      *             action code being validated.                      *
+      *  MD036159 - Systems allows payment with same FRNT.            *
+      *             Pattern fix AR971184.                             *
+      *           - Applied for MD-39705.                             *
       *  MD034973 - FT Payment Charges defaulting error               *
       *  MD032077 - Blank Front Office ID after authorisation. Do not *
       *             override IPFRNT when APFOTRANID is blank.         *
@@ -1185,6 +1183,30 @@
       *****************************************************************
      C     ValidateAc    BEGSR
 
+      *                                                                                     MD036159
+      * Set retrieve mode to '*FRONT' (Access using Front Office ID)                        MD036159
+      *  if insert                                                                          MD036159
+      *  if not insert and Midas transaction ID is not present                              MD036159
+      * Otherwise                                                                           MD036159
+      *  Set retrieve mode to blank  (Access using Midas transaction ID).                   MD036159
+      *                                                                                     MD036159
+     C     DDACTN        IFEQ      'I'                                                      MD036159
+     C                   MOVEL     '*FRONT'      PMode                                      MD036159
+     C                   ELSE                                                               MD036159
+     C     DDPREF        IFEQ      *BLANK                                                   MD036159
+     C                   MOVEL     '*FRONT'      PMode                                      MD036159
+     C                   ELSE                                                               MD036159
+     C                   MOVEL     '      '      PMode                                      MD036159
+     C                   ENDIF                                                              MD036159
+     C                   ENDIF                                                              MD036159
+                                                                                            MD036159
+     C                   IF        APFOTRANID <> *BLANKS AND                                MD036159
+     C                             DDACTN  = 'I'                                            MD036159
+     C                   EVAL      PMode = '*FRONT'                                         MD036159
+     C                   ELSE                                                               MD036159
+     C                   MOVEL     '      '      PMode                                      MD036159
+     C                   ENDIF                                                              MD036159
+                                                                                            MD036159
       ** Validate action code versus transaction IDs supplied
       ** The Transaction in file format from the FT database is retrieved
       ** as well.
@@ -1197,7 +1219,8 @@
       ** Return Code
      C                   PARM      *BLANKS       RetCodeOut
 
-     C                   PARM      *BLANKS       PMode
+     C**********         PARM      *BLANKS       PMode                                      MD036159
+     C                   PARM                    PMode                                      MD036159
 
       ** Response Mode (from caller: A=Asynchronous, S=Synchronous)
      C                   PARM                    PResponse

@@ -19,8 +19,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. CLE154             Date 02Aug12               *
-      *  Prev Amend No. MD000091           Date 10May13               *
+      *  Last Amend No. AR1071579          Date 29Jul16               *
+      *  Prev Amend No. CLE154             Date 02Aug12               *
+      *                 MD000091           Date 10May13               *
       *                 CSF011A            Date 28Nov11               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
@@ -32,6 +33,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  AR1071579 - LEM - Reverse All not working fully (CLE154)     *
       *  CLE154 - Loan Repayment Schedule Enhancement (Recompile)     *
       *  MD000091 - Event Codes Substitution                          *
       *  CSF011A - CCR015: Display Order in Confirmation Pages        *
@@ -247,6 +249,7 @@
       * Amount                                  *
       *-----------------------------------------*
       *
+     C     DDACTN        IFNE      'R'                                                   AR1071579
       * Call ZCMPAMTS to compare the two screen amounts                                     CAP084
                                                                                             CAP084
      C                   CALLB     'ZCMPAMTS'                                               CAP084
@@ -264,6 +267,7 @@
      C                   EVAL      MsgDtaArr(Idx) = LenStr +%TRIM(@DDSAMT)                  MD000091
      C                   EVAL      DDSAMTok        = 'N'
      C                   END
+     C                   ENDIF                                                           AR1071579
       *
      C                   ENDSR
       *****************************************************************

@@ -12,17 +12,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2008            *
       *                                                               *
-      *  Last Amend No. MD039359           Date 27Jul16               *
-      *  Prev Amend No. AR685870           Date 10Dec10               *
+      *  Last Amend No. AR685870           Date 10Dec10               *
       * Bank Fusion Midas 1.4 Base -----------------------------------*
       * Midas Plus 1.4 Base 04 ---------------------------------------*
-      *                 256564             Date 17Sep08               *
+      *  Prev Amend No. 256564             Date 17Sep08               *
       *                 BUG16890 *CREATE   Date 07Apr08               *
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039359 - Abnormal termination is not reported in           *
-      *             Switchable Feature initialization screen.         *
       *  AR685870 - Introduce sequence number field.                  *
 /*    *             (Child: AR685871)                                 *
       *  256564 - Recompile due to PF changes done by fix 256330      *
@@ -57,10 +54,6 @@
       * MAIN PROCEDURE                                                *
       *****************************************************************
       *
-     C     *ENTRY        PLIST                                                              MD039359
-     C                   PARM                    RetCode           7                        MD039359
-     C                   PARM                    Mode              1                        MD039359
-                                                                                            MD039359
       ** Get zone details for UDF Extension table update
      C                   CALL      'GOGETZONE'
      C                   PARM      *BLANKS       I#RTCD            7
@@ -230,7 +223,6 @@
      C                   EVAL      *INU8 = *ON
      C                   DUMP
      C                   EVAL      *INLR = *ON
-     C                   EVAL      RetCode = '*ERROR'                                       MD039359
      C                   RETURN
       *
      C                   ENDSR

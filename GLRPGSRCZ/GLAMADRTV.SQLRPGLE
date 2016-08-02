@@ -21,9 +21,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD039559           Date 27Jul16               *
-      *  Prev Amend No. CRE101             Date 27Aug14               *
-      *                 CGL165             Date 17Feb15               *
+      *  Last Amend No. CRE101             Date 27Aug14               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
       *                 226364             Date 19Aug14               *
       *                 MD024951           Date 19Aug14               *
       *                 MD025198           Date 11May14               *
@@ -81,10 +80,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD039559 - account opening failed =>Data lost after clicking *
-      *             of Next : Currency, Account code, Account Seq,    *
-      *             Retail Number                                     *
-      *           - Applied partial fix 232076 which sets WCNUM value *
       *  CRE101 - Interim Interest Statements on a Frequency          *
       *           Pgm type changed to be SQLRPGLE                     *
       *           Added hooks:  CRE101_008, CRE101_014, CRE101_019    *
@@ -1431,8 +1426,7 @@
       *                                                                                       194431
       ** Access Customer details of Default Account                                           194431
       *                                                                                       194431
-     C**********         MOVE      A1CNUM        WCNUM             6                 194431 MD039559
-     C                   MOVE      DDCUSN        WCNUM             6                        MD039559
+     C                   MOVE      A1CNUM        WCNUM             6                          194431
      C                   CALLB     'AOCUSTR0'                                                 194431
      C                   PARM      *BLANKS       @RTCD                                        194431
      C                   PARM      '*KEY   '     @OPTN                                        194431

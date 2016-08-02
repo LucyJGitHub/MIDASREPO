@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. MD030958           Date 17Jul15               *
+      *  Last Amend No. MD039405           Date 11Aug16               * 
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 MD030958           Date 17Jul15               *
       *                 CER070             Date 29Oct14               *
       *                 CSW214             Date 29Oct14               *
       *                 MD030956           Date 09Oct14               *
@@ -127,6 +128,8 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039405 - Remove the Swift ID of the customer that will be  *
+      *             deleted.                                          *
       *  CER071 - BAIS - Legal Form field                             *
       *  MD030958 - Condition SDCUSTXC updates on CGL132 feature.     *
       *  CER070 - BuBa Reporting / BAIS V.1.16.0                      *
@@ -4686,6 +4689,10 @@
      C                   ENDIF                                                                CSW207
      C                   ENDIF                                                                CSW207
       *                                                                                       CSW207
+      ** Remove the customer's SWIFT ID.                                                    MD039405
+      *                                                                                     MD039405
+     C                   MOVE      *BLANKS       BBCSID                                     MD039405
+      *                                                                                     MD039405
       ** UPDATE RECORD
 
      C                   UPDATE    @BBREBG

@@ -14,8 +14,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CLE164             Date 18Aug14               *
-      *  Prev Amend No. MD021528           Date 01Aug13               *
+      *  Last Amend No. CLE068             Date 02Aug16               *      
+      *  Prev Amend No. CLE164             Date 18Aug14               *
+      *                 MD021528           Date 01Aug13               *
       *                 CGP017             Date 06Aug12               *
       *                 263108             Date 23Nov12               *
       *                 CLE134             Date 01Aug12               *
@@ -37,6 +38,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  CLE068 - Loan Event Modeller                                 *
       *  CLE164 - CLE134 Enhancement F (Repayment Methodology)        *
       *  MD021528 - Missing facility after authorization (Recompile)  *
       *  CGP017 - Global Layer - GOC0100 Task Split (Recompile)       *
@@ -169,6 +171,7 @@
      C     PFLNAME       CASEQ     'CLONCLQD'    GLOB_CLONCLQD                                CER049
      C     PFLNAME       CASEQ     'CLOANZTD'    GLOB_CLOANZTD                                CLE164
      C     PFLNAME       CASEQ     'LEFEEZTD'    GLOB_LEFEEZTD                                CLE164
+     C     PFLNAME       CASEQ     'LELEMRWPD'   GLOB_LELEMRWPD                               CLE068
      C                   ENDCS
      C*****CLE025        IFEQ      'Y'                                                CLE025 BUG3286
      C*****PFLNAME       ANDEQ     'LEFCLTQD'                                         CLE025 BUG3286
@@ -364,6 +367,14 @@
       /COPY GPCPYSRCG,GPLOAMSDK
      C                   ENDSR
       *****************************************************************
+      /SPACE 5                                                                                CLE068
+      *****************************************************************                       CLE068
+      * Global Updates - Loan Event Modeller                                                  CLE068
+      *****************************************************************                       CLE068
+     C     GLOB_LELEMRWPDBEGSR                                                                CLE068
+      /COPY GPCPYSRCG,GPLELEMRPD                                                              CLE068
+     C                   ENDSR                                                                CLE068
+      *****************************************************************                       CLE068
       /SPACE 5
       *****************************************************************
       * Determine Updates

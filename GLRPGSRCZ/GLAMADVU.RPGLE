@@ -34,9 +34,8 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. MD040146           Date 11Aug16               *
-      *  Prev Amend No. LLN022A            Date 03Jun15               *
-      *                 CRE101             Date 27Aug14               *
+      *  Last Amend No. LLN022A            Date 03Jun15               *
+      *  Prev Amend No. CRE101             Date 27Aug14               *
       *                 CGL165             Date 17Feb15               *
       *                 MD028970           Date 25Nov14               *
       *                 MD026979           Date 09Jun14               *
@@ -127,8 +126,6 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
-      *  MD040146 - Account maintenance - Account name different from *
-      *             Customer report name                              *
       *  LLN022A - BOE Upgrade to MidasPlus - incorporate code from   *
       *            /COPY members and add switchability.               *
       *  CRE101 - Interim Interest Statements on a Frequency          *
@@ -2874,13 +2871,6 @@
      C                   MOVE      WDACTN        @DDACTN                                      BUG553
       ** Move the defaults to the screen fields.                                              BUG553
      C                   MOVEL     CurAcMast     AccnInMast                                   BUG553
-     C                   CALLB     'AOCUSTR1'                                               MD040146
-     C                   PARM      '*DBERR '     @RTCD                                      MD040146
-     C                   PARM      '*KEY   '     @OPTN                                      MD040146
-     C                   PARM      DDCUSN        @CNUM                                      MD040146
-     C                   PARM      *BLANKS       @CNST                                      MD040146
-     C     SDCUST        PARM      SDCUST        DSLDY                                      MD040146
-     C                   EVAL      DDANAM = BBCRNM                                          MD040146
      C                   MOVEL     CurAcDebi     AccnInDebi                                   BUG553
      C                   MOVEL     CurAcCred     AccnInCred                                   BUG553
      C                   MOVEL     CurAcComm     AccnInComm                                   BUG553

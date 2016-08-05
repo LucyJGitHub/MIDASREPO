@@ -9,8 +9,9 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. CIR018             Date 12Aug14               *
-      *  Prev Amend No. CIR017             Date 10Apr14               *
+      *  Last Amend No. MD039107           Date 01Aug16               *
+      *  Prev Amend No. CIR018             Date 12Aug14               *
+      *                 CIR017             Date 10Apr14               *
       *                 AR996895           Date 25Nov12               *
       *                 CLE064             Date 06Dec10               *
       *                 263666             Date 01Feb10               *
@@ -113,6 +114,8 @@
      F*                                                               *
      F*---------------------------------------------------------------*
       *                                                               *
+      *  MD039107 - Make sure that there is no negative amount in the *
+      *             projection.                                       *
       *  CIR018 - Daily Rate Change Frequency on SIRS                 *
       *  CIR017 - SIRS Business Day Conventions for both legs         *
       *  AR996895 - Incorrect acrrual interest calculation            *
@@ -1562,11 +1565,13 @@
      C           ECOD      OREQ 'N2'                                      CEU003
      C                     EXSR EVNTEU                                    CEU003
      C                     ELSE                                           CEU003
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  CEU003
      C/COPY WNCPYSRC,DL0401C062
      C                     ENDIF                                          CEU003
      C                     ELSE                                           CEU003
      C/COPY WNCPYSRC,DL0401C014
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF
      C/COPY WNCPYSRC,DL0401C063
      C                     ENDIF                                          CEU003
@@ -1618,6 +1623,7 @@
       **  Write record to EVENT file, increment count & hash totals       S01117
      C                     MOVE RECID     RECI                            S01117
      C/COPY WNCPYSRC,DL0401C096
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  S01117
      C/COPY WNCPYSRC,DL0401C064
       *                                                                   S01117
@@ -1719,6 +1725,7 @@
      C                     ELSE                                           S01117
      C                     MOVE 'O'       INOI                            S01117
      C                     END                                            S01117
+     C                     EXSR SRNEG                                                       MD039107
       *                                                                   S01117
       ** Write record to EVENT file, increment count & hash totals        S01117
      C                     MOVE RECID     RECI                            S01117
@@ -9131,6 +9138,7 @@
      C*                                                                   152870
      C                     Z-ADDA6SSNB    ECSS                            152870
      C*                                                                   CEU003
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  CEU003
      C/COPY WNCPYSRC,DL0401C066
      C*                                                                   CEU003
@@ -9191,6 +9199,7 @@
      C                     MOVE *BLANKS   TSEN                            CEU003
      C                     MOVE *BLANKS   WACNT            OSAC1/2        CEU003
      C*                                                                   CEU003
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  CEU003
      C/COPY WNCPYSRC,DL0401C067
      C*                                                                   CEU003
@@ -9283,6 +9292,7 @@
      C                     MOVE OTHC      SVOTHC                          134625
      C                     MOVE @SETCY    OTHC                            134625
      C*                                                                   CEU003
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  CEU003
      C/COPY WNCPYSRC,DL0401C068
      C* Keep the count and hash totals for EVNTXED file                   CEU003
@@ -9442,6 +9452,7 @@
      C*                                                                   CEU003
      C                     MOVE *BLANK    SIAC                            CEU003
      C*                                                                   CEU003
+     C                     EXSR SRNEG                                                       MD039107
      C                     WRITEEVNTXEDF                                  CEU003
      C/COPY WNCPYSRC,DL0401C069
      C*                                                                   CEU003
@@ -10361,6 +10372,25 @@
       *                                                                                       CIR007
      C                     ENDSR                                                              CIR007
       *****************************************************************                       CIR007
+      /EJECT                                                                                MD039107
+      *****************************************************************                     MD039107
+      *                                                               *                     MD039107
+      *  SRNEG - Process negative amount                              *                     MD039107
+      *                                                               *                     MD039107
+      *****************************************************************                     MD039107
+     C           SRNEG     BEGSR                                                            MD039107
+      *                                                                                     MD039107
+     C           EAMT      IFLT 0                                                           MD039107
+     C                     Z-SUBEAMT      EAMT                                              MD039107
+     C           INOI      IFEQ 'O'                                                         MD039107
+     C                     MOVE 'I'       INOI                                              MD039107
+     C                     ELSE                                                             MD039107
+     C                     MOVE 'O'       INOI                                              MD039107
+     C                     ENDIF                                                            MD039107
+     C                     ENDIF                                                            MD039107
+      *                                                                                     MD039107
+     C                     ENDSR                                                            MD039107
+      *****************************************************************                     MD039107
       *
      C/COPY WNCPYSRC,DL0401C055
      C/COPY ZSRSRC,ZINTDYZ2                                               066550

@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. AR924563           Date 05Nov14               *
-      *  Prev Amend No. CFT120             Date 28Sep12               *
+      *  Last Amend No. MD039573           Date 22Jul16               *
+      *  Prev Amend No. AR924563           Date 05Nov14               *
+      *                 CFT120             Date 28Sep12               *
       *                 CSF011A            Date 28Nov11               *
       *                 CRE067             Date 05Oct10               *
       *                 CSD089             Date 07Oct10               *
@@ -41,6 +42,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039573 - Manual construct of corr bank chgs for HKD        *
       *  AR924563 - '-' should not be present in 1st character of     *
       *             outgoing payments fields 50, 57D, 59, 70 and 72.  *
       *             (SFTADDRCLE changed). Also, Details of payment    *
@@ -285,10 +287,14 @@
      C                             AND CTYP = 'B'                                           BUG26775
      C                             AND SSTTP = '08'                                         AR924563
       * Send error to screen
-     C                   Move      'N'           OKDtp1
-     C                   Add       1             Idx
-     C                   Movel     'SDTP1'       FldNamXAr(Idx)
-     C                   Movel     'MMA1060'     MsgIdXAr(Idx)
+     C**********         Move      'N'           OKDtp1                                     MD039573
+     C**********         Add       1             Idx                                        MD039573
+     C**********         Movel     'SDTP1'       FldNamXAr(Idx)                             MD039573
+     C**********         Movel     'MMA1060'     MsgIdXAr(Idx)                              MD039573
+     C                   Move      'W'           OKDtp1                                     MD039573
+     C                   Add       1             wIx                                        MD039573
+     C                   Movel     'SDTP1'       wFldNmXAr(wIx)                             MD039573
+     C                   Movel     'MMA1060'     wMsgIDXAr(WIx)                             MD039573
      C                   End
  
       * No errors

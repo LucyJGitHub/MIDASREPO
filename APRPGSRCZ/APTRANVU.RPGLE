@@ -13,8 +13,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. CER071             Date 01Aug16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD038485           Date 10Aug16               *
+      *  Prev Amend No. CER071             Date 01Aug16               *
+      *                 CLE141             Date 08Feb16               *
       *                 AR316373           Date 03Jun15               *
       *                 LLN022             Date 03Jun15               *
       *                 AR702532           Date 13Jan15               *
@@ -198,6 +199,7 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD038485 - Correct mapping of Stamp Tax fields (CER049).     *
       *  CER071 - BAIS - Legal Form field (Recompile)                 *
       *  CLE141 - Currency and Location Business Day Convention for   *
       *           Lending Transactions                                *
@@ -1257,6 +1259,7 @@ RGC  D RPIF4LN         S              4  0                                      
       ** Start of Buffer2                                                                     CSF011
                                                                                               CSF011
      C                   ADD       1467          Bfp2                                         CSF011
+     C                   ADD       1681          Bfp2                                       MD038485
       *                                                                                       CER043
      C*****LDSTQLn       SUBST     BUffer:Bfp    TransQ                             CER049 AR819540A
      C**********         ADD       LDSTQLn       Bfp                                CER049 AR819540A

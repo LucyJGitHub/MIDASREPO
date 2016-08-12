@@ -19,6 +19,7 @@
      F*                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
      F*                                                               *
+     F*  Last Amend No. MD039544           Date 11Aug16               *
       *  Last Amend No. CSD090             Date 06Dec10               *
       *  Prev Amend No. CER059             Date 19Jul10               *
       *                 BUG22356           Date 22Jan09               *
@@ -55,6 +56,9 @@
      F*                                                               *
      F*---------------------------------------------------------------*
      F*                                                               *
+      *  MD039544 - Introduce System Value 'CMAddrFromAddCustInf' to  *
+      *             extract address from 'Additional Customer         *
+      *             Information' tab.                                 *
       *  CSD090 - Customer Segmentation and Overdraft                 *
       *  CER059 - German Feature Upgrade to Delhi                     *
       *  BUG22356 - Customer address line 5 is missing                *
@@ -161,6 +165,9 @@
       *                                                                                       CSD090
      F* All Purposed Field File                                                               CCG018
      F*-------------------------------------------------------------------                    CCG018
+     FSDACUSL0IF  E           K        DISK                                                 MD039544
+     F                                              KINFSR SRFILE                           MD039544
+     F* Additional Customer details                                                         MD039544
      F*-------------------------------------------------------------------
      E/EJECT
      E*-------------------------------------------------------------------
@@ -206,6 +213,7 @@
       *                                                                                       CER038
      I              'Country'             C         WSVL1                                     CER038
      I              'CorrLine5Details'    C         WSVLK1                                    CER038
+     I              'CMAddrFromAddCustInf'C         WSVLK2                                  MD039544
       *                                                                                       CER038
       ** Data Structure                                                                       CER038
       *                                                                                       CER038
@@ -410,6 +418,8 @@
       *                                                                                       CER038
      C                     MOVELWSVLK1    PSVLK1                                              CER038
      C                     MOVEL*BLANKS   WCORR5                                              CER038
+     C                     MOVELWSVLK2    PSVLK2                                            MD039544
+     C                     MOVEL*BLANKS   ADDTNL                                            MD039544
       *                                                                                       CER038
      C                     CALL 'AOSVALR0'                                                    CER038
      C                     PARM           PRTCD   7                                           CER038
@@ -436,6 +446,7 @@
       *                                                                                       CER038
      C           PRTCD     IFEQ *BLANKS                                                       CER038
      C                     MOVELPSVL1     WCORR5  7                                           CER038
+     C                     MOVELPSVL2     ADDTNL  1                                         MD039544
      C                     ENDIF                                                              CER038
       *                                                                                       CER038
      C                     OPEN CGRDTAL1
@@ -1152,6 +1163,17 @@
      C*
      C           *IN92     IFEQ *OFF
      C           CDCUST    ANDNE*BLANKS                                   086244
+      ** If CMAddrFromAddCustInf is 'Y' look in SDACUSL0 first                              MD039544
+     C           ADDTNL    IFEQ 'Y'                                                         MD039544
+     C           CDCUST    CHAINSDACUSL0             93                                     MD039544
+     C           *IN93     IFEQ *OFF                                                        MD039544
+     C                     MOVELE5CNA1    ##ADD1                                            MD039544
+     C                     MOVELE5CNA2    ##ADD2                                            MD039544
+     C                     MOVELE5CNA3    ##ADD3                                            MD039544
+     C                     MOVELE5CNA4    ##ADD4                                            MD039544
+     C                     ENDIF                                                            MD039544
+     C                     ENDIF                                                            MD039544
+      *                                                                                     MD039544
      C           CDCUST    CHAINSDCUSTL0             93
      C           *IN93     IFEQ *OFF
      C* Name:

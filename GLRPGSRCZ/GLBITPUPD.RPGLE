@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2001            *
       *                                                               *
-      *  Last Amend No. MD033630A          Date 25May16               *
-      *  Prev Amend No. MD036967           Date 25May16               *
+      *  Last Amend No. MD039859           Date 11Aug16               *
+      *  Prev Amend No. MD033630A          Date 25May16               *
+      *                 MD036967           Date 25May16               *
       *                 MD035554           Date 25May16               *
       *                 MD037061           Date 19Jan16               *
       *                 MD033630           Date 23Jun15               *
@@ -79,6 +80,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039859 - Batch header is not updated when batch item is    *
+      *             through API without batch number, but Front       *
+      *             Office Id. Pattern AR1092517 done for BITH.       *
       *  MD033630A - Corrected discrepancy in MD033630 codes.         *
       *  MD036967 - Conflict between CRE023 and CAP207. Update Credit *
       *            only after Accept when both features are ON.       *
@@ -579,7 +583,8 @@
       ** Validate Front Office Id; it must not be blank.
       *
      C     B2FRNT        IFEQ      *BLANKS
-     C     CGL125        ANDEQ     'N'                                                        CSC054
+     C*****CGL125        ANDEQ     'N'                                               CSC054 MD039859
+     C     CAP209        ANDEQ     'N'                                                      MD039859
      C                   MOVEL     B2FRNT        DBKEY
      C                   MOVEL(P)  'GLVBITPPD'   DBFILE
      C                   Z-ADD     001           DBASE
@@ -703,7 +708,8 @@
       ** transaction even if it originated from SIN module.                                   CAP084
                                                                                               CAP084
      C                   IF        CSC011 = 'Y'                                               CAP084
-     C                             AND CGL125 = 'N'                                           CSC054
+     C**********                   AND CGL125 = 'N'                                  CSC054 MD039859
+     C                             AND CAP209 = 'N'                                         MD039859
      C                   IF        BTFRNT = *BLANKS                                           CAP084
      C                   EVAL      BTFRNT = 'MD' + BTBTNB                                     CAP084
      C                   ENDIF                                                                CAP084
@@ -856,7 +862,8 @@
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011
      C                   IF        CSC011 = 'Y'                                               CSC011
-     C                             AND CGL125 = 'N'                                           CSC054
+     C*********                    AND CGL125 = 'N'                                  CSC054 MD039859
+     C                             AND CAP209 = 'N'                                         MD039859
      C                   IF        BTFRNT = *BLANKS                                           CSC011
      C                   EVAL      BTFRNT = 'MD' + BTBTNB                                     CSC011
      C                   ENDIF                                                                CSC011
@@ -1326,7 +1333,8 @@ E1   C                   ENDIF                                                  
       ** transaction even if it originated from SIN module.                                   CSC011
                                                                                               CSC011
      C                   IF        CSC011 = 'Y'                                               CSC011
-     C                             AND CGL125 = 'N'                                           CSC054
+     C**********                   AND CGL125 = 'N'                                  CSC054 MD039859
+     C                             AND CAP209 = 'N'                                         MD039859
      C                   IF        BRFRNT = *BLANKS                                           CSC011
      C                   EVAL      BRFRNT = 'MD' + BRBTNB                                     CSC011
      C                   ENDIF                                                                CSC011
@@ -1518,7 +1526,8 @@ E1   C                   ENDIF                                                  
      C     JAVAUSER      IFEQ      'Y'                                                        CAP084
      C     BITUPD        ANDEQ     'Y'                                                        CAP084
      C     JAVAUSER      OREQ      'Y'                                                    AR1027164A
-     C     CGL125        ANDEQ     'Y'                                                    AR1027164A
+     C*****CGL125        ANDEQ     'Y'                                           AR1027164A MD039859
+     C     CAP209        ANDEQ     'Y'                                                      MD039859
      C     BRFRNT        ANDNE     *BLANKS                                                AR1027164A
      C     BRHINI        ANDLE     BRHINC                                                 AR1027164A
      C                   MOVE      *BLANKS       BRBIUF                                       CAP084
@@ -2460,26 +2469,31 @@ E1   C                   ENDIF                                                  
       *                                                                                     BUG23742
      C                   ENDIF                                                              BUG23742
       *                                                                                       CSC054
-      ** Access SAR details file to see if CGL125 is installed.                               CSC054
+      ***Access*SAR*details*file*to*see*if*CGL125*is*installed.                      CSC054 MD039859
+      ** Access SAR details file to see if CAP209 is installed.                             MD039859
       *                                                                                       CSC054
      C                   CALLB     'AOSARDR0'                                                 CSC054
      C                   PARM      *BLANKS       @RTCD                                        CSC054
      C                   PARM      '*VERIFY'     @OPTN                                        CSC054
-     C                   PARM      'CGL125'      @SARD                                        CSC054
+     C**********         PARM      'CGL125'      @SARD                               CSC054 MD039859
+     C                   PARM      'CAP209'      @SARD                                      MD039859
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC054
       *                                                                                       CSC054
      C                   IF        @RTCD <> *BLANKS AND                                       CSC054
      C                             @RTCD <> '*NRF'                                            CSC054
-     C                   EVAL      DBKEY = 'CGL125'                                           CSC054
+     C**********         EVAL      DBKEY = 'CGL125'                                  CSC054 MD039859
+     C                   EVAL      DBKEY = 'CAP209'                                         MD039859
      C                   EVAL      DBFILE ='SCSARDPD'                                         CSC054
      C                   EVAL      DBASE  = 13                                                CSC054
      C                   EXSR      *PSSR                                                      CSC054
      C                   ENDIF                                                                CSC054
       *                                                                                       CSC054
      C     @RTCD         IFEQ      *BLANK                                                     CSC054
-     C                   MOVE      'Y'           CGL125            1                          CSC054
+     C**********         MOVE      'Y'           CGL125            1                 CSC054 MD039859
+     C                   MOVE      'Y'           CAP209            1                        MD039859
      C                   ELSE                                                                 CSC054
-     C                   MOVE      'N'           CGL125                                       CSC054
+     C**********         MOVE      'N'           CGL125                              CSC054 MD039859
+     C                   MOVE      'N'           CAP209                                     MD039859
      C                   ENDIF                                                                CSC054
      C/COPY WNCPYSRC,GLH00460
      C/COPY OFCPYSRCZ,CGL135_066                                                             CGL135A

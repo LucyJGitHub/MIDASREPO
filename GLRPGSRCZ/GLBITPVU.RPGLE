@@ -33,8 +33,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2003            *
       *                                                               *
-      *  Last Amend No. AR851481           Date 27Oct15               *
-      *  Prev Amend No. AR570314           Date 27Oct15               *
+      *  Last Amend No. MD039859           Date 11Aug16               *
+      *  Prev Amend No. AR851481           Date 27Oct15               *
+      *                 AR570314           Date 27Oct15               *
       *                 MD027587           Date 19Jun14               *
       *                 MD023635           Date 20Nov13               *
       *                 CGL135A            Date 10Jul13               *
@@ -86,6 +87,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD039859 - Batch header is not updated when batch item is    *
+      *             through API without batch number, but Front       *
+      *             Office Id. Pattern AR1092517 done for BITH.       *
       *  AR851481 - Batch is blocked when Cancel is pressed. Created  *
       *             conditions to skip validation when input is       *
       *             cancelled. (Child: AR853231)                      *
@@ -671,7 +675,8 @@
                                                                                             AR994585
       ** Do not write when User has pressed Cancel                                          AR994585
                                                                                             AR994585
-     C     CGL125        IFEQ      'Y'                                                      AR994585
+     C*****CGL125        IFEQ      'Y'                                             AR994585 MD039859
+     C     CAP209        IFEQ      'Y'                                                      MD039859
      C     DDDLIT        ANDEQ     'U'                                                      AR994585
      C     UpdateYN      ANDEQ     'Y'                                                      AR994585
      C                   Z-ADD     1             Idx                                        AR994585
@@ -925,7 +930,8 @@
       *                                                                                       CSC054
       ** Front office only updated from 3rd party                                             CSC054
       *                                                                                       CSC054
-     C                   IF        CGL125 = 'Y'                                               CSC054
+     C**********         IF        CGL125 = 'Y'                                      CSC054 MD039859
+     C                   IF        CAP209 = 'Y'                                             MD039859
      C                   EVAL      B2FRNT = APFOTranID                                        CSC054
      C                   ENDIF                                                                CSC054
      C                   EVAL      B2AFRT = APFOAsocID
@@ -948,7 +954,8 @@
       *
       ** Front office only updated from 3rd party                                             CSC054
       *                                                                                       CSC054
-     C                   IF        CGL125 = 'N'                                               CSC054
+     C**********         IF        CGL125 = 'N'                                      CSC054 MD039859
+     C                   IF        CAP209 = 'N'                                             MD039859
       *                                                                                       CSC054
      C                   IF        B2FRNT = 'APCTRANVU'                                       249585
      C                   MOVE      *BLANKS       FRNTID            9
@@ -1723,13 +1730,16 @@
      C                   EXSR      *PSSR                                                      CER001
      C                   ENDIF                                                                CER001
       *                                                                                       CER001
-      ** Access SAR file to determine if CGL125 is installed.                                 CSC054
+      ***Access*SAR*file*to*determine*if*CGL125*is*installed.                        CSC054 MD039859
+      ** Access SAR file to determine if CAP209 is installed.                               MD039859
       *                                                                                       CSC054
-     C                   MOVE      'N'           CGL125                                       CSC054
+     C**********         MOVE      'N'           CGL125                              CSC054 MD039859
+     C                   MOVE      'N'           CAP209                                     MD039859
      C                   CALLB     'AOSARDR0'                                                 CSC054
      C                   PARM      *BLANKS       PRTCD                                        CSC054
      C                   PARM      '*VERIFY'     POPTN                                        CSC054
-     C                   PARM      'CGL125'      PSARD                                        CSC054
+     C**********         PARM      'CGL125'      PSARD                               CSC054 MD039859
+     C                   PARM      'CAP209'      PSARD                                      MD039859
      C     SCSARD        PARM      SCSARD        DSFDY                                        CSC054
       *                                                                                       CSC054
       ** An NRF (No Record Found) return code is valid. Issue database error                  CSC054
@@ -1737,14 +1747,16 @@
       *                                                                                       CSC054
      C     PRTCD         IFNE      *BLANKS                                                    CSC054
      C     PRTCD         ANDNE     '*NRF   '                                                  CSC054
-     C                   MOVEL     'CGL125'      DBKEY                                        CSC054
+     C**********         MOVEL     'CGL125'      DBKEY                               CSC054 MD039859
+     C                   MOVEL     'CAP209'      DBKEY                                      MD039859
      C                   MOVEL     'SCSARDPD'    DBFILE                                       CSC054
      C                   Z-ADD     013           DBASE                                        CSC054
      C                   EXSR      *PSSR                                                      CSC054
      C                   ENDIF                                                                CSC054
       *                                                                                       CSC054
      C     PRTCD         IFEQ      *BLANKS                                                    CSC054
-     C                   MOVE      'Y'           CGL125            1                          CSC054
+     C**********         MOVE      'Y'           CGL125            1                 CSC054 MD039859
+     C                   MOVE      'Y'           CAP209            1                        MD039859
      C                   ENDIF                                                                CSC054
       *                                                                                       CSC054
      C     KBITP         KLIST                                                                249585

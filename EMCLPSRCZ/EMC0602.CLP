@@ -9,9 +9,10 @@
 /*                                                                  */
 /*       (c) Misys International Banking Systems Ltd. 2001           */
 /*                                                                  */
-/*       Last Amend No. MD030956           Date 09Oct14             */
+/*       Last Amend No. MD040449           Date 15Aug16              */
+/*       Prev Amend No. MD030956           Date 09Oct14              */
 /* Bank Fusion Midas 1.4 Base ---------------------------------------*/
-/*       Prev Amend No.   CCB016         Date   03Aug07             */
+/*                        CCB016         Date   03Aug07              */
 /* Midas Plus 1.4 Base 04 -------------------------------------------*/
 /* Midas Plus 1.4 Base ----------------------------------------------*/
 /* Midas Plus 1.3 ---------------- Base -----------------------------*/
@@ -29,6 +30,8 @@
 /*                                                                  */
 /*------------------------------------------------------------------*/
 /*                                                                  */
+/*     MD040449 - Component EMC06 00002 failed during COB due to    */
+/*                database error                                    */
 /*           MD030956 - Additional changes to BFM-TI enhancement    */
 /*           CCB016  -  CoB performance enhancement                 */
 /*           CCB009  -  Journal files throughout close of business  */
@@ -55,7 +58,7 @@
              DCL        VAR(&MSG) TYPE(*CHAR) LEN(132) +
                         VALUE('Exposure Management Create End +
                                Of Day Exposure File')
- 
+
 /* CTI002 Start */
              DCL        VAR(&SRTCD) TYPE(*CHAR) LEN(7)                /*CTI002*/
              DCL        VAR(&SOPTN) TYPE(*CHAR) LEN(7) +
@@ -81,7 +84,7 @@
 /*                                                                      CCB009*/
              DCL        VAR(&CCB009) TYPE(*CHAR) LEN(7)               /*CCB009*/
              DCL        VAR(&AOFMT) TYPE(*CHAR) LEN(200)              /*CCB009*/
- 
+
                         SNDPGMMSG  MSG(&MSG) TOMSGQ(MRUNQ)
 /*                                                                      CCB009*/
 /** Check for Switchable feature CCB009.                                CCB009*/
@@ -95,7 +98,7 @@
 /**/                                                                  /*CTI002*/
              CALL       PGM(SF0410) PARM(&GROUP &USER &SLEVEL &TIMEO  +
                           &ERRORC &MULT)                              /*CTI002*/
- 
+
              IF         COND(&MULT *EQ '  ') THEN(DO)                 /*CTI002*/
              CHGVAR     VAR(&MULT) VALUE('GB')                        /*CTI002*/
              ENDDO                                                    /*CTI002*/
@@ -130,18 +133,18 @@
 /**/                                                                  /*S01332*/
 /************ALCOBJ*****OBJ((ACCNT *FILE *EXCLRD)) WAIT(9999)  /*E11699*E21893*/
              ALCOBJ     OBJ((ACCNT *FILE *SHRRD)) WAIT(1800)          /*E21893*/
- 
-             OVRDBF     FILE(EMDEXX4) NBRRCDS(500) SEQONLY(*YES 500)                      /*CCB016*/
-             OVRDBF     FILE(EMDEXX5) NBRRCDS(500) SEQONLY(*YES 500)                      /*CCB016*/
-             OVRDBF     FILE(EMDEXX6) NBRRCDS(500) SEQONLY(*YES 500)                      /*CCB016*/
- 
+
+/*           OVRDBF     FILE(EMDEXX4) NBRRCDS(500) SEQONLY(*YES 500)*/           /*CCB016 MD040449*/
+/*           OVRDBF     FILE(EMDEXX5) NBRRCDS(500) SEQONLY(*YES 500)*/           /*CCB016 MD040449*/
+/*           OVRDBF     FILE(EMDEXX6) NBRRCDS(500) SEQONLY(*YES 500)*/           /*CCB016 MD040449*/
+
              CALL       PGM(EM0450)
-             DLTOVR     FILE(EMDEXX4)                                                     /*CCB016*/
-             DLTOVR     FILE(EMDEXX5)                                                     /*CCB016*/
-             DLTOVR     FILE(EMDEXX6)                                                     /*CCB016*/
- 
+/*           DLTOVR     FILE(EMDEXX4)                               */           /*CCB016 MD040449*/
+/*           DLTOVR     FILE(EMDEXX5)                               */           /*CCB016 MD040449*/
+/*           DLTOVR     FILE(EMDEXX6)                               */           /*CCB016 MD040449*/
+
              IF         COND(%SWITCH(XXXXXX11)) THEN(GOTO ENDP)       /*CTI002*/
- 
+
                                                                       /*CTI002*/
 /* CTI002 Start */                                                    /*CTI002*/
              CALL       PGM(AOSARDR0) PARM(&SRTCD &SOPTN &SSARD)      /*CTI002*/

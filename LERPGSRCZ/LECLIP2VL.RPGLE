@@ -11,8 +11,9 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2002            *
       *                                                               *
-      *  Last Amend No. MD039304           Date 19Jul16               *
-      *  Prev Amend No. CLE141             Date 08Feb16               *
+      *  Last Amend No. MD040412           Date 17Aug16               *
+      *  Prev Amend No. MD039304           Date 19Jul16               *
+      *                 CLE141             Date 08Feb16               *
       *                 MD031736           Date 02Mar15               *
       *                 MD031225           Date 10Dec14               *
       *                 MD025521           Date 19Aug14               *
@@ -108,6 +109,9 @@
       *                                                               *
       *---------------------------------------------------------------*
       *                                                               *
+      *  MD040412 - No description for error 45048709 ; fixed also    *
+      *             the serious midas error when a user entered an    *
+      *             invalid character in rate/spread field            *       *
       *  MD039304 - Prevent a combination of zero spread rate and a   *
       *             spread indicator equal to percentage.             *
       *  CLE141 - Currency and Location Business Day Convention for   *
@@ -1406,9 +1410,16 @@
      C**********         MOVE      DDRTSP        #DDRTSP          11 7               249268 BUG21853
      C                   MOVE      DDRTSP        #DDRTSP          12 7                      BUG21853
      C                   IF        DDRTSP <> *BLANKS                                        BUG20318
+     C                   MOVE      *Blanks       PSCRF                                      MD040412
+     C                   MOVE      DDRTSP        PSCRF                                      MD040412
+     C                   Z-ADD     4             PNDIG                                      MD040412
+     C                   Z-ADD     7             PNDEC                                      MD040412
+     C                   CALL      'ZALIGN'      PPAR1                                      MD040412
+     C                   IF        PRTCD = *Blanks                                          MD040412
      C**********         EVAL      #DDRTSP = %DEC(DDRTSP:12:0)                     BUG20318 AR811153
      C                   EVAL      #DDRTSP = %DEC(DDRTSP:12:7)                              AR811153
      C                   ENDIF                                                              BUG20318
+     C                   ENDIF                                                              MD040412
      C     DDRTSP        IFNE      *BLANKS                                                    CLE035
      C     #DDRTSP       ANDNE     0                                                          249268
      C     CRE073        ANDNE     'Y'                                                        CRE073

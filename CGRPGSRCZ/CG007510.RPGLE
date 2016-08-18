@@ -19,12 +19,14 @@
       *                                                               *
       *  (c) Misys International Banking Systems Ltd. 2010            *
       *                                                               *
-      *  Last Amend No. CGL165             Date 17Feb15               *
-      *  Prev Amend No. MD025760           Date 20Mar14               *
+      *  Last Amend No. MD040062           Date 17Aug16               *
+      *  Prev Amend No. CGL165             Date 17Feb15               *
+      *                 MD025760           Date 20Mar14               *
       *                 CER055  *CREATE    Date 06Dec10               *
       *                                                               *
       *****************************************************************
       *                                                               *
+      *  MD040062 - Component CGC2050 00033 failed during COB         *
       *  CGL165 - Dual Withholding Tax (Recompile)                    *
       *  MD025760 - Reminder Letter generated lacking fields          *
       *  CER055 - Penalty Interest on Exceeding Overdraft Limit       *
@@ -32,12 +34,12 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ F-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
      FSDCSEGL0  IF   E           K DISK    INFSR(*PSSR)
       ** Midas SD Customer Segmentation
       *
@@ -50,67 +52,67 @@
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--------------------------------------+
       ** ¦ D-specs                              ¦
       ** ¦ =======                              ¦
       ** +--------------------------------------+
- 
+
       ** +--------------------------------------+
       ** ¦ Named constants                      ¦
       ** ¦ ===============                      ¦
       ** +--------------------------------------+
- 
+
      D WCPrtItmTyp     C                   CONST('ODREMLET')
       ** Print Item Type
- 
+
      D WCPrtItmSubTyp  C                   CONST('NOTICE')
       ** Print Item Sub-Type
- 
+
       ** +--------------------------------------+
       ** ¦ Arrays and Data Structures           ¦
       ** ¦ ==========================           ¦
       ** +--------------------------------------+
- 
+
      D DSFDY         E DS                  EXTNAME(DSFDY)
       ** Data structure for access objects, first DS
- 
+
      D DSSDY         E DS                  EXTNAME(DSSDY)
       ** Data structure for access objects, second DS
- 
+
      D DSLDY         E DS                  EXTNAME(DSLDY)
       ** Data structure for access objects
- 
+
      D SDBRCH        E DS                  EXTNAME(SDBRCHPD)
       ** Data structure for SD Branch details file
- 
+
      D SDCURR        E DS                  EXTNAME(SDCURRPD)
       ** Data structure Currency details
- 
+
      D SDCUST        E DS                  EXTNAME(SDCUSTPD)
      D QQDFAC1       E                     EXTFLD(QQDFAC)
       ** Data structure for SD Customer details file
- 
+
      D SCSARD        E DS                  EXTNAME(SCSARDPD)
       ** Data structure for Switchable Feature File
- 
+
      D PEDsCGUDCRPD  E DS                  EXTNAME(CGUDCRPD)
       ** Data structure for UDC data reference file
- 
+
      D PDsAccntBx0   E DS                  EXTNAME(ACCNTBY0)
       ** Data structure for Account Details Extension
- 
+
      D ACCNT         E DS                  EXTNAME(ACCNTAB)
      D LCD1          E                     EXTFLD(LCD)
       ** Data structure for Account Details Extension
- 
+
      D SDACOF        E DS                  EXTNAME(SDACOFPD)                                MD025760
       ** Data structure for SD Account Officer Details file                                 MD025760
                                                                                             MD025760
      D WMDsPath        DS                  OCCURS(20)
       ** Multi-occurence data structure to store path starting from Treadv
      D  WMDsPathGrp            1      6
- 
+
      D                 DS
       ** General data structure to define fields that need to share data
      D WGrp10                  1     10
@@ -119,25 +121,25 @@
      D  WAr20                 21     40    DIM(20)
      D  WNum20                21     40  0
      D  WAr29                 51     79    DIM(29)
- 
+
       ** Compile-time array to contain RDE definitions
      D WTbGrp          S             10    DIM(42) CTDATA PERRCD(1)
      D WTbRDE          S             22    DIM(42) ALT(WTbGrp)
- 
+
       ** +--------------------------------------+
       ** ¦ Declared variables                   ¦
       ** ¦ ==================                   ¦
       ** +--------------------------------------+
- 
+
      D WPathStr        S            256A
       ** String that contains the concatenated path
- 
+
      D WPx             S              3P 0
       ** Index for WMDsPath only
- 
+
      D ##ITEM          S              8  0
       ** Confirmation Text code
- 
+
       ** General purpose variables
      D WProduce        S              1A
      D Wx1             S              3P 0
@@ -145,7 +147,7 @@
      D Wx3             S              3P 0
      D WMvam           S             13P 0
      D ExNumDay        S              5A
- 
+
       ** Parameter fields
      D PAction8        S              8A
      D PCustNumChr6    S              6A
@@ -155,7 +157,7 @@
      D W0CMT           S              3A
      D PChgType        S              1A
      D W0SPAT          S             70A
- 
+
       ** Access Object Parameter fields
      D PRtCd           S              7A
      D POptn           S              7A
@@ -175,18 +177,18 @@
      D PBrch           S              3A
      D PCurr           S              3A
      D PAcof           S              2A                                                    MD025760
- 
+
      D/COPY CGCPYSRC,CGPACKDLE
       ** Data pack arrays and data structures
- 
+
      D/COPY CGCPYSRC,SRERRDLE
       ** Fields, data structures, arrays definition for
       ** CG error processing
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
- 
+
       ** +--- Start of Main processing -------------------------------+
       ** ¦                                                            ¦
       ** ¦ Initial processing is performed automatically: the *INZSR  ¦
@@ -212,7 +214,7 @@
       *
      C                   EVAL      *INLR = *ON
      C                   RETURN
- 
+
       *****************************************************************
       /EJECT
       *****************************************************************
@@ -282,7 +284,9 @@
       ** Account Officer Details                **                                          MD025760
       ********************************************                                          MD025760
       *                                                                                     MD025760
+     C                   IF        BBACOC <> *Blanks                                        MD040062
      C                   EXSR      SrACOF                                                   MD025760
+     C                   ENDIF                                                              MD040062
       *
       ********************************************
       ** Customer details group                 **
